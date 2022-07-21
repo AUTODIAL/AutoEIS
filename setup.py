@@ -25,8 +25,8 @@ setup(
     install_requires = [],
     keywords=['python', 'Electrochemical impedance spectroscopy', 'Fully-automated', 'equivalent circuit models', 'gene-expression programming', 'genetic algorithm'],
     classifiers=[
-        "Programming Language :: Python ::3 & Julia::",
-        "License :: TBD",
+        "Programming Language :: Python ::3",
+        "License :: MIT",
         "Operating System :: Windows 10",
     ],
 )
