@@ -48,7 +48,13 @@ It contains: data pre-processing, ECM generation, circuit post-filtering, Bayesi
 
 ## Usage
 -------------
-To enable the interaction between python and julia, please set the julia executable path at first.
+To enable the interaction between python and julia, please set the julia executable pathway at first. The common pathway of the Julia executable path depends on the operating system you are using. Here are the common default locations for each supported OS:
+
+- Windows: *C:\Users\<username>\AppData\Local\Julia-<version>\bin*
+- macOS: */Applications/Julia-<version>.app/Contents/Resources/julia/bin*
+- Linux: */usr/local/julia-<version>/bin*
+Please note that <version> refers to the specific version of Julia you have installed, and <username> is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command which julia (for Unix-based systems) or where julia (for Windows). This will display the full path of the Julia executable file.
+
 ```bash
 # import AutoEIS and its dependencies
 import AutoEis as ae
