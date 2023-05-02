@@ -84,4 +84,10 @@ measurements = reals + 1j*imags
 # Perform automated ECM generation and evaluation
 ae.EIS_auto(impedance=measurements,freq=frequencies,data_path=data_path,iter_number=100,plot_ECM=False)
 ```
+- `impedance` : the measured electrochemical impedance
+- `freq`: the measured frequencies
+- `data_path`: the pathway of loaded data (this path will be used for the results storage)
+- `iter_number`: the numbers of ECM generation to be performed (default = 100)
+- `plot_ECM`: to plot ECM or not (*Note: To enable this parameter, a [LaTex compiler](https://www.latex-project.org/get/) is required.*) 
+  
 An example that demonstrate how to use AutoEis is attached [here](https://github.com/AUTODIAL/Auto_Eis/blob/main/Example_AutoEIS.ipynb). 
