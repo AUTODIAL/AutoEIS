@@ -28,7 +28,8 @@ AutoEis requires:
 - - PyJulia (>=0.5.7)
 - - IPython (>=7.19.0)
 - - jax (>=0.3.9)
-*Note: After install jax, you may need to install jaxlib as well. However, the installation of jaxlib on Windows is not pypi-supported. You may need to visit [this repository](https://github.com/cloudhan/jax-windows-builder) to find the version corresponding to your python version, and then install it using wheel.
+
+*Note: If you operating system is Windows, after install jax, you may need to install jaxlib as well. However, the installation of jaxlib on Windows is not pypi-supported. You may need to visit [this repository](https://github.com/cloudhan/jax-windows-builder) to find the version corresponding to your python version, and then install it using wheel.
 
 -   **Julia programming language (>=1.7.0)**
 - - equivalentcircuit (>=0.1.3)
