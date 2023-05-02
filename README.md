@@ -53,6 +53,7 @@ To enable the interaction between python and julia, please set the julia executa
 - Windows: *C:\Users\<username>\AppData\Local\Julia-<version>\bin*
 - macOS: */Applications/Julia-<version>.app/Contents/Resources/julia/bin*
 - Linux: */usr/local/julia-<version>/bin*
+
 Please note that <version> refers to the specific version of Julia you have installed, and <username> is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command which julia (for Unix-based systems) or where julia (for Windows). This will display the full path of the Julia executable file.
 
 ```bash
