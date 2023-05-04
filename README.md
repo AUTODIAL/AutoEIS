@@ -23,7 +23,7 @@ AutoEis requires:
 - - impedance (>=1.4)
 - - regex (>=2.2)
 - - arviz (>=2.2.1)
-- - numpyro (>=0.9)
+- - numpyro (=0.10.1)
 - - dill (>=0.3.4)
 - - PyJulia (>=0.5.7)
 - - IPython (>=7.19.0)
