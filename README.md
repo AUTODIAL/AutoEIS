@@ -13,10 +13,10 @@ pip install AutoEis
 
 ## Dependencies
 ---------------
-Because AutoEis uses functions from the julia package [equivalentcircuit.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH, it requires a installation of [julia programming language](https://julialang.org/)
+The circuits generation is realized based on the julia package [equivalentcircuit.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. It requires a installation of [julia programming language](https://julialang.org/)
 
 AutoEis requires:
--   **Python programming language (>=3.7)**
+-   **Python programming language (>=3.7, <3.11)**
 - - NumPy (>=1.20)
 - - Matplotlib (>=3.3)
 - - Pandas (>=1.1)
@@ -29,7 +29,7 @@ AutoEis requires:
 - - IPython (>=7.19.0)
 - - jax (>=0.3.9)
 
-*Note: If you operating system is Windows, after install jax, you may need to install jaxlib as well. However, the installation of jaxlib on Windows is not pypi-supported. You may need to visit [this repository](https://github.com/cloudhan/jax-windows-builder) to find the version corresponding to your python version, and then install it using wheel.
+*Note: If you operating system is Windows, after install jax, it is required to install jaxlib as well. However, the installation of jaxlib on Windows is not pypi-supported. You may need to visit [this repository](https://github.com/cloudhan/jax-windows-builder) to find the version corresponding to your python version, and then install it using wheel.
 
 -   **Julia programming language (>=1.7.0)**
 - - equivalentcircuit (>=0.1.3)
@@ -63,7 +63,7 @@ import AutoEis as ae
 # define the path of julia program
 j = ae.set_julia (r"D:\Julia-1.7.2\bin\julia.exe")
 ```
-Then by calling the function `initialize_julia()`, AutoEis will automatically install julia's dependencies. *(This step is only required for your first time using AutoEis)*
+Then by calling the function `initialize_julia()`, AutoEis will automatically install julia's dependencies. *(This step is only required at your first time using AutoEis)*
 ```bash
 # initialize the julia environment and download the dependencies
 ae.initialize_julia()
