@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '0.0.13'
+VERSION = '0.0.15'
 DESCRIPTION = 'A demo package to assist EIS analysis by automatically proposing statistically plausible ECM'
 LONG_DESCRIPTION = 'AutoEIS is a novel tool designed to aid EIS analysis by automatically prioritizing statistically optimal ECM by combining evolutionary algorithms and Bayesian inference.'
 
@@ -27,12 +27,12 @@ setup(
                         'pandas>=1.1.3',
                         'impedance>=1.4.0',
                         'regex>=2.2.1',
-                        'arviz>=0.12.0',
-                        'numpyro>=0.9.1',
+                        'arviz==0.12.0',
+                        'numpyro==0.10.1',
                         'dill>=0.3.4',
-                        'julia>=0.5.7',
+                        'julia==0.5.7',
                         'IPython>=7.19.0',
-                        'jax>=0.3.9'],
+                        'jax==0.3.9'],
     keywords=['Electrochemical impedance spectroscopy', 'equivalent circuit models', 'Bayesian inference', 'evolutionary algorithm'],
     classifiers=[
         "Programming Language :: Python :: 3",

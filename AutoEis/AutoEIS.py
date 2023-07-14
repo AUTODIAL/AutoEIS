@@ -71,6 +71,8 @@ def set_julia(julia_executable_path: 'str') -> 'Julia object':
 
 
 def initialize_julia():
+    """Install the julia's dependencies"""
+
     # import julia's basic packages via PyCall
     from julia import Pkg
     from julia import Base
@@ -100,6 +102,7 @@ def import_julia():
 
 
 def set_parameter():
+
     """Set the parameters of figures"""
 
     # set the parameters for plots
@@ -135,6 +138,7 @@ def reset_storage():
 
 
 def load_data(data_path: 'str') -> 'pd.DataFrame':
+
     """ Load the required EIS data(impedance and frequency) from a given data path
 
         Parameter
@@ -171,9 +175,9 @@ def load_data(data_path: 'str') -> 'pd.DataFrame':
         print('Error: The file format of the given data is not supported in this function.')
 
 
-
 def plot_EIS(freq: 'np.array', impedance: 'np.array' = "", reals: 'np.array' = "", imags: 'np.arary' = "",
              kind: 'string' = 'Nyquist'):
+
     """ Plot impedance data as nyquist plot and bode plots using matplotlib
 
         Parameters
@@ -251,10 +255,11 @@ def plot_EIS(freq: 'np.array', impedance: 'np.array' = "", reals: 'np.array' = "
         ax2.set_ylabel('Phase')
         fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes)
         fig.show()
-        pass
+    return fig
 
 
 def find_ohmic_resistance(reals: 'np.array', imags: 'np.array', data_path: 'string', save: 'bool' = True) -> 'float':
+
     """ Extract the ohmic resistance of impedance data by doing a 5th order polynomial fit (with 5% accepted relative error)
 
         Parameters:
@@ -291,6 +296,7 @@ def find_ohmic_resistance(reals: 'np.array', imags: 'np.array', data_path: 'stri
 
 def pre_processing(impedance: 'np.array', freq: 'np.array', threshold: 'float',
                    data_path: 'str') -> 'Returns: pd.DataFrame / float / float':
+
     """ Pre-process impedance data by deleting data with positive imaginary part at high-freq range, and by kk validation
 
         Parameters:
@@ -407,42 +413,48 @@ def pre_processing(impedance: 'np.array', freq: 'np.array', threshold: 'float',
     # Need to set a threshold limit for when to filter out the noisy data of the residuals
     # threshold = 0.05 # USER DEFINE!!!
 
-    # filter the data according to imaginary residuals
-    mask = [False] * (len(res_imag))
-    for i in range(len(res_imag)):
-        if res_imag[i] < threshold:
-            mask[i] = True
-        else:
-            break
+    ########## 2023/05/03 modification #########
+    Zdf_mask = np.arange(1)
 
-    freq_mask = freq[mask]
-    Z_mask = Z[mask]
-    Re_Z_mask = Re_Z[mask]
-    Im_Z_mask = Im_Z[mask]
+    while len(Zdf_mask) <= 0.7 * len(Z):
+        # filter the data according to imaginary residuals
+        mask = [False] * (len(res_imag))
+        for i in range(len(res_imag)):
+            if res_imag[i] < threshold:
+                mask[i] = True
+            else:
+                break
 
-    # filter the data according to real residuals
-    mask = [False] * (len(res_real))
-    for i in range(len(res_real)):
-        if res_real[i] < threshold:
-            mask[i] = True
-        else:
-            break
+        freq_mask = freq[mask]
+        Z_mask = Z[mask]
+        Re_Z_mask = Re_Z[mask]
+        Im_Z_mask = Im_Z[mask]
 
-    freq_mask = freq[mask]
-    Z_mask = Z[mask]
-    Re_Z_mask = Re_Z[mask]
-    Im_Z_mask = Im_Z[mask]
+        # filter the data according to real residuals
+        mask = [False] * (len(res_real))
+        for i in range(len(res_real)):
+            if res_real[i] < threshold:
+                mask[i] = True
+            else:
+                break
 
-    # find the ohmic resistance
-    try:
-        ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, data_path)
-        print(f"ohmic_resistance = {ohmic_resistance}")
-    except ValueError:
-        print("Error: Didn't find the ohmic resistance. Please recheck the data or increase the KK threshold.")
-    # Putting into a dataframe for use with plotting and program
-    values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
-    labels = ['freq', 'Zreal', 'Zimag']
-    Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
+        freq_mask = freq[mask]
+        Z_mask = Z[mask]
+        Re_Z_mask = Re_Z[mask]
+        Im_Z_mask = Im_Z[mask]
+
+        # find the ohmic resistance
+        try:
+            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, data_path)
+        except ValueError:
+            print("Error: Didn't find the ohmic resistance. Please recheck the data or increase the KK threshold.")
+        # Putting into a dataframe for use with plotting and program
+        values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
+        labels = ['freq', 'Zreal', 'Zimag']
+        Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
+        threshold += 0.01
+
+    print(f"ohmic_resistance = {ohmic_resistance}")
 
     # Plot the data to see how the filter performed
     fig, axes = plt.subplots(1, 3, figsize=(15, 3.5), dpi=300)
@@ -465,13 +477,15 @@ def pre_processing(impedance: 'np.array', freq: 'np.array', threshold: 'float',
     plt.savefig(f'{folder_name}\\Filtered_Nyquist and Bode plots.png', dpi=300)
     plt.show()
 
-    if len(Zdf_mask) / len(Z) <= 0.6:
+    if threshold != 0.06:
         print(
-            'Warning: the KK validation dropped too many information. Please consider to increase the threshold a little bit.')
+            f"Warning: the default threshold (0.05) dropped too much points and indicated a data-quality concern. Please be careful of using the filtered data.The current selected threshold is {threshold - 0.01}")
+
     return Zdf_mask, ohmic_resistance, RMSE_value
 
 
 def save_processed_data(input_name: 'string', data_stored: 'pd.DataFrame') -> 'string':
+
     """ Store the processed EIS data in a .csv file
 
         Parameters:
@@ -510,6 +524,7 @@ def save_processed_data(input_name: 'string', data_stored: 'pd.DataFrame') -> 's
 
 
 def ECM_generation(processed_data: 'pd.DataFrame', times: 'int' = 100, head: 'int' = 12, save: 'bool' = True):
+
     """Generate ECMs via evolutionary algorithms
 
         Parameters:
@@ -551,6 +566,7 @@ def ECM_generation(processed_data: 'pd.DataFrame', times: 'int' = 100, head: 'in
 
 
 def load_results(file_path: 'string') -> 'pd.DataFrame':
+
     """ load the ECMs results generated by the julia program and convert it to pd.DataFrame
 
         Parameters:
@@ -571,6 +587,7 @@ def load_results(file_path: 'string') -> 'pd.DataFrame':
 
 
 def split_components(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Split all the components and their corresponding values of each ECMs
 
         Parameter:
@@ -616,6 +633,7 @@ def split_components(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
 
 
 def capacitance_filter(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Filter the circuits by ideal capacitors
 
         Parameter:
@@ -637,6 +655,7 @@ def capacitance_filter(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
 
 
 def find_series_elements(circuit: 'string') -> 'string':
+
     """ Extract the series componenets existed in the circuit
 
         Parameter:
@@ -666,6 +685,7 @@ def find_series_elements(circuit: 'string') -> 'string':
 
 
 def ohmic_resistance_filter(df_circuits: 'pd.DataFrame', ohmic_resistance: 'float') -> 'pd.DataFrame':
+
     """ Extract the ohmic resistance of each circuit and filter the circuits according to the values (with 15% buffer)
 
         Parameter:
@@ -717,6 +737,7 @@ def ohmic_resistance_filter(df_circuits: 'pd.DataFrame', ohmic_resistance: 'floa
 
 
 def series_filter(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Filter the circuits by checking if any parallel structure included capacitors
 
         Parameter:
@@ -740,6 +761,7 @@ def series_filter(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
 
 
 def generate_mathematical_expression(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Generate the mathematical expression of each circuit
 
         Parameter:
@@ -802,6 +824,7 @@ def generate_mathematical_expression(df_circuits: 'pd.DataFrame') -> 'pd.DataFra
 
 
 def s_to_a_convert(circuit: 'string') -> 'np.array':
+
     """ Convert the circuit configuration strings to np.array (representing components by numbers)
 
         Parameter:
@@ -842,6 +865,7 @@ def s_to_a_convert(circuit: 'string') -> 'np.array':
 
 
 def count_components(circuit: 'string', symbols: 'bool' = True) -> 'np.array':
+
     """ Calculate the numbers of each kind of component in given circuit strings (R/C/L/P/-/,/[/])
 
         Parameters:
@@ -900,6 +924,7 @@ def count_components(circuit: 'string', symbols: 'bool' = True) -> 'np.array':
 
 
 def rank_the_structure(circuit_array: 'np.array') -> 'np.array':
+
     """ Rank each component in given circuits according to its 'complexity' (defined by how many parallel structures it's in)
 
         Parameter:
@@ -933,6 +958,7 @@ def rank_the_structure(circuit_array: 'np.array') -> 'np.array':
 
 
 def structure_deconstructor(ranks_array: 'np.array') -> 'list':
+
     """ Extract the index information of each level circuit according to ranking array
 
         Parameter:
@@ -961,6 +987,7 @@ def structure_deconstructor(ranks_array: 'np.array') -> 'list':
 
 
 def structure_extractor(circuit_array: 'np.array', ranks_array: 'np.array', indexs_lists: 'list') -> 'np.array':
+
     """ Extract the circuit configuration at each level
 
         Parameters:
@@ -1007,6 +1034,7 @@ def structure_extractor(circuit_array: 'np.array', ranks_array: 'np.array', inde
 
 
 def precise_rank_the_structure(circuit_array: 'np.array') -> 'np.array':
+
     """ Rank each component in given circuits according to its 'complexity' in a more precise way (defined by how many parallel structures it's in)
 
         Parameter:
@@ -1043,6 +1071,7 @@ def precise_rank_the_structure(circuit_array: 'np.array') -> 'np.array':
 
 
 def precise_extractor(circuit_array: 'np.array', precise_ranks_array: 'np.array') -> 'list':
+
     """ Extract the index information of each level circuit according to ranking array in a more precise way
 
         Parameter:
@@ -1103,6 +1132,7 @@ def precise_extractor(circuit_array: 'np.array', precise_ranks_array: 'np.array'
 
 
 def sort_level_lists(level_lists: 'list') -> 'list':
+
     """ Sort the level lists:
 
         Parameter:
@@ -1124,6 +1154,7 @@ def sort_level_lists(level_lists: 'list') -> 'list':
 
 
 def feature_store(circuit: 'string') -> 'dict':
+
     """ Extract the features of given circuits and store them as a dictionary
             Feature 1: the component numbers (R/C/L/P/-/,/[/]) of a given circuit
             Feature 2: the component numbers in series part of a given circuit
@@ -1172,6 +1203,7 @@ def feature_store(circuit: 'string') -> 'dict':
 
 
 def identifior(df_circuits: 'pd.DataFrame') -> 'Returns: list / list':
+
     """ Identfy the identical circuits configurations by the above features
 
         Parameter:
@@ -1214,6 +1246,7 @@ def identifior(df_circuits: 'pd.DataFrame') -> 'Returns: list / list':
 
 
 def filter(similar_circuits: 'list') -> 'list':
+
     """ Filter the repeated "identical circuits list" in the list
 
         Parameter:
@@ -1234,6 +1267,7 @@ def filter(similar_circuits: 'list') -> 'list':
 
 
 def circuit_expression_combine_lists(df_circuits: 'pd.DataFrame') -> 'Returns: list /list':
+
     """ Identfy the identical circuits configurations by the above features
 
         Parameter:
@@ -1258,6 +1292,7 @@ def circuit_expression_combine_lists(df_circuits: 'pd.DataFrame') -> 'Returns: l
 
 
 def component_values(input: 'pd.Series') -> 'Returns: list / list / list':
+
     """ Before combination, separate the components names and values for further comparison to identify identical circuit values
 
         Parameter:
@@ -1320,6 +1355,7 @@ def component_values(input: 'pd.Series') -> 'Returns: list / list / list':
 
 
 def combine_expression(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Combine the identical circuits
 
         Parameter:
@@ -1396,6 +1432,7 @@ def combine_expression(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
 
 
 def calculate_length(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Cound how many different value sets are in identical circuits
 
         Paramter:
@@ -1424,6 +1461,7 @@ def calculate_length(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
 
 
 def split_variables(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Separate the value and name of each component
 
         Parameter:
@@ -1470,8 +1508,8 @@ def split_variables(df_circuits: 'pd.DataFrame') -> 'pd.DataFrame':
     return df_circuits
 
 
-
 def temperate_filter(df: 'pd.DataFrame') -> 'pd.DataFrame':
+
     """ Note: this is just a temporary filtering rule to delete ECMs with 0.0 value after approximation with 4 digits
 
         Parameter:
@@ -1498,6 +1536,7 @@ def temperate_filter(df: 'pd.DataFrame') -> 'pd.DataFrame':
 
 
 def r2_calculator(y_true, y_pred):
+
     """ Calculation of the coefficient of determintion, goodness of fit metric
 
         Parameter:
@@ -1520,8 +1559,8 @@ def r2_calculator(y_true, y_pred):
     return r2
 
 
-
 def MSE_calculator(y_true: 'np.array', y_pred: 'np.array'):
+
     """ Calculation of the mean square error, goodness of fit metric
 
         Parameter:
@@ -1542,8 +1581,8 @@ def MSE_calculator(y_true: 'np.array', y_pred: 'np.array'):
     return MSE
 
 
-
 def RMSE_calculator(y_true: 'np.array', y_pred: 'np.array') -> 'float':
+
     """ Calculation of the root mean square error, goodness of fit metric
 
         Parameter:
@@ -1567,6 +1606,7 @@ def RMSE_calculator(y_true: 'np.array', y_pred: 'np.array') -> 'float':
 
 
 def MAPE_calculator(y_true: 'np.array', y_pred: 'np.array') -> 'float':
+
     """ Calculation of the mean abosulte percentage error, goodness of fit metric
 
         Parameter:
@@ -1589,7 +1629,73 @@ def MAPE_calculator(y_true: 'np.array', y_pred: 'np.array') -> 'float':
     return mean_absolute_error_percentage
 
 
-def convert_text(text: 'string'):
+
+def posterior_evaluation(posteriors):
+
+    """ Evaluate the posterior ddistributions according to their shapes
+
+        Parameter:
+        -----------
+        posteriors: Axesubplots
+            the axesubplots that record posterior distribution
+
+        Return:
+        -----------
+        marker: Float64
+            indicator of the quality of posterior distributions
+    """
+
+    marker = 0
+    posterior_x = []
+    posterior_y = []
+    for i in range(len(posteriors) - 1):
+        test_dist = posteriors[i][0].lines[0]
+        test_x, test_y = test_dist.get_xydata().T
+        test_y_percent = test_y / sum(test_y)
+
+        posterior_x.append(test_x)
+        posterior_y.append(test_y_percent)
+
+        if np.where(test_y_percent == test_y_percent.max())[0][0] == 0 or \
+                np.where(test_y_percent == test_y_percent.max())[0][
+                    0] == 511 or test_y_percent.max() >= 0.01 or test_y_percent.max() <= 0.003:
+            marker = marker - 1
+        else:
+            if test_y_percent[np.where(test_x == test_x.max())[0][0]] >= 0.001 or test_y_percent[
+                np.where(test_x == test_x.max())[0][0]] >= 0.001:
+                marker = marker - 0.5
+
+    return marker
+
+
+def model_evaluation(results):
+    evaluation_results = results[results.columns[[0,17,18,19,20,23,25]]]
+
+
+    evaluation_results['Consistency'] = pd.to_numeric(evaluation_results['Consistency'], errors='coerce')
+    evaluation_results.loc[evaluation_results['Consistency'].isna(), 'Consistency'] = np.inf
+    def absolute_difference(x):
+        if np.isinf(x):
+            return np.inf
+        else:
+            return abs(x - 1)
+
+    def custom_sort(x):
+        if x == 'F':
+            return -1000
+        else:
+            return x
+    evaluation_results['Consistency'] = evaluation_results['Consistency'].apply(absolute_difference)
+    evaluation_results['Posterior_shape'] = evaluation_results['Posterior_shape'].apply(custom_sort)
+    evaluation_results_sorted = evaluation_results.sort_values(by=['Divergences', 'Posterior_shape', 'Consistency', 'Posterior_mean_r2_real', 'Posterior_mean_r2_imag', 'AIC Value'],
+                                                                 ascending=[True, False, True, False, False, True])
+    results_sorted = results.loc[evaluation_results_sorted.reset_index()['index']]
+    results_sorted = results_sorted.reset_index(drop=True)
+    return results_sorted
+
+
+def convert_text(text: 'string', save=True):
+
     """ Visualize circuit string (convert the string of ECMs to figures)
 
         Parameter:
@@ -1614,7 +1720,8 @@ def convert_text(text: 'string'):
     text = text.replace('-', '+')
     # surround all numbers with parentheses
     text = re.sub(r'([A-Z])(\d+)', r'\1("\1\2")', text)
-    circuit_figure = eval(text).draw(style='american')
+    circuit_figure = eval(text)
+    circuit_figure.draw(style='american')
     return circuit_figure
 
 
@@ -1703,8 +1810,16 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
     Posterior_predictions = []
     AIC = []
 
+    # create a set of lists for model evaluation
+    divergences = []
+    posterior_shape = []
+    consistency = []
+
     dirStr, ext = os.path.splitext(data_path)
-    folder_name = dirStr.split('\\')[-1]
+    #     folder_name = dirStr.split('\\')[-1]
+    folder_name = dirStr
+
+    current_path = os.getcwd()
 
     for i in range(len(df['Combined Circuits'])):
         circuit_name_i = circuit_names[i]
@@ -1717,13 +1832,12 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
         mkdir(folder_name + f'\\{circuit_name_i}')
         os.chdir(folder_name + f'\\{circuit_name_i}')
 
-        print(f"Circuit {i}:{circuit_name_i} composed of components ({name_i}) with values ({value_i})")
+        print(f"----------Circuit {i}:{circuit_name_i}--------------")
+        print(f"Circuit elements: {name_i})  \nValues: ({value_i})")
 
         if plot:
             if ECM_figure:
-                convert_text(circuit_name_i)
-                if save:
-                    plt.savefig(f'Equivalent circuit model.png', dpi=300);
+                ECM_plot = convert_text(circuit_name_i)
 
         ECM_data = function_i(value_i, freq)
         ECMs_data.append(ECM_data)
@@ -1750,7 +1864,7 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
         RMSE_list.append(RMSE_value)
 
         MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"RMSE_value:{MAPE_value}")
+        print(f"MAPE_value:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
         if plot:
@@ -1761,7 +1875,7 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
             plt.title('Nyquist plots of original data and simulated data')
             plt.legend()
             if save:
-                plt.savefig(f'Nyquist_plots_of_simulated_data.png', dpi=300);
+                plt.savefig(f'Nyquist_plots_of_simulated_data.png', dpi=300)
             plt.show()
 
         def model_i(values=value_i, func=function_i, true_data=data, error=relative_error_accepted):
@@ -1794,7 +1908,7 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
 
         kernel = NUTS(model_i, target_accept_prob=0.8)
         num_samples = 10000
-        mcmc_i = MCMC(kernel, num_warmup=1000, num_samples=num_samples, num_chains=1)
+        mcmc_i = MCMC(kernel, num_warmup=2000, num_samples=num_samples, num_chains=1)
         mcmc_i.run(rng_key_, values=value_i, func=function_i, true_data=data, error=relative_error_accepted)
 
         # Results
@@ -1808,34 +1922,40 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
 
         AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
         AIC.append(AIC_value)
-        print(AIC_value)
+        print(f"AIC value = {AIC_value}")
 
+        divergence = np.asarray(mcmc_i.get_extra_fields()["diverging"].sum()).ravel()[0]
+
+        divergences.append(divergence)
+
+        # prior distributions
         if plot:
-
             print(f"{circuit_name_i}:Prior distributions with trajectories")
-            # prior distributions
             az.plot_trace(prior_prediction, var_names=name_i)
             if save:
                 plt.savefig(f'Prior distributions.png', dpi=300);
             plt.show()
 
-            # prior predictions
+        # prior predictions
+        if plot:
             print(f"{circuit_name_i}:Prior prediction")
             _, ax = plt.subplots()
 
-            prior_R2_list = []
-            for j in range(100):
-                vars = []
-                for k in range(len(name_i)):
-                    if 'n' in name_i[k]:
-                        var = prior_prediction[name_i[k]][j]
-                        vars.append(var)
-                    else:
-                        var = prior_prediction[name_i[k]][j] * value_i[k]
-                        vars.append(var)
-                y = function_i(vars, freq)
-                ax.plot(y.real, -y.imag, color='k', alpha=0.4)
+        prior_R2_list = []
+        for j in range(100):
 
+            vars = []
+            for k in range(len(name_i)):
+                if 'n' in name_i[k]:
+                    var = prior_prediction[name_i[k]][j]
+                    vars.append(var)
+                else:
+                    var = prior_prediction[name_i[k]][j] * value_i[k]
+                    vars.append(var)
+            y = function_i(vars, freq)
+            if plot:
+                ax.plot(y.real, -y.imag, color='k', alpha=0.4)
+        if plot:
             ax.plot(Zreal, -Zimag, c='b', alpha=1)
             ax.set_xlabel("real impedance ")
             ax.set_ylabel("imag impedance")
@@ -1844,54 +1964,72 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
                 plt.savefig(f'Prior prediction.png', dpi=300);
             plt.show()
 
-            # posterior distributions
+        # posterior distributions
+        if plot:
             print(f"{circuit_name_i}:Posterior distributions with HDI")
-            az.plot_posterior(mcmc_i, var_names=name_i)
+            for i in range(len(name_i)):
+                name = name_i[i]
+                value = value_i[i]
+                if 'n' not in name:
+                    trace.posterior[name] = trace.posterior[name] * value
+            posterior_HDI = az.plot_posterior(trace, var_names=name_i)
+            #             for i in range(posterior_HDI.shape[0]):
+            #                 for j in range(posterior_HDI.shape[1]):
+            #                     rc_id = i*3 + j
+            #                     if rc_id < len(value_i):
+            #                         y_values = posterior_HDI[i][j].lines[0].get_ydata()
+            #                         posterior_HDI[i][j].lines[0].set_data(np.multiply(posterior_HDI[i][j].lines[0].get_xydata()[:,0],value_i[rc_id]),y_values)
+            # #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
+            # #                         posterior_HDI[i][j].set_xlim(new_lim)
             if save:
                 plt.savefig(f'Posterior prediction_with HDI.png', dpi=300);
             plt.show()
 
-            # posterior trajectories
-            print(f"{circuit_name_i}:Posterior distributions with trajectories")
-            az.plot_trace(mcmc_i, var_names=name_i)
+        # posterior trajectories
+        posterior_dist = az.plot_trace(trace, var_names=name_i)
 
+        if plot:
+            print(f"{circuit_name_i}:Posterior distributions with trajectories")
             if save:
                 plt.savefig(f'Posterior distributions.png', dpi=300);
             plt.show()
 
-            # posterior predictions -- real part
+        # posterior predictions -- real part
+        if plot:
             print(f"{circuit_name_i}:Posterior predictions - real part")
-
             _, ax = plt.subplots()
-            samples = mcmc_i.get_samples()
-            Posterior_predictions.append(samples)
 
-            # sep_mse_real_list = []
-            sep_mape_real_list = []
-            sep_r2_real_list = []
+        samples = mcmc_i.get_samples()
+        Posterior_predictions.append(samples)
 
-            for j in range(100):
-                vars = []
-                for k in range(len(name_i)):
-                    if 'n' in name_i[k]:
-                        var = samples[name_i[k]][j]
-                        vars.append(var)
-                    else:
-                        var = samples[name_i[k]][j] * value_i[k]
-                        vars.append(var)
-                BI_data = function_i(vars, freq)
+        sep_mape_real_list = []
+        sep_r2_real_list = []
+
+        for j in range(100):
+            vars = []
+            for k in range(len(name_i)):
+                if 'n' in name_i[k]:
+                    var = samples[name_i[k]][j]
+                    vars.append(var)
+                else:
+                    var = samples[name_i[k]][j] * value_i[k]
+                    vars.append(var)
+            BI_data = function_i(vars, freq)
+            if plot:
                 ax.plot(np.log10(freq), BI_data.real, marker='.', color='grey', alpha=0.5)
-                sep_mape_real = float(MAPE_calculator(Zreal, BI_data.real))
-                sep_mape_real_list.append(sep_mape_real)
-                sep_r2_real = float(r2_calculator(Zreal, BI_data.real))
-                sep_r2_real_list.append(sep_r2_real)
+            sep_mape_real = float(MAPE_calculator(Zreal, BI_data.real))
+            sep_mape_real_list.append(sep_mape_real)
+            sep_r2_real = float(r2_calculator(Zreal, BI_data.real))
+            sep_r2_real_list.append(sep_r2_real)
 
-            avg_mape_real = np.array(sep_mape_real_list).mean()
-            avg_r2_real = np.array(sep_r2_real_list).mean()
+        avg_mape_real = np.array(sep_mape_real_list).mean()
+        avg_r2_real = np.array(sep_r2_real_list).mean()
+        if plot:
             print(f"Posterior real part's fit: MAPE = {avg_mape_real}; R2 = {avg_r2_real}")
-            Posterior_r2_real.append(avg_r2_real)
-            Posterior_mape_real.append(avg_mape_real)
+        Posterior_r2_real.append(avg_r2_real)
+        Posterior_mape_real.append(avg_mape_real)
 
+        if plot:
             ax.plot(np.log10(freq), BI_data.real, marker='.', ms=15, color='grey', alpha=0.5, label='Predictive EIS')
             ax.plot(np.log10(freq), Zreal, '--', marker='o', c='b', alpha=0.9, ms=8, label='Ground Truth EIS')
 
@@ -1903,34 +2041,38 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
             plt.legend()
             plt.show()
 
-            # posterior predictions -- imag part
+        # posterior predictions -- imag part
+        if plot:
             print(f"{circuit_name_i}:Posterior predictions imag")
-
             _, ax = plt.subplots()
-            sep_mape_imag_list = []
-            sep_r2_imag_list = []
 
-            for j in range(100):
-                vars = []
-                for k in range(len(name_i)):
-                    if 'n' in name_i[k]:
-                        var = samples[name_i[k]][j]
-                        vars.append(var)
-                    else:
-                        var = samples[name_i[k]][j] * value_i[k]
-                        vars.append(var)
-                BI_data = function_i(vars, freq)
+        sep_mape_imag_list = []
+        sep_r2_imag_list = []
+
+        for j in range(100):
+            vars = []
+            for k in range(len(name_i)):
+                if 'n' in name_i[k]:
+                    var = samples[name_i[k]][j]
+                    vars.append(var)
+                else:
+                    var = samples[name_i[k]][j] * value_i[k]
+                    vars.append(var)
+            BI_data = function_i(vars, freq)
+            if plot:
                 ax.plot(np.log10(freq), -BI_data.imag, marker='.', color='grey', alpha=0.5)
-                sep_mape_imag = float(MAPE_calculator(Zimag, BI_data.imag))
-                sep_mape_imag_list.append(sep_mape_imag)
-                sep_r2_imag = float(r2_calculator(Zimag, BI_data.imag))
-                sep_r2_imag_list.append(sep_r2_imag)
+            sep_mape_imag = float(MAPE_calculator(Zimag, BI_data.imag))
+            sep_mape_imag_list.append(sep_mape_imag)
+            sep_r2_imag = float(r2_calculator(Zimag, BI_data.imag))
+            sep_r2_imag_list.append(sep_r2_imag)
 
-            avg_mape_imag = np.array(sep_mape_imag_list).mean()
-            avg_r2_imag = np.array(sep_r2_imag_list).mean()
+        avg_mape_imag = np.array(sep_mape_imag_list).mean()
+        avg_r2_imag = np.array(sep_r2_imag_list).mean()
+        if plot:
             print(f"Posterior imag part's fit: MAPE = {avg_mape_imag}; R2 = {avg_r2_imag}")
-            Posterior_r2_imag.append(avg_r2_imag)
-            Posterior_mape_imag.append(avg_mape_imag)
+        Posterior_r2_imag.append(avg_r2_imag)
+        Posterior_mape_imag.append(avg_mape_imag)
+        if plot:
             ax.plot(np.log10(freq), -BI_data.imag, marker='.', ms=15, color='grey', alpha=0.5, label='Predictive EIS')
             ax.plot(np.log10(freq), -Zimag, '--', marker='o', c='b', alpha=0.9, ms=8, label='Ground Truth EIS')
 
@@ -1942,50 +2084,70 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
             plt.legend()
             plt.show()
 
-            # posterior predictions
+        # posterior predictions
+        if plot:
             print(f"{circuit_name_i}:Posterior predictions")
-
             _, ax = plt.subplots()
-            sep_mape_list = []
-            sep_r2_list = []
-            for j in range(100):
-                vars = []
-                for k in range(len(name_i)):
-                    if 'n' in name_i[k]:
-                        var = samples[name_i[k]][j]
-                        vars.append(var)
-                    else:
-                        var = samples[name_i[k]][j] * value_i[k]
-                        vars.append(var)
-                BI_data = function_i(vars, freq)
+
+        sep_mape_list = []
+        sep_r2_list = []
+        for j in range(100):
+            vars = []
+            for k in range(len(name_i)):
+                if 'n' in name_i[k]:
+                    var = samples[name_i[k]][j]
+                    vars.append(var)
+                else:
+                    var = samples[name_i[k]][j] * value_i[k]
+                    vars.append(var)
+            BI_data = function_i(vars, freq)
+            if plot:
                 ax.plot(BI_data.real, -BI_data.imag, color='grey', marker='.', alpha=0.5)
-                sep_mape = float(MAPE_calculator(Zreal + 1j * Zimag, BI_data))
-                sep_mape_list.append(sep_mape)
-                sep_r2 = float(r2_calculator(Zreal + 1j * Zimag, BI_data))
-                sep_r2_list.append(sep_r2)
+            sep_mape = float(MAPE_calculator(Zreal + 1j * Zimag, BI_data))
+            sep_mape_list.append(sep_mape)
+            sep_r2 = float(r2_calculator(Zreal + 1j * Zimag, BI_data))
+            sep_r2_list.append(sep_r2)
 
-            # avg_mse = np.array(sep_mse_list).mean()
-            avg_mape = np.array(sep_mape_list).mean()
-            avg_r2 = np.array(sep_r2_list).mean()
+        # avg_mse = np.array(sep_mse_list).mean()
+        avg_mape = np.array(sep_mape_list).mean()
+        avg_r2 = np.array(sep_r2_list).mean()
+        if plot:
             print(f"Posterior fit: MAPE = {avg_mape}; R2 = {avg_r2}")
-            Posterior_r2.append(avg_r2)
-            Posterior_mape.append(avg_mape)
+        Posterior_r2.append(avg_r2)
+        Posterior_mape.append(avg_mape)
 
-            ax.plot(BI_data.real, -BI_data.imag, marker='.', ms=15, color='grey', alpha=0.5, label='Predictive EIS')
-            ax.plot(Zreal, -Zimag, '--', marker='o', c='b', alpha=0.9, ms=8, label='Ground Truth EIS')
+        if plot:
+            #             ax.plot(BI_data.real, -BI_data.imag ,marker='.',ms=15,color='grey', alpha=0.5,label='Predictive EIS')
+            #             ax.plot(Zreal,-Zimag,'--',marker='o',c='b',alpha=0.9,ms=8,label = 'Ground Truth EIS')
+            ax.plot(BI_data.real, -BI_data.imag, marker='.', ms=15, color='grey', alpha=0.5, label='Predictions')
+            ax.plot(Zreal, -Zimag, '--', marker='o', c='b', alpha=0.9, ms=8, label='Ground Truth')
             ax.set_xlabel("real impedance ")
             ax.set_ylabel("imag impedance")
             ax.set_title("Posterior predictive checks")
             if save:
                 plt.savefig(f'Posterior prediction.png', dpi=300)
-            plt.legend()
+            plt.legend(loc='upper left', fontsize=18)
             plt.show()
 
-            # Pair relationship
+        #         Pair relationship
+        if plot:
             az.plot_pair(mcmc_i, var_names=name_i)
             if save:
                 plt.savefig(f'Pair relationship plot_{circuit_name_i}.png', dpi=300)
             plt.show()
+
+        #         estimate posterior distribution
+        if any(len(result[0].lines[0].get_xydata().T[0]) == 2 for result in posterior_dist[:]):
+            posterior_mark = 'F'
+        else:
+            posterior_mark = posterior_evaluation(posterior_dist)
+        posterior_shape.append(posterior_mark)
+
+        r_hats = []
+        for i in range(len(name_i)):
+            r_hats.append(summary(mcmc_i.get_samples(), prob=0.94, group_by_chain=False)[f'{name_i[i]}']['r_hat'])
+        posterior_rhat = np.mean(r_hats)
+        consistency.append(posterior_rhat)
 
         for i in range(2):
             os.chdir(os.path.abspath(os.path.dirname(os.getcwd())))
@@ -2001,13 +2163,20 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
     df['Priors_prediction'] = Prior_predictions
     df['Posterior_prediction'] = Posterior_predictions
     df['AIC Value'] = AIC
+    df['Divergences'] = divergences
+    df['Consistency'] = consistency
+    df['Posterior_shape'] = posterior_shape
     df['Posterior_mean_r2'] = Posterior_r2
     df['Posterior_mean_mape'] = Posterior_mape
     df['Posterior_mean_r2_real'] = Posterior_r2_real
     df['Posterior_mean_mape_real'] = Posterior_mape_real
     df['Posterior_mean_r2_imag'] = Posterior_r2_imag
     df['Posterior_mean_mape_imag'] = Posterior_mape_imag
+
+    df = model_evaluation(df)
+
     df_dict = df.to_dict()
+    os.chdir(current_path)
     if save:
         with open(f'{folder_name}//results.pkl', 'wb') as handle:
             dill.dump(df_dict, handle)
@@ -2052,12 +2221,12 @@ def EIS_auto(impedance: 'np.array', freq: 'np.array', data_path: 'string', iter_
     ec, jl_df, jl_pd, jl_Base = import_julia()
 
     # preprocessing + store preprocessed data
-    print('Data_processing')
+    print('---------------Data_processing---------------')
     data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, data_path)
     path_data_preprocessed = save_processed_data(input_name=data_path, data_stored=data_processed)
 
     # call julia program
-    print('ECM generation in process')
+    print('---------------ECM generation in process---------------')
     df_results = ECM_generation(processed_data=data_processed, times=iter_number)
     # an alternative method: direcly call julia script - this might be faster
     # run_julia = j.include('test_julia.jl')
@@ -2076,6 +2245,7 @@ def EIS_auto(impedance: 'np.array', freq: 'np.array', data_path: 'string', iter_
     new_df = calculate_length(new_df)
     new_df = split_variables(new_df)
     results = Bayesian_inference(data=data_processed, data_path=data_path, df=new_df, ECM_figure=plot_ECM)
+
     return results
 
 
@@ -2111,12 +2281,12 @@ def EIS_auto_script(impedance: 'np.array', freq: 'np.array', data_path: 'string'
     ec, jl_df, jl_pd, jl_Base = import_julia()
 
     # preprocessing + store preprocessed data
-    print('Data_processing')
+    print('---------------Data_preprocessing---------------')
     data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, data_path)
     path_data_preprocessed = save_processed_data(input_name=data_path, data_stored=data_processed)
 
     # ECM generation
-    print('ECM generation in process')
+    print('---------------ECM generation in process---------------')
     # an alternative method: direcly call julia script - this might be faster
     run_julia = j.include('test_julia.jl')
 
@@ -2142,9 +2312,24 @@ if __name__ == '__main__':
     # define the path of julia program
     j = set_julia(r"D:\Julia-1.7.2\bin\julia.exe")
 
+    # initialize the julia environment
+    # initialize_julia()
+
     # set the parameter of plots
     set_parameter()
 
+    # Load the EIS data and get access to the impedance and frequencies
+    data_path = "Test_data.txt"
+    df = load_data(data_path)
 
+    frequencies = np.array(df["freq/Hz"]).astype(float)
+    reals = np.array(df["Re(Z)/Ohm"]).astype(float)
+    imags = -np.array(df["-Im(Z)/Ohm"]).astype(float)
+
+    measurements = reals + imags * 1j
+
+    # Analysis board
+    results = EIS_auto(impedance=measurements, freq=frequencies, data_path=data_path, iter_number=100)
+    print(results)
 
 
