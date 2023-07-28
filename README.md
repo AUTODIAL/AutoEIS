@@ -93,3 +93,5 @@ ae.EIS_auto(impedance=measurements,freq=frequencies,data_path=data_path,iter_num
 An example that demonstrate how to use AutoEis is attached [here](https://github.com/AUTODIAL/Auto_Eis/blob/main/Example_AutoEIS.ipynb). 
 
 *The graphysical user interface for a more friendly interaction is under development. Please be patient :)
+
+*Also the codes is still a bit rough for the current moment, but it is under constant improvement. Any feedback/suggestions would be greatly appreciated! 
