@@ -94,4 +94,26 @@ An example that demonstrate how to use AutoEis is attached [here](https://github
 
 *The graphysical user interface for a more friendly interaction is under development. Please be patient :)
 
-*Also the codes is still a bit rough for the current moment, but it is under constant improvement. Any feedback/suggestions would be greatly appreciated! 
+*Also the codes is still a bit rough for the current moment, but it is under constant improvement. Any feedback/suggestions would be greatly appreciated!
+
+# Acknowledgement
+he authors extend their heartfelt gratitude to the following individuals for their invaluable guidance and support throughout the development of this work:
+
+- Prof. Jason Hattrick-Simpers
+- Dr. Robert Black
+- Dr. Debashish Sur
+- Dr. Parisa Karimi
+- Dr. Brian DeCost
+- Dr. Kangming Li
+- Prof. John R. Scully
+
+The authors also wish to express their sincere appreciation to the following experts for engaging in technical discussions and providing valuable feedback:
+
+- Dr. Shijing Sun
+- Prof. Keryn Lian
+- Dr. Alvin Virya
+- Dr. Austin McDannald
+
+Special thanks go to Prof. John R. Scully and Dr. Debashish Sur for graciously allowing us to utilize their corrosion data as an illustrative example to showcase the functionality of AutoEIS.
+
+Their contributions have been immensely helpful in shaping this research, and their unwavering support is deeply appreciated.
