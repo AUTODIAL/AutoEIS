@@ -2,7 +2,7 @@
 ------------
 AutoEis is a Python package to automatically propose statistical plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradations.
 
-Please be aware that the current version is only the beta test and has not been formally realized. If you find any bug and any suggestions, please [file an issue](https://github.com/AUTODIAL/Auto_Eis/issues) or directly [pull requests](https://github.com/AUTODIAL/Auto_Eis/pulls). We would really appreciate any contributions from our commmunity. 
+Please be aware that the current version is still under development and has not been formally realized. If you find any bug and any suggestions, please [file an issue](https://github.com/AUTODIAL/Auto_Eis/issues) or directly [pull requests](https://github.com/AUTODIAL/Auto_Eis/pulls). We would really appreciate any contributions from the commmunity. 
 
 ## Installation
 ---------------
@@ -44,7 +44,7 @@ AutoEis requires:
 ------------
 The schematic workflow of AutoEis is shown below:
 ![Workflow](https://github.com/AUTODIAL/Auto_Eis/blob/main/AutoEis_workflow.png)
-It contains: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference and model evaluation process. Through this workflow, AutoEis can prioritize the statistical optimal ECM and also retains suboptimal models with lower priority for subsequent expert inspection.
+It contains: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference and model evaluation process. Through this workflow, AutoEis can prioritize the statistical optimal ECM and also retains suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be founded in the ![paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta)
 
 ## Usage
 -------------
