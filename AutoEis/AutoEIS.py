@@ -1908,7 +1908,7 @@ def Bayesian_inference(data: 'pd.DataFrame', df: 'pd.DataFrame', data_path: 'str
 
         kernel = NUTS(model_i, target_accept_prob=0.8)
         num_samples = 10000
-        mcmc_i = MCMC(kernel, num_warmup=2000, num_samples=num_samples, num_chains=1)
+        mcmc_i = MCMC(kernel, num_warmup=1000, num_samples=num_samples, num_chains=1)
         mcmc_i.run(rng_key_, values=value_i, func=function_i, true_data=data, error=relative_error_accepted)
 
         # Results
