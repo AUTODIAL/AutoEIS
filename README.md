@@ -43,7 +43,7 @@ AutoEis requires:
 ## Workflow
 ------------
 The schematic workflow of AutoEis is shown below:
-![Workflow](https://github.com/AUTODIAL/Auto_Eis/blob/main/AutoEis_workflow.png)
+![Workflow](https://github.com/AUTODIAL/AutoEIS/blob/main/static/workflow.png)
 It contains: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference and model evaluation process. Through this workflow, AutoEis can prioritize the statistical optimal ECM and also retains suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be founded in the ![paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta)
 
 ## Usage
