@@ -1,11 +1,9 @@
 # AutoEIS
-------------
 AutoEIS is a Python package that automatically proposes statistically plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradation.
 
 Please be aware that the current version is still under development and has not been formally released. If you find any bugs or have any suggestions, please file an [issue](https://github.com/AUTODIAL/AutoEIS/issues) or directly submit a [pull request](https://github.com/AUTODIAL/AutoEIS/pulls). We would greatly appreciate any contributions from the community.
 
 ## Installation
----------------
 The easiest way to install this package is using pip install from [pypi](https://pypi.org/project/autoeis/):
 
 ```bash
@@ -13,7 +11,6 @@ pip install autoeis
 ```
 
 ## Dependencies
----------------
 The circuits generation is realized based on the julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. It requires a installation of [Julia programming language](https://julialang.org/).
 
 AutoEIS depends on the following libraries:
@@ -42,24 +39,22 @@ AutoEIS depends on the following libraries:
 - StringEncodings
 
 ## Workflow
-------------
 The schematic workflow of AutoEis is shown below:
 ![AutoEIS workflow](./static/workflow.png)
 It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference, and the model evaluation process. Through this workflow, AutoEis can prioritize the statistically optimal ECM and also retain suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be found in the [paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta).
 
 ## Usage
--------------
 To enable interaction between Python and Julia, you must first set the Julia executable path. The default location of the Julia executable varies depending on the operating system you are using. Below are the common default locations for each supported OS:
 
-- Windows: *C:\Users\<username>\AppData\Local\Julia-<version>\bin*
-- macOS: */Applications/Julia-<version>.app/Contents/Resources/julia/bin*
-- Linux: */usr/local/julia-<version>/bin*
+- Windows: `C:\Users\<username>\AppData\Local\Julia-<version>\bin`
+- macOS: `/Applications/Julia-<version>.app/Contents/Resources/julia/bin`
+- Linux: `/usr/local/julia-<version>/bin`
 
 Please note that `<version>` refers to the specific version of Julia you have installed, and `<username>` is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command `which julia` (for Unix-based systems) or `where julia` (for Windows). This will display the full path of the Julia executable file.
 
 ```python
 import AutoEis as ae
-j = ae.set_julia (r"D:\Julia-1.7.2\bin\julia.exe")
+j = ae.set_julia(r"D:\Julia-1.7.2\bin\julia.exe")
 ```
 
 Then by calling the function `initialize_julia()`, AutoEIS will automatically install Julia's dependencies. This step is only required the first time you use AutoEIS.
@@ -75,7 +70,7 @@ Now, you're all set. You can load your data and perform all the analyses using j
 ae.set_parameter()
 
 # Load the EIS data
-data_path = "Test_data.txt"
+data_path = "test_data.txt"
 df = ae.load_data(data_path)
 frequencies = ...
 reals = ...
