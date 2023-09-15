@@ -1,4 +1,4 @@
-from .AutoEIS import *
+from ._funcs import *
 
 
 __version__ = "0.0.15"
