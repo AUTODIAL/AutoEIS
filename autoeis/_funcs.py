@@ -210,9 +210,9 @@ def plot_EIS(
         fig, ax = plt.subplots(figsize=(5, 3.5), dpi=300)
 
         # Magnitude plot
-        ax.scatter(np.log10(frequencies), magnitude, c="b", label="Magnitude")
+        ax.scatter(np.log10(frequencies), magnitude, c="b", label="magnitude")
         ax.set_xlabel("log(freq)")
-        ax.set_ylabel("Magnitude")
+        ax.set_ylabel("magnitude")
         ax.set_title("Bode plot")
         # Phase plot
         ax2 = ax.twinx()
@@ -259,9 +259,8 @@ def find_ohmic_resistance(
         dirStr, ext = os.path.splitext(fname)
         folder_name = dirStr.split("\\")[-1]
         mkdir(folder_name)
-        with open(
-            f"{folder_name}\\ohmic_resistance = {round(ohmic_resistance, 4)}.txt", "w"
-        ) as f:
+        saveto = os.path.join(folder_name, "ohmic_resistance.txt")
+        with open(saveto, "w") as f:
             f.write(f"ohmic resistance = {ohmic_resistance}")
 
     return ohmic_resistance
@@ -374,11 +373,12 @@ def pre_processing(
     plt.plot(freq, res_imag, label="delta Im")
     plt.plot(freq, res_real, label="delta Re")
     plt.xlabel("freq (Hz)")
-    plt.ylabel("Delta %")
+    plt.ylabel("delta %")
     plt.xscale("log")
-    plt.title("Lin-KK Validation")
+    plt.title("Lin-KK validation")
     plt.legend()
-    plt.savefig(f"{folder_name}\\Lin-KK Validation.png", dpi=300)
+    saveto = os.path.join(folder_name, "Lin-KK validation.png")
+    fig.savefig(saveto, dpi=300)
 
     # Need to set a threshold limit for when to filter out the noisy data
     # of the residuals threshold = 0.05 # USER DEFINE!!!
@@ -425,7 +425,7 @@ def pre_processing(
         Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
         threshold += 0.01
 
-    print(f"ohmic_resistance = {ohmic_resistance}")
+    print(f"ohmic resistance = {ohmic_resistance}")
 
     # Plot the data to see how the filter performed
     fig, axes = plt.subplots(1, 3, figsize=(15, 3.5), dpi=300)
@@ -1871,8 +1871,8 @@ def Bayesian_inference(
         mkdir(folder_name + f"\\{circuit_name_i}")
         os.chdir(folder_name + f"\\{circuit_name_i}")
 
-        print(f"----------Circuit {i}:{circuit_name_i}--------------")
-        print(f"Circuit elements: {name_i})  \nValues: ({value_i})")
+        print(f"> Circuit {i}: {circuit_name_i}")
+        print(f"Elements: ({name_i})\nValues: ({value_i})")
 
         if plot:
             if ECM_figure:
@@ -1881,40 +1881,40 @@ def Bayesian_inference(
         ECM_data = function_i(value_i, freq)
         ECMs_data.append(ECM_data)
 
-        print("Julia circuit's fitting")
+        print("> Julia circuit's fitting")
 
         r2_value = float(r2_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"r2_value:{r2_value}")
+        print(f"  r2_value:{r2_value}")
         R2_list.append(r2_value)
 
         r2_real = r2_calculator(Zreal, ECM_data.real)
-        print(f"r2_real_part:{r2_real}")
+        print(f"  r2_real_part:{r2_real}")
         R2_real_list.append(r2_real)
         r2_imag = r2_calculator(Zimag, ECM_data.imag)
-        print(f"r2_imag_part:{r2_imag}")
+        print(f"  r2_imag_part:{r2_imag}")
         R2_imag_list.append(r2_imag)
 
         MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"MSE_value:{MSE_value}")
+        print(f"  MSE_value:{MSE_value}")
         MSE_list.append(MSE_value)
 
         RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"RMSE_value:{RMSE_value}")
+        print(f"  RMSE_value:{RMSE_value}")
         RMSE_list.append(RMSE_value)
 
         MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"MAPE_value:{MAPE_value}")
+        print(f"  MAPE_value:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
         if plot:
-            plt.scatter(ECM_data.real, -ECM_data.imag, c="r", s=12, label="Simulated data")
-            plt.scatter(Zreal, -Zimag, c="b", s=12, label="Original data")
-            plt.xlabel("Real impedance")
-            plt.ylabel("- Imag impedance")
-            plt.title("Nyquist plots of original data and simulated data")
+            plt.scatter(ECM_data.real, -ECM_data.imag, c="r", s=12, label="simulated")
+            plt.scatter(Zreal, -Zimag, c="b", s=12, label="original")
+            plt.xlabel("Real(impedance)")
+            plt.ylabel("-Im(impedance)")
+            plt.title("Nyquist plots of original and simulated data")
             plt.legend()
             if save:
-                plt.savefig(f"Nyquist_plots_of_simulated_data.png", dpi=300)
+                plt.savefig(f"Nyquist_simulated.png", dpi=300)
             plt.show()
 
         def model_i(
@@ -1976,7 +1976,7 @@ def Bayesian_inference(
 
         # Prior distributions
         if plot:
-            print(f"{circuit_name_i}:Prior distributions with trajectories")
+            print(f"{circuit_name_i}: Prior distributions with trajectories")
             az.plot_trace(prior_prediction, var_names=name_i)
             if save:
                 plt.savefig(f"Prior distributions.png", dpi=300)
@@ -1984,7 +1984,7 @@ def Bayesian_inference(
 
         # Prior predictions
         if plot:
-            print(f"{circuit_name_i}:Prior prediction")
+            print(f"{circuit_name_i}: Prior prediction")
             _, ax = plt.subplots()
 
         prior_R2_list = []
@@ -2002,16 +2002,16 @@ def Bayesian_inference(
                 ax.plot(y.real, -y.imag, color="k", alpha=0.4)
         if plot:
             ax.plot(Zreal, -Zimag, c="b", alpha=1)
-            ax.set_xlabel("real impedance ")
-            ax.set_ylabel("imag impedance")
+            ax.set_xlabel("Real(impedance)")
+            ax.set_ylabel("Im(impedance)")
             ax.set_title("Prior predictive checks")
             if save:
-                plt.savefig(f"Prior prediction.png", dpi=300)
+                plt.savefig(f"Prior predictions.png", dpi=300)
             plt.show()
 
         # Posterior distributions
         if plot:
-            print(f"{circuit_name_i}:Posterior distributions with HDI")
+            print(f"{circuit_name_i}: Posterior distributions with HDI")
             for i in range(len(name_i)):
                 name = name_i[i]
                 value = value_i[i]
@@ -2027,21 +2027,21 @@ def Bayesian_inference(
             # #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
             # #                         posterior_HDI[i][j].set_xlim(new_lim)
             if save:
-                plt.savefig(f"Posterior prediction_with HDI.png", dpi=300)
+                plt.savefig(f"Posterior predictions with HDI.png", dpi=300)
             plt.show()
 
         # Posterior trajectories
         posterior_dist = az.plot_trace(trace, var_names=name_i)
 
         if plot:
-            print(f"{circuit_name_i}:Posterior distributions with trajectories")
+            print(f"{circuit_name_i}: Posterior distributions with trajectories")
             if save:
                 plt.savefig(f"Posterior distributions.png", dpi=300)
             plt.show()
 
         # Posterior predictions -- real part
         if plot:
-            print(f"{circuit_name_i}:Posterior predictions - real part")
+            print(f"{circuit_name_i}: Posterior predictions - real part")
             _, ax = plt.subplots()
 
         samples = mcmc_i.get_samples()
@@ -2075,37 +2075,19 @@ def Bayesian_inference(
         Posterior_mape_real.append(avg_mape_real)
 
         if plot:
-            ax.plot(
-                np.log10(freq),
-                BI_data.real,
-                marker=".",
-                ms=15,
-                color="grey",
-                alpha=0.5,
-                label="Predictive EIS",
-            )
-            ax.plot(
-                np.log10(freq),
-                Zreal,
-                "--",
-                marker="o",
-                c="b",
-                alpha=0.9,
-                ms=8,
-                label="Ground Truth EIS",
-            )
-
+            ax.plot(np.log10(freq), BI_data.real, marker=".", ms=15, color="grey", alpha=0.5, label="predictive EIS")
+            ax.plot(np.log10(freq), Zreal, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth EIS")
             ax.set_xlabel("log(freq)")
-            ax.set_ylabel("real impedance")
-            ax.set_title("Posterior predictive checks - Real parts")
+            ax.set_ylabel("Real(impedance)")
+            ax.set_title("Posterior predictive checks (Real)")
             if save:
-                plt.savefig(f"Posterior prediction_real parts.png", dpi=300)
+                plt.savefig(f"Posterior predictions (Real).png", dpi=300)
             plt.legend()
             plt.show()
 
         # Posterior predictions -- imag part
         if plot:
-            print(f"{circuit_name_i}:Posterior predictions imag")
+            print(f"{circuit_name_i}: Im(Posterior predictions)")
             _, ax = plt.subplots()
 
         sep_mape_imag_list = []
@@ -2135,37 +2117,19 @@ def Bayesian_inference(
         Posterior_r2_imag.append(avg_r2_imag)
         Posterior_mape_imag.append(avg_mape_imag)
         if plot:
-            ax.plot(
-                np.log10(freq),
-                -BI_data.imag,
-                marker=".",
-                ms=15,
-                color="grey",
-                alpha=0.5,
-                label="Predictive EIS",
-            )
-            ax.plot(
-                np.log10(freq),
-                -Zimag,
-                "--",
-                marker="o",
-                c="b",
-                alpha=0.9,
-                ms=8,
-                label="Ground Truth EIS",
-            )
-
+            ax.plot(np.log10(freq), -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictive EIS")
+            ax.plot(np.log10(freq), -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth EIS")
             ax.set_xlabel("log(freq) ")
-            ax.set_ylabel("-imag impedance")
-            ax.set_title("Posterior predictive checks - Imag parts")
+            ax.set_ylabel("-Im(impedance)")
+            ax.set_title("Posterior predictive checks (Im)")
             if save:
-                plt.savefig(f"Posterior prediction_imag parts.png", dpi=300)
+                plt.savefig(f"Posterior predictions (Im).png", dpi=300)
             plt.legend()
             plt.show()
 
         # Posterior predictions
         if plot:
-            print(f"{circuit_name_i}:Posterior predictions")
+            print(f"{circuit_name_i}: Posterior predictions")
             _, ax = plt.subplots()
 
         sep_mape_list = []
@@ -2196,25 +2160,15 @@ def Bayesian_inference(
         Posterior_mape.append(avg_mape)
 
         if plot:
-            #             ax.plot(BI_data.real, -BI_data.imag ,marker='.',ms=15,color='grey', alpha=0.5,label='Predictive EIS')
-            #             ax.plot(Zreal,-Zimag,'--',marker='o',c='b',alpha=0.9,ms=8,label = 'Ground Truth EIS')
-            ax.plot(
-                BI_data.real,
-                -BI_data.imag,
-                marker=".",
-                ms=15,
-                color="grey",
-                alpha=0.5,
-                label="Predictions",
-            )
-            ax.plot(
-                Zreal, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="Ground Truth"
-            )
-            ax.set_xlabel("real impedance ")
-            ax.set_ylabel("imag impedance")
+            # ax.plot(BI_data.real, -BI_data.imag ,marker='.',ms=15,color='grey', alpha=0.5,label='predictive EIS')
+            # ax.plot(Zreal,-Zimag,'--',marker='o',c='b',alpha=0.9,ms=8,label = 'ground truth EIS')
+            ax.plot(BI_data.real, -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictions")
+            ax.plot(Zreal, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="grount truth")
+            ax.set_xlabel("Real(impedance)")
+            ax.set_ylabel("Im(impedance)")
             ax.set_title("Posterior predictive checks")
             if save:
-                plt.savefig(f"Posterior prediction.png", dpi=300)
+                plt.savefig(f"Posterior predictions.png", dpi=300)
             plt.legend(loc="upper left", fontsize=18)
             plt.show()
 
@@ -2235,9 +2189,11 @@ def Bayesian_inference(
         r_hats = []
         for i in range(len(name_i)):
             r_hats.append(
-                summary(mcmc_i.get_samples(), prob=0.94, group_by_chain=False)[f"{name_i[i]}"][
-                    "r_hat"
-                ]
+                summary(
+                    mcmc_i.get_samples(),
+                    prob=0.94,
+                    group_by_chain=False
+                )[f"{name_i[i]}"]["r_hat"]
             )
         posterior_rhat = np.mean(r_hats)
         consistency.append(posterior_rhat)
