@@ -329,7 +329,8 @@ def pre_processing(
     axes[2].set_ylabel(r"$-Im(Z) / \Omega$")
     axes[2].set_xlabel("freq (Hz)")
     axes[2].set_title("Non-filtered")
-    plt.savefig(f"{folder_name}\\Non-filtered_Nyquist and Bode plots.png", dpi=300)
+    saveto = os.path.join(folder_name, "Non-filtered Nyquist and Bode plots.png")
+    fig.savefig(saveto, dpi=300)
     plt.show()
 
     # Filter 1 - High Frequency Region
@@ -445,7 +446,8 @@ def pre_processing(
     axes[2].set_ylabel(r"$-Im(Z) / \Omega$")
     axes[2].set_xlabel("freq (Hz)")
     axes[2].set_title("Bode plot - Imaginary Part")
-    plt.savefig(f"{folder_name}\\Filtered_Nyquist and Bode plots.png", dpi=300)
+    saveto = os.path.join(folder_name, "Filtered Nyquist and Bode plots.png")
+    fig.savefig(saveto, dpi=300)
     plt.show()
 
     if threshold != 0.06:
@@ -485,11 +487,11 @@ def save_processed_data(input_name: str, data: "pd.DataFrame") -> str:
         file_name = input_name.split(".xlsx")[0]
     elif input_name.endswith(".pkl"):
         file_name = input_name.split(".pkl")[0]
-    data.to_csv(
-        folder_name + "//" + folder_name + "_processed" + ".csv", header=None, index=False
-    )
 
-    data.to_csv("temp" + ".csv", header=None, index=False)
+    saveto = os.path.join(folder_name, f"{file_name}_processed.csv")
+    data.to_csv(saveto, header=None, index=False)
+    data.to_csv("temp.csv", header=None, index=False)
+
     return file_name + ".csv"
 
 
@@ -2176,7 +2178,7 @@ def Bayesian_inference(
         if plot:
             az.plot_pair(mcmc_i, var_names=name_i)
             if save:
-                plt.savefig(f"Pair relationship plot_{circuit_name_i}.png", dpi=300)
+                plt.savefig(f"Pair relationship plot ({circuit_name_i}).png", dpi=300)
             plt.show()
 
         #         estimate posterior distribution
@@ -2227,14 +2229,16 @@ def Bayesian_inference(
     df_dict = df.to_dict()
     os.chdir(current_path)
     if save:
-        with open(f"{folder_name}//results.pkl", "wb") as handle:
+        saveto = os.path.join(folder_name, "results.pkl")
+        with open(saveto, "wb") as handle:
             dill.dump(df_dict, handle)
 
-    #         with open(f'{data_path}_results.json','w') as file_obj:
-    #             json.dum`bp(df_dict,file_obj)
+        # with open(f'{data_path}_results.json','w') as file_obj:
+        #     json.dumbp(df_dict,file_obj)
     # load data:
     # with open('file.pkl', 'rb') as f:
     #     input_dict = dill.load(f)
+
     return df
 
 
