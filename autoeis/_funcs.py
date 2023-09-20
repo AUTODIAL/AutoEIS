@@ -2278,7 +2278,6 @@ def EIS_auto(
     # Preprocessing + store preprocessed data
     print("> Data processing...")
     data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)
-    data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)    
     path_data_preprocessed = save_processed_data(input_name=fname, data=data_processed)
 
     # Call EquivalentCircuits.jl
