@@ -2276,16 +2276,16 @@ def EIS_auto(
     ec, jl_df, jl_pd, jl_Base = import_julia()
 
     # Preprocessing + store preprocessed data
-    print("---------------Data_processing---------------")
+    print("> Data processing...")
     data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)
-    path_data_preprocessed = save_processed_data(
-        input_name=fname, data=data_processed
-    )
+    data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)    
+    path_data_preprocessed = save_processed_data(input_name=fname, data=data_processed)
 
-    # Call julia program
-    print("---------------ECM generation in process---------------")
+    # Call EquivalentCircuits.jl
+    print("> ECM generation in progress...")
     df_results = ECM_generation(data=data_processed, times=iter_number)
-    # an alternative method: direcly call julia script - this might be faster
+    if df_results is None: return
+    # Alternative: Direcly call Julia script (might be faster)
     # run_julia = j.include('test_julia.jl')
 
     # Load the results - 1.from the results file
