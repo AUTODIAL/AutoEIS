@@ -1,5 +1,6 @@
 import itertools
 import json
+import logging
 import math
 import os
 import pickle
@@ -38,6 +39,7 @@ from numpyro.infer import (
 )
 from numpyro.infer.util import log_density, log_likelihood
 
+log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 
@@ -117,7 +119,7 @@ def load_data(fname: str) -> "pd.DataFrame":
     try:
         f = open(fname)
     except FileNotFoundError:
-        print("ERROR: No such file/directory in the current folder.")
+        log.error("No such file/directory in the current folder.")
         return
     if fname.endswith(".json"):
         data = json.load(f)
@@ -135,7 +137,7 @@ def load_data(fname: str) -> "pd.DataFrame":
     try:
         return df
     except UnboundLocalError:
-        print("ERROR: Unsupported file format.")
+        log.error("Unsupported file format.")
 
 
 def plot_EIS(
@@ -415,8 +417,8 @@ def pre_processing(
         try:
             ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, fname)
         except ValueError:
-            msg = "ERROR: Ohmic resistance not found. Recheck data or increase  KK threshold."
-            print(msg)
+            msg = "Ohmic resistance not found. Recheck data or increase KK threshold."
+            log.error(msg)
         # Putting into a dataframe for use with plotting and program
         values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
         labels = ["freq", "Zreal", "Zimag"]
@@ -447,12 +449,7 @@ def pre_processing(
     plt.show()
 
     if threshold != 0.06:
-        msg = (
-            r"WARNING: The default threshold (0.05) dropped too many points"
-            r" and indicated a data-quality concern. Please be careful when"
-            f" using the filtered data. Current threshold is {threshold-0.01}"
-        )
-        print(msg)
+        log.warn(f"Default threshold ({threshold-0.01}) dropped too many points; Proceed with caution.")
 
     return Zdf_mask, ohmic_resistance, RMSE_value
 
@@ -531,7 +528,7 @@ def ECM_generation(data: "pd.DataFrame", times: int = 100, head: int = 12, save:
             ECM_solution.append(circuit_i)
     df_results = jl_pd.DataFrame(jl_df.DataFrame(ECM_solution))
     if len(df_results) == 0:
-        print("WARNING: No plausible ECM was found. Consider increasing the search space.")
+        log.warn("No plausible ECMs found. Try increasing the iterations.")
         return
     for i in range(len(df_results)):
         df_results["Parameters"][i] = jl_Base.string(df_results["Parameters"][i])
@@ -558,7 +555,7 @@ def load_results(fname: str) -> "pd.DataFrame":
 
     df_circuits = pd.read_csv(fname)
     if len(df_circuits) == 0:
-        print("ERROR: No plausible ECM was found. Consider increasing the iterations.")
+        log.error("No plausible ECMs found. Consider increasing the iterations.")
     return df_circuits
 
 
@@ -732,7 +729,6 @@ def series_filter(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
         Dataframe containing the generated ECMs without parallel capacitors (6 columns)
 
     """
-
     test_pattern = re.compile(r"\[")
     for i in range(len(df_circuits["Circuit"])):
         test_circuit = df_circuits["Circuit"][i]
@@ -1011,7 +1007,7 @@ def structure_extractor(
         elif ranks_array[indexs_lists[i][0]] == 5:
             characteristic_array[i][0] = 5
         else:
-            assert "ERROR: Circuit's too complex!"
+            log.error("Circuit is too complex")
 
         segment = np.array(sorted(circuit_array[indexs_lists[i]]))
         characteristic_array[i][1 : 1 + len(segment)] = segment.reshape(1, len(segment))
@@ -1799,7 +1795,7 @@ def Bayesian_inference(
     """
     # Determine if there's any ECM that passed post-filtering process
     if len(df) == 0:
-        print("Error: No plausible ECM founded. Please run ECM generation more times.")
+        log.error("No plausible ECMs found. Try increasing the iterations.")
 
     # Set the parameters for plots
     az.style.use("arviz-darkgrid")
