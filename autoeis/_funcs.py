@@ -1,43 +1,24 @@
 import itertools
 import json
 import logging
-import math
 import os
 import pickle
 import re
 import sys
 import warnings
-from os.path import basename
 
 import arviz as az
 import dill
-import impedance
-import jax
-import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
 import pandas as pd
-from impedance import preprocessing
 from impedance.validation import linKK
-from IPython.display import set_matplotlib_formats
-from jax import random, vmap
-from jax.scipy.special import logsumexp
+from jax import random
 from julia import Julia
-from numpyro import handlers
-from numpyro.diagnostics import hpdi
-from numpyro.infer import (
-    HMC,
-    HMCECS,
-    MCMC,
-    NUTS,
-    BarkerMH,
-    DiscreteHMCGibbs,
-    HMCGibbs,
-    Predictive,
-)
-from numpyro.infer.util import log_density, log_likelihood
+from numpyro.diagnostics import summary
+from numpyro.infer import MCMC, NUTS, Predictive
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
