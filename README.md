@@ -116,5 +116,7 @@ The authors also wish to express their sincere appreciation to the following exp
 - Prof. Keryn Lian
 - Dr. Alvin Virya
 - Dr. Austin McDannald
-
+- Dr. Fuzhan Rahmanian
+- Prof.Helge Stein
+  
 Special thanks go to Prof. John R. Scully and Dr. Debashish Sur for graciously allowing us to utilize their corrosion data as an illustrative example to showcase the functionality of AutoEIS. Their contributions have been immensely helpful in shaping this research, and their unwavering support is deeply appreciated.
