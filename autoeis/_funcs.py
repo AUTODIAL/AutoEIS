@@ -9,6 +9,7 @@ import warnings
 
 import arviz as az
 import dill
+import julia
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
@@ -24,21 +25,20 @@ log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 
-def set_julia(julia_exec_path: str):
-    """
-    Set the julia environment in python
-
+def initialize_julia_runtime(executable_path: str) -> "julia.core.LegacyJulia":
+    """Initialize the Julia runtime with the given executable path.
+    
     Parameters
     ----------
-    julia_executable_path:str
-        Path of Julia executable in your computer
-
+    executable_path : str
+        The path to the Julia executable.
+        
     Returns
     -------
-    Handle to Julia runtime
-
+    LegacyJulia
+        A handle to the initialized Julia runtime.
     """
-    return Julia(runtime=julia_exec_path, compiled_modules=False)
+    return Julia(runtime=executable_path, compiled_modules=False)
 
 
 def initialize_julia():
