@@ -249,7 +249,7 @@ def find_ohmic_resistance(
 
 def pre_processing(
     impedance: "np.ndarray", freq: "np.ndarray", threshold: float, fname: str
-) -> "Returns: pd.DataFrame / float / float":
+) -> tuple["pd.DataFrame", float, float]:
     """Pre-process impedance data by deleting data with positive imaginary part at high-freq range, and by kk validation
 
     Parameters
