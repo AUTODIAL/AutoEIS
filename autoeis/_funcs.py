@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import re
+from pathlib import Path
 from typing import Optional, Union
 
 import arviz as az
@@ -18,70 +19,66 @@ from jax import random
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
 
-import autoeis.julia_helpers
+import autoeis.utils as utils
+import autoeis.visualization as viz
 from autoeis.julia_helpers import import_julia_module, init_julia
 
+# HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
+linKK = utils.suppress_output(linKK)
 log = logging.getLogger(__name__)
 
-
-def set_mpl_style():
-    """Modifies the default plotting parameters for matplotlib."""
-    plt.rcParams["figure.figsize"] = (19.6, 10.8)
-    az.style.use("arviz-darkgrid")
-
-
-def mkdir(path):
-    """Create a new folder in the current working directory."""
-    if not os.path.exists(path):
-        os.makedirs(path)
+__all__ = [
+    "analyze_eis_data",
+    "generate_equivalent_circuits",
+    "load_eis_data",
+    "perform_bayesian_inference",
+    "preprocess_impedance_data",
+]
 
 
-def reset_storage():
-    """Resets the storage path to the current working directory."""
-    for _ in range(2):
-        os.chdir(os.path.abspath(os.path.dirname(os.getcwd())))
-
-
-def load_data(fname: str) -> "pd.DataFrame":
-    """
-    Loads the EIS data(impedance and frequency) from file.
+def load_eis_data(fname: str) -> pd.DataFrame:
+    """Load EIS (Electrochemical Impedance Spectroscopy) data from a file.
 
     Parameters
     ----------
-    fname: str
-        Path of the EIS data file
+    fname : str
+        Path to the EIS data file.
 
     Returns
-    --------
-    df: pd.DataFrame
-        Dataframe containing the impedance and frequency data
+    -------
+    pd.DataFrame
+        DataFrame containing impedance and frequency data.
 
+    Raises
+    ------
+    ValueError:
+        If the file format is not supported.
+    FileNotFoundError:
+        If the file does not exist.
     """
-    try:
-        f = open(fname)
-    except FileNotFoundError:
-        log.error("No such file/directory in the current folder.")
-        return
-    if fname.endswith(".json"):
-        data = json.load(f)
-        df = pd.DataFrame(data)
-    elif fname.endswith(".csv"):
-        df = pd.read_csv(f)
-    elif fname.endswith(".txt"):
-        df = pd.read_csv(fname, sep="\t")
-    elif fname.endswith(".xlsx"):
-        df = pd.read_excel(fname)
-    elif fname.endswith(".pkl"):
-        with open(fname, "rb") as f:
-            data = pickle.load(f)
-        df = pd.DataFrame(data)
-    try:
-        return df
-    except UnboundLocalError:
+    path = Path(fname)
+
+    if not path.exists():
+        log.error(f"No such file or directory: {path}")
+        raise FileNotFoundError(f"No such file or directory: {path}")
+
+    loaders = {
+        ".json": lambda: pd.DataFrame(json.loads(path.read_text())),
+        ".csv": lambda: pd.read_csv(path),
+        ".txt": lambda: pd.read_csv(path, sep="\t"),
+        ".xlsx": lambda: pd.read_excel(path),
+        ".pkl": lambda: pd.DataFrame(pickle.loads(path.read_bytes()))
+    }
+
+    loader = loaders.get(path.suffix)
+    if loader:
+        return loader()
+    else:
         log.error("Unsupported file format.")
+        raise ValueError("Unsupported file format.")
 
 
-def plot_EIS(
+def plot_eis(
     freq: "np.array",
     impedance: "np.array" = "",
     reals: "np.array" = "",
@@ -166,11 +163,10 @@ def plot_EIS(
 
 
 def find_ohmic_resistance(
-    reals: "np.array", imags: "np.array", fname: str, save: bool = True
-) -> "float":
-    """
-    Extracts the ohmic resistance of impedance data by doing a 5th order
-    polynomial fit (with 5% tolerance as relative error).
+    reals: np.array, imags: np.array, saveto: str = None
+) -> float:
+    """Extracts the ohmic resistance of impedance data by performing 5th
+    order polynomial fit (with 5% tolerance as relative error).
 
     Parameters:
     ----------
@@ -185,7 +181,6 @@ def find_ohmic_resistance(
     -------
     ohmic_resistance: float
         The ohmic resistance of impedance data
-
     """
     # Select the high-frequency impedance data
     high_f_real = reals[0:10]
@@ -196,88 +191,59 @@ def find_ohmic_resistance(
     # Extract the ohmic resistance
     ohmic_resistance = high_f_real[index[0]]
 
-    if save:
-        dirStr, ext = os.path.splitext(fname)
-        folder_name = dirStr.split("\\")[-1]
-        mkdir(folder_name)
-        saveto = os.path.join(folder_name, "ohmic_resistance.txt")
-        with open(saveto, "w") as f:
-            f.write(f"ohmic resistance = {ohmic_resistance}")
+    if saveto is not None:
+        np.savetxt(saveto, [ohmic_resistance])
 
     return ohmic_resistance
 
 
 def preprocess_impedance_data(
-    impedance: "np.ndarray", freq: "np.ndarray", threshold: float, fname: str
-) -> tuple["pd.DataFrame", float, float]:
-    """Preprocess impedance data by deleting those with positive imaginary part
-    at high frequency range, and by KK validation.
+    impedance: np.ndarray,
+    freq: np.ndarray,
+    threshold: float,
+    saveto: str,
+    plot: bool = False
+) -> tuple[pd.DataFrame, float, float]:
+    """Preprocess impedance data, filtering out data with a positive
+    imaginary part in high frequencies and applying KK validation.
 
     Parameters
     ----------
-    impedance: np.ndarray[complex]
-        The impedance data
-    freq: np.ndarray[float]
-        The frequencies of EIS data points
-    threshold: float
-        The parameter that controls the filtering effect of KK validation
-    fname: str
-        The storage path
+    impedance : np.ndarray[complex]
+        Impedance measurements.
+    freq : np.ndarray[float]
+        Frequencies corresponding to impedance measurements.
+    threshold : float
+        Controls the filtering effect during KK validation.
+    saveto : str
+        Path to the directory where the results will be saved.
+    plot : bool, optional
+        If True, a plot of the processed data will be generated. Default is False.
 
     Returns
     -------
-    Zdf_mask: pd.DataFrame
-        The impedance data after pre-processing
-    ohmic_resistance: float
-        The ohmic resistance of impedance data
-    RMSE_value:float
-        The mean square error between KK validated data and original data
-
+    tuple
+        - Zdf_mask (pd.DataFrame): Preprocessed impedance data.
+        - ohmic_resistance (float): Ohmic resistance extracted from impedance data.
+        - rmse (float): Root mean square error of KK validated data vs. measurements.
     """
-    # Set plotting parameters and export path
-    tick_size = 9
-    label_size = 11
+    # Make a new folder to store the results
+    EXPORT_DIR = saveto
+    utils.make_dir(EXPORT_DIR)
 
-    plt.rcParams["font.family"] = "serif"
-    plt.rcParams["mathtext.fontset"] = "dejavuserif"
-    plt.rcParams["xtick.labelsize"] = tick_size
-    plt.rcParams["ytick.labelsize"] = tick_size
-    plt.rcParams["axes.labelsize"] = label_size
-    plt.rcParams["legend.fontsize"] = tick_size - 1
-
-    # Set the storage folder
-    dirStr, ext = os.path.splitext(fname)
-    folder_name = dirStr.split("\\")[-1]
-    mkdir(folder_name)
-
-    # Load the data
+    # Fetch the real and imaginary part of the impedance data
     Re_Z = impedance.real
     Im_Z = impedance.imag
-    # Set plotting parameters for the non-filtered data
-    fig, axes = plt.subplots(1, 3, figsize=(15, 3.5), dpi=300)
 
-    # Plot the non-filtered plots
-    axes[0].scatter(Re_Z, -Im_Z, s=1.5)
-    axes[0].set_xlabel(r"$Re(Z) / \Omega$")
-    axes[0].set_ylabel(r"$-Im(Z) / \Omega$")
-    axes[0].set_title("Non-filtered")
-    axes[1].scatter(freq, Re_Z, s=1.5)
-    axes[1].set_xscale("log")
-    axes[1].set_xlabel("freq (Hz)")
-    axes[1].set_ylabel(r"$Re(Z) / \Omega$")
-    axes[1].set_title("Non-filtered")
-    axes[2].scatter(freq, -Im_Z, s=1.5)
-    axes[2].set_xscale("log")
-    axes[2].set_ylabel(r"$-Im(Z) / \Omega$")
-    axes[2].set_xlabel("freq (Hz)")
-    axes[2].set_title("Non-filtered")
-    saveto = os.path.join(folder_name, "Non-filtered Nyquist and Bode plots.png")
-    fig.savefig(saveto, dpi=300)
-    plt.show()
+    if plot:
+        saveto = "Non-filtered Nyquist and Bode plots.png"
+        fpath = os.path.join(EXPORT_DIR, saveto)
+        viz.plot_eis_data(Re_Z, Im_Z, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
     # Find index where phase_Zwe == minimum, remove all high frequency imag values below zero
     # Find index: 10khz - 100khz
+    # ?: What's the logic behind this?
     # BUG: ???
     try:
         pos = np.where((1000 <= freq) & (freq <= 1000000))
@@ -302,7 +268,7 @@ def preprocess_impedance_data(
     Re_Z = np.delete(Re_Z, positive_im)
     Im_Z = np.delete(Im_Z, positive_im)
     Z = np.delete(Z, positive_im)
-
+    
     # Filter 2 - Low Frequency Region
     # Lin-KK data validation to remove 'noisy' data
     # For Lin-KK, the residuals of Re(Z) and Im(Z) are what will be used as a filter.
@@ -310,23 +276,19 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK(
         freq, Z, c=0.5, max_M=100, fit_type="complex", add_cap=True
     )
-    RMSE_value = RMSE_calculator(Z, Z_linKK)
+    rmse = RMSE_calculator(Z, Z_linKK)
 
-    # Plot residuals of Lin-KK for visualization purposes.
-    plt.plot(freq, res_imag, label="delta Im")
-    plt.plot(freq, res_real, label="delta Re")
-    plt.xlabel("freq (Hz)")
-    plt.ylabel("delta %")
-    plt.xscale("log")
-    plt.title("Lin-KK validation")
-    plt.legend()
-    saveto = os.path.join(folder_name, "Lin-KK validation.png")
-    fig.savefig(saveto, dpi=300)
+    # Plot residuals of Lin-KK validation
+    if plot:
+        saveto = "Lin-KK residuals.png"
+        fpath = os.path.join(EXPORT_DIR, saveto)
+        viz.plot_linKK_residuals(freq, res_real, res_imag, saveto=fpath)
 
     # Need to set a threshold limit for when to filter out the noisy data
-    # of the residuals threshold = 0.05 # USER DEFINE!!!
+    # of the residuals threshold = 0.05 !!! USER DEFINED !!!
 
     # NOTE: 2023/05/03 modification by Runze Zhang
+    # ?: What's the logic behind this?
     Zdf_mask = np.arange(1)
 
     while len(Zdf_mask) <= 0.7 * len(Z):
@@ -358,47 +320,29 @@ def preprocess_impedance_data(
 
         # Find the ohmic resistance
         try:
-            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, fname)
+            fpath = os.path.join(EXPORT_DIR, "ohmic_resistance.txt")
+            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, saveto=fpath)
         except ValueError:
-            msg = "Ohmic resistance not found. Recheck data or increase KK threshold."
-            log.error(msg)
-        # Putting into a dataframe for use with plotting and program
+            log.error("Ohmic resistance not found. Check data or increase KK threshold.")
+
+        # Convert the data to a dataframe for easier manipulation
         values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
         labels = ["freq", "Zreal", "Zimag"]
         Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
         threshold += 0.01
 
-    print(f"ohmic resistance = {ohmic_resistance}")
+    log.info(f"Ohmic resistance = {ohmic_resistance}")
 
-    # Plot the data to see how the filter performed
-    fig, axes = plt.subplots(1, 3, figsize=(15, 3.5), dpi=300)
-    axes[0].scatter(Zdf_mask["Zreal"].values, -Zdf_mask["Zimag"].values, s=1.5)
-    # if index == 0:
-    #    axes[0].scatter(Re_Z_mask, fz(Re_Z_mask),s=1.5,c='r')
-    axes[0].set_xlabel(r"$Re(Z) / \Omega$")
-    axes[0].set_ylabel(r"$-Im(Z) / \Omega$")
-    axes[0].set_title("Nyquist Plot")
-    axes[1].scatter(Zdf_mask["freq"].values, Zdf_mask["Zreal"].values, s=1.5)
-    axes[1].set_xscale("log")
-    axes[1].set_xlabel("freq (Hz)")
-    axes[1].set_ylabel(r"$Re(Z) / \Omega$")
-    axes[1].set_title("Bode plot - Real part")
-    axes[2].scatter(Zdf_mask["freq"].values, -Zdf_mask["Zimag"].values, s=1.5)
-    axes[2].set_xscale("log")
-    axes[2].set_ylabel(r"$-Im(Z) / \Omega$")
-    axes[2].set_xlabel("freq (Hz)")
-    axes[2].set_title("Bode plot - Imaginary Part")
-    saveto = os.path.join(folder_name, "Filtered Nyquist and Bode plots.png")
-    fig.savefig(saveto, dpi=300)
-    plt.show()
+    # Plot the filtered Nyquist and Bode plots
+    if plot:
+        saveto = os.path.join(EXPORT_DIR, "Filtered Nyquist and Bode plots.png")
+        viz.plot_eis_data(Re_Z_mask, Im_Z_mask, freq_mask, saveto=saveto)
 
+    # ?: What's the logic behind this?
     if threshold != 0.06:
-        log.warn(
-            f"Default threshold ({threshold-0.01}) dropped too many points. "
-            " Proceed with caution."
-        )
+        log.warn(f"Default threshold ({threshold-0.01}) dropped too many points.")
 
-    return Zdf_mask, ohmic_resistance, RMSE_value
+    return Zdf_mask, ohmic_resistance, rmse
 
 
 def generate_equivalent_circuits(
@@ -454,9 +398,8 @@ def generate_equivalent_circuits(
     return circuits_df
 
 
-def load_results(fname: str) -> "pd.DataFrame":
-    """
-    Loads the ECMs generated by the Julia program and converts it to a dataframe.
+def load_results(fname: str) -> pd.DataFrame:
+    """Load the generated ECMs and convert to a dataframe.
 
     Parameters
     ----------
@@ -466,30 +409,26 @@ def load_results(fname: str) -> "pd.DataFrame":
     Returns:
     --------
     df_circuits: pd.DataFrame
-        Dataframe containing the generated ECMs (2 columns)
-
+        Dataframe containing ECMs (2 columns)
     """
-
     df_circuits = pd.read_csv(fname)
     if len(df_circuits) == 0:
         log.error("No plausible ECMs found. Consider increasing the iterations.")
     return df_circuits
 
 
-def split_components(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """
-    Splits all the components and their corresponding values of each ECM.
+def split_components(df_circuits: pd.DataFrame) -> pd.DataFrame:
+    """Split circuit components and their values for each ECM in the dataframe.
 
     Parameters
     ----------
     df_circuits: pd.DataFrame
-        Dataframe containing the generated ECMs (2 columns)
+        Dataframe containing ECMs (2 columns)
 
     Returns
     -------
     df_circuits: pd.DataFrame
-        Dataframe containing the generated ECMs (6 columns)
-
+        Dataframe containing ECMs (6 columns)
     """
     # Define some regular expression pattern to separate each kind of elements
     resistor_p = re.compile(r"[R][0-9][a-z]? = [0-9]*\.[0-9]*")
@@ -522,22 +461,19 @@ def split_components(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     return df_circuits
 
 
-def capacitance_filter(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """
-    Excludes ideal capacitors from the circuits.
+def capacitance_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
+    """Exclude ideal capacitors from the circuits dataframe.
 
     Parameters
     ----------
     df_circuits: pd.DataFrame
-       Dataframe containing the generated ECMs (6 columns)
+       Dataframe containing ECMs (6 columns)
 
     Returns
     -------
     df_circuits: pd.DataFrame
-       Dataframe containing the generated ECMs without ideal capacitors (6 columns)
-
+       Dataframe containing ECMs without ideal capacitors (6 columns)
     """
-
     for i in range(len(df_circuits["Capacitors"])):
         if df_circuits["Capacitors"][i] != []:
             df_circuits.drop([i], inplace=True)
@@ -575,26 +511,21 @@ def find_series_elements(circuit: str) -> str:
     return series_circuit
 
 
-def ohmic_resistance_filter(
-    df_circuits: "pd.DataFrame", ohmic_resistance: float
-) -> "pd.DataFrame":
-    """
-    Extracts the ohmic resistance of each circuit and filters the circuits
-    according to the values (with 15% buffer).
+def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) -> pd.DataFrame:
+    """Extracts the ohmic resistance of each circuit and filters those
+    that are not within 15% of the ohmic resistance of the EIS data.
 
     Parameters
     ----------
     df_circuits: pd.DataFrame
-       Dataframe containing the generated ECMs (6 columns)
-
+       Dataframe containing ECMs (6 columns)
     ohmic_resistance: float
         The ohmic resistance of the given EIS data
 
     Returns
     -------
     df_circuits: pd.DataFrame
-        Dataframe containing the generated ECMs with correct ohmic resistance (6 columns)
-
+        Dataframe containing ECMs filtered based on ohmic resistance (6 columns)
     """
 
     for i in range(len(df_circuits["Circuit"])):
@@ -937,20 +868,20 @@ def structure_extractor(
     return characteristic_array
 
 
-def precise_rank_the_structure(circuit_array: "np.array") -> "np.array":
-    """Rank each component in given circuits according to its 'complexity' in a more precise way (defined by how many parallel structures it's in)
+def precise_rank_the_structure(circuit_array: np.array) -> np.array:
+    """Rank each component in given circuits according to its 'complexity'
+    defined by how many parallel structures it's nested in.
 
-    Parameter:
+    Parameters
     ----------
     circuit_array: np.array
         the nparray that stores the circuit configurations
 
-    Return:
+    Returns
     -------
     ranks_array: np.array
         the nparray that stores the level information of given circuits
     """
-
     ranks_array = np.zeros([1, len(circuit_array)])
     ranker = 0
     for i in range(len(circuit_array)):
@@ -973,9 +904,8 @@ def precise_rank_the_structure(circuit_array: "np.array") -> "np.array":
     return ranks_array[0]
 
 
-def precise_extractor(circuit_array: "np.ndarray", precise_ranks_array: "np.ndarray") -> list:
-    """
-    Extracts the index information of each level circuit according to
+def precise_extractor(circuit_array: np.ndarray, precise_ranks_array: np.ndarray) -> list:
+    """Extracts the index information of each level circuit according to
     ranking array in a more precise way.
 
     Parameters
@@ -989,9 +919,7 @@ def precise_extractor(circuit_array: "np.ndarray", precise_ranks_array: "np.ndar
     -------
     level_lists: list
         The list that stores the index information of each level circuit
-
     """
-
     level_lists = []
     if circuit_array[0] == 5:
         # detect [
@@ -1042,8 +970,7 @@ def precise_extractor(circuit_array: "np.ndarray", precise_ranks_array: "np.ndar
 
 
 def sort_level_lists(level_lists: "list") -> "list":
-    """
-    Sorts the level lists.
+    """Sorts the level lists.
 
     Parameters
     ----------
@@ -1054,9 +981,7 @@ def sort_level_lists(level_lists: "list") -> "list":
     -------
     level_lists: list
         The sorted list that stores the index information of each level circuit
-
     """
-
     for i in range(len(level_lists)):
         level_lists[i] = sorted(level_lists[i])
     level_lists = sorted(level_lists)
@@ -1064,9 +989,8 @@ def sort_level_lists(level_lists: "list") -> "list":
 
 
 def feature_store(circuit: str) -> dict:
-    """
-    Extracts the features of a given circuit and stores them as a
-    dictionary with the following keys:
+    """Extract the features of the circuit and store them as a dictionary
+     with the following keys:
 
         - Feature 1: the component numbers (R/C/L/P/-/,/[/]) of a given circuit
         - Feature 2: the component numbers in series part of a given circuit
@@ -1082,9 +1006,7 @@ def feature_store(circuit: str) -> dict:
     -------
     characteristic_features: dict
         The dictionary that stores the above 4 characteristics of a given circuit
-
     """
-
     circuit = circuit
     circuit_array = s_to_a_convert(circuit)
     ranks_array = rank_the_structure(circuit_array)
@@ -1129,7 +1051,6 @@ def identifior(df_circuits: "pd.DataFrame") -> (list, list):
         The list that stores the strings of identical circuit configurations
     equal_lists_seq: list
         The list that stores the index of identical circuits
-
     """
     equal_lists = []
     equal_lists_seq = []
@@ -1162,8 +1083,7 @@ def identifior(df_circuits: "pd.DataFrame") -> (list, list):
 
 
 def filter(similar_circuits: "list") -> "list":
-    """
-    Filters the repeated "identical circuits list" in the list.
+    """Filter the repeated "identical circuits list" in the list.
 
     Parameters
     ----------
@@ -1175,7 +1095,6 @@ def filter(similar_circuits: "list") -> "list":
     -------
     equal_list_filtered: list
         The processed list that stores the index of
-
     """
 
     similar_circuits.sort()
@@ -1186,8 +1105,7 @@ def filter(similar_circuits: "list") -> "list":
 
 
 def circuit_expression_combine_lists(df_circuits: "pd.DataFrame") -> (list, list):
-    """
-    Identfies the identical circuits configurations by the above features.
+    """Identfy the identical circuits configurations by the above features.
 
     Parameters
     ----------
@@ -1200,7 +1118,6 @@ def circuit_expression_combine_lists(df_circuits: "pd.DataFrame") -> (list, list
         The processed list that stores the strings of identical circuit configurations
     similar_expression_index: list
         The processed list that stores the index of identical circuits
-
     """
     similar_lists = identifior(df_circuits)
     similar_expression = filter(similar_lists[0])
@@ -1210,8 +1127,7 @@ def circuit_expression_combine_lists(df_circuits: "pd.DataFrame") -> (list, list
 
 
 def component_values(input: "pd.Series") -> (list, list, list):
-    """
-    Before combination, separates the components names and values for
+    """Before combination, separates the components names and values for
     further comparison to identify identical circuit values.
 
     Parameters
@@ -1227,7 +1143,6 @@ def component_values(input: "pd.Series") -> (list, list, list):
         The list that only stores the component values
     names_lists: list
         The list that only stores the component names
-
     """
     # Delete the ( and ) in the string
     delete_p = re.compile(r"[^()]")
@@ -1272,8 +1187,7 @@ def component_values(input: "pd.Series") -> (list, list, list):
 
 
 def combine_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """
-    Combines the identical circuits.
+    """Combines the identical circuits.
 
     Parameters
     ----------
@@ -1284,7 +1198,6 @@ def combine_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     -------
     df_circuits: pd.DataFrame
         Dataframe containing filtered ECMs with mathematical expressions (r columns)
-
     """
     combined_expressions = []
     combined_values = []
@@ -1365,8 +1278,7 @@ def combine_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
 
 
 def calculate_length(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """
-    Counts how many different value sets are in identical circuits.
+    """Counts how many different value sets are in identical circuits.
 
     Parameters
     ----------
@@ -1377,7 +1289,6 @@ def calculate_length(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     -------
     df_circuits: pd.DataFrame
         Dataframe containing filtered ECMs with mathematical expressions (5 columns)
-
     """
 
     counts = []
@@ -1394,8 +1305,7 @@ def calculate_length(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
 
 
 def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """
-    Separates the value and name of each component.
+    """Separate the value and name of each component.
 
     Parameters
     ----------
@@ -1406,7 +1316,6 @@ def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     -------
     df_circuits: pd.DataFrame
         Dataframe containing filtered ECMs with mathematical expressions (7 columns)
-
     """
     # Create some lists to store the names and values for BI
     variables_names = []
@@ -1455,9 +1364,7 @@ def temperate_filter(df: "pd.DataFrame") -> "pd.DataFrame":
     -------
     df: pd.DataFrame
         Dataframe containing filtered ECMs (7 columns)
-
     """
-
     for i in range(len(df["Combined Circuits"])):
         value_set = df["Variables_values"][i]
         for j in range(len(value_set)):
@@ -1470,8 +1377,7 @@ def temperate_filter(df: "pd.DataFrame") -> "pd.DataFrame":
 
 
 def r2_calculator(y_true, y_pred):
-    """
-    Calculates of the coefficient of determintion, goodness of fit metric.
+    """Calculate of the coefficient of determintion, R^2.
 
     Parameters
     ----------
@@ -1484,7 +1390,6 @@ def r2_calculator(y_true, y_pred):
     -------
     r2: float
         The coefficient of determintion
-
     """
     sse = (abs(y_pred - y_true) ** 2).sum()
     sst = (abs(y_true - y_true.mean()) ** 2).sum()
@@ -1492,9 +1397,8 @@ def r2_calculator(y_true, y_pred):
     return r2
 
 
-def MSE_calculator(y_true: "np.ndarray", y_pred: "np.ndarray"):
-    """
-    Calculates of the mean square error, goodness of fit metric.
+def MSE_calculator(y_true: np.ndarray, y_pred: np.ndarray):
+    """Calculate of the mean square error.
 
     Parameters
     ----------
@@ -1507,15 +1411,13 @@ def MSE_calculator(y_true: "np.ndarray", y_pred: "np.ndarray"):
     -------
     MSE: float
         The mean square error
-
     """
     mse = np.array(((abs(y_true - y_pred)) ** 2)).mean()
     return mse
 
 
-def RMSE_calculator(y_true: "np.array", y_pred: "np.array") -> "float":
-    """
-    Calculates of the root mean square error, goodness of fit metric.
+def RMSE_calculator(y_true: np.array, y_pred: np.array) -> float:
+    """Calculate of the root mean square error.
 
     Parameters
     ----------
@@ -1528,7 +1430,6 @@ def RMSE_calculator(y_true: "np.array", y_pred: "np.array") -> "float":
     -------
     RMSE: float
         The root mean square error
-
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -1538,9 +1439,8 @@ def RMSE_calculator(y_true: "np.array", y_pred: "np.array") -> "float":
     return rmse
 
 
-def MAPE_calculator(y_true: "np.array", y_pred: "np.array") -> "float":
-    """
-    Calculates of the mean abosulte percentage error, goodness of fit metric.
+def MAPE_calculator(y_true: np.array, y_pred: np.array) -> float:
+    """Calculate of the mean abosulte percentage error.
 
     Parameters
     ----------
@@ -1553,7 +1453,6 @@ def MAPE_calculator(y_true: "np.array", y_pred: "np.array") -> "float":
     -------
     mean_absolute_error_percentage: float
         The mean absolute percentage error
-
     """
     error_term = abs(y_true - y_pred)
     absolute_error_percentage = error_term / abs(y_true)
@@ -1562,21 +1461,18 @@ def MAPE_calculator(y_true: "np.array", y_pred: "np.array") -> "float":
 
 
 def posterior_evaluation(posteriors):
-    """
-    Evaluates the posterior distributions according to their shapes.
+    """Evaluate the posterior distributions according to their shapes.
 
     Parameters
-    -----------
+    ----------
     posteriors: Axesubplots
         The axesubplots that record posterior distribution
 
-    Return:
-    -----------
+    Returns
+    -------
     marker: float
         Indicator of the quality of posterior distributions
-
     """
-
     marker = 0
     posterior_x = []
     posterior_y = []
@@ -1648,8 +1544,7 @@ def model_evaluation(results):
 
 
 def plot_ecm(circuit: str):
-    """
-    Visualize circuit model using lcapy.
+    """Visualize circuit model using lcapy.
 
     Parameters
     ----------
@@ -1660,7 +1555,6 @@ def plot_ecm(circuit: str):
     -------
     fig: lcapy.figure
         Handle of the circuit figure
-
     """
     from lcapy import CPE as P
     from lcapy import C, L, R
@@ -1681,15 +1575,14 @@ def plot_ecm(circuit: str):
 
 
 def perform_bayesian_inference(
-    eis_data: "pd.DataFrame",
-    ecms: "pd.DataFrame",
+    eis_data: pd.DataFrame,
+    ecms: pd.DataFrame,
     data_path: str,
     plot: bool = True,
     save: bool = True,
     draw_ecm=False,
 ) -> pd.DataFrame:
-    """
-    Given EIS data and a list of ECMs, perform Bayesian inference.
+    """Perform Bayesian inference on the ECMs based on the EIS measurements.
 
     Parameters
     ----------
@@ -1709,7 +1602,7 @@ def perform_bayesian_inference(
 
     Returns
     -------
-    df: pd.DataFrame
+    df : pd.DataFrame
         Dataframe containing the ECMs with the Bayesian inference results (12 columns)
     """
     # Determine if there's any ECM that passed post-filtering process
@@ -1787,7 +1680,7 @@ def perform_bayesian_inference(
         function_i = eval(f"lambda X,F:{expression_str_i}")
 
         # create a new folder to store these results
-        mkdir(folder_name + f"\\{circuit_name_i}")
+        utils.make_dir(folder_name + f"\\{circuit_name_i}")
         os.chdir(folder_name + f"\\{circuit_name_i}")
 
         print(f"> Circuit {i}: {circuit_name_i}")
@@ -2158,37 +2051,43 @@ def perform_bayesian_inference(
     return ecms
 
 
-def EIS_auto(
-    impedance: "np.ndarray",
-    freq: "np.ndarray",
-    fname: str,
+def analyze_eis_data(
+    impedance: np.ndarray,
+    freq: np.ndarray,
+    saveto: str,
     iters: int = 100,
-    plot_ECM: bool = False,
-) -> "pd.DataFrame":
-    """
-    The main function to automate the whole EIS analysis by ECMs+ BI.
+    plot: bool = False,
+    draw_ecm: bool = False,
+) -> pd.DataFrame:
+    """Perform automated EIS analysis by generating plausible ECMs
+    followed by Bayesian inference on component values.
 
     Parameters
     ----------
-    impedance: np.ndarray
-        The impedance data
-    freq: np.ndarray
-        The frequencies of the impedance data
-    fname: str
-        The data path of the impedance data
-    iter_number:int
-        The number of times the ECM generation is performed
-    plot_ECM:bool
-        Determine whether to plot ECM or not
+    impedance : np.ndarray
+        Impedance data.
+    freq : np.ndarray
+        Frequencies corresponding to the impedance data.
+    saveto : str
+        Path to the directory where the results will be saved.
+    iters : int, optional
+        Number of iterations for ECM generation. Default is 100.
+    plot : bool, optional
+        If True, the results will be plotted. Default is False.        
+    draw_ecm : bool, optional
+        If True, the ECM will be plotted. Default is False.
 
     Returns
     -------
     results: pd.DataFrame
-        Dataframe containing effective ECMs after filtering + BI results (12 columns)
+        Dataframe containing plausible ECMs with BI results.
     """    
     # Preprocessing + store preprocessed data
     log.info("Pre-processing EIS data using KK filter")
-    data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, 0.05, fname)
+    data, ohmic_resistance, rmse = preprocess_impedance_data(
+        impedance, freq, threshold=0.05, saveto=saveto, plot=plot
+    )
+    return
 
     # Call EquivalentCircuits.jl
     log.info("Generating equivalent circuits using GEP")
@@ -2207,7 +2106,7 @@ def EIS_auto(
     new_df = split_variables(new_df)
 
     log.info("Applying Bayesian inference on the equivalent circuits")
-    results = perform_bayesian_inference(eis_data=data, data_path=fname, ecms=new_df, draw_ecm=plot_ECM)
+    results = perform_bayesian_inference(eis_data=data, data_path=saveto, ecms=new_df, draw_ecm=draw_ecm)
 
     return results
 
@@ -2218,7 +2117,7 @@ if __name__ == "__main__":
 
     # Load EIS data
     fname = "testdata.txt"
-    df = load_data(fname)
+    df = load_eis_data(fname)
     # Fetch frequency and impedance data
     freqs = np.array(df["freq/Hz"]).astype(float)
     reals = np.array(df["Re(Z)/Ohm"]).astype(float)
@@ -2226,5 +2125,5 @@ if __name__ == "__main__":
 
     # Perform EIS analysis
     measurements = reals + imags * 1j
-    results = EIS_auto(impedance=measurements, freq=freqs, fname=fname, iters=100)
+    results = analyze_eis_data(impedance=measurements, freq=freqs, saveto=fname, iters=100)
     print(results)
