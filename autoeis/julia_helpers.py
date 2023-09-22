@@ -320,11 +320,10 @@ def _load_backend(Main):
 
 def _load_julia_module(Main, module_name):
     """Load a Julia module and return a reference to the module."""
-    import julia
+    import importlib
     try:
         Main.eval(f"using {module_name}")
     except (JuliaError, RuntimeError) as e:
         _raise_import_error(root=e) 
-    return getattr(julia, module_name)
-
-    
+    ref = importlib.import_module(f"julia.{module_name}")
+    return ref
