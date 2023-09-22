@@ -1,6 +1,8 @@
 arviz
 dill
 impedance
+ipython     # for notebook support
+ipywidgets  # for notebook support
 jax
 jaxlib
 julia
