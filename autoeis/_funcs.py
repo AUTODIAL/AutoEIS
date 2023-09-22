@@ -4,12 +4,9 @@ import logging
 import os
 import pickle
 import re
-import sys
-import warnings
 
 import arviz as az
 import dill
-import julia
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
@@ -17,67 +14,13 @@ import numpyro.distributions as dist
 import pandas as pd
 from impedance.validation import linKK
 from jax import random
-from julia import Base, Julia, Pkg
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
 
 log = logging.getLogger(__name__)
-warnings.filterwarnings("ignore")
 
 
-def initialize_julia_runtime(executable_path: str) -> "julia.core.LegacyJulia":
-    """Initialize the Julia runtime with the given executable path.
-    
-    Parameters
-    ----------
-    executable_path : str
-        The path to the Julia executable.
-        
-    Returns
-    -------
-    LegacyJulia
-        A handle to the initialized Julia runtime.
-    """
-    return Julia(runtime=executable_path, compiled_modules=False)
-
-
-def install_julia_dependencies():
-    """Installs Julia's dependencies"""
-    try:
-        # Set Python executable for Julia
-        Base.ENV["PYTHON"] = sys.executable
-        
-        # Build and install required Julia packages
-        Pkg.build("PyCall")
-        
-        # List of packages to install
-        julia_packages = [
-            "EquivalentCircuits",
-            "DelimitedFiles",
-            "StringEncodings",
-            "Pandas",
-            "DataFrames"
-        ]
-        
-        # Install packages if they are not already installed
-        for package in julia_packages:
-            if package not in Pkg.installed():
-                Pkg.add(package)
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-
-def import_julia():
-    """Imports the required packages in Julia and returns the handles."""
-    from julia import Base, DataFrames, DelimitedFiles
-    from julia import EquivalentCircuits as ec
-    from julia import Pandas, Pkg, StringEncodings
-
-    return ec, DataFrames, Pandas, Base
-
-
-def set_parameter():
+def set_mpl_style():
     """Modifies the default plotting parameters for matplotlib."""
     plt.rcParams["figure.figsize"] = (19.6, 10.8)
     az.style.use("arviz-darkgrid")
