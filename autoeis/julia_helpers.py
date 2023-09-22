@@ -162,6 +162,24 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
     return Main
 
 
+def import_backend(Main):
+    """Load EquivalentCircuits.jl, verify version and return a reference."""
+    EquivalentCircuits = import_julia_module(Main, "EquivalentCircuits")
+    _backend_version_assertion(Main)
+    return EquivalentCircuits
+
+
+def import_julia_module(Main, module_name):
+    """Load a Julia module and return a reference to the module."""
+    import importlib
+    try:
+        Main.eval(f"using {module_name}")
+    except (JuliaError, RuntimeError) as e:
+        _raise_import_error(root=e) 
+    ref = importlib.import_module(f"julia.{module_name}")
+    return ref
+
+
 def _raise_import_error(root: Exception=None):
     """Raise ImportError if Julia dependencies are not installed."""
     raise ImportError(
@@ -309,21 +327,3 @@ def _update_julia_project(Main, is_shared, io_arg):
         Main.eval(f"Pkg.resolve({io_arg})")
     except (JuliaError, RuntimeError) as e:
         _raise_import_error(root=e)
-
-
-def _load_backend(Main):
-    """Load EquivalentCircuits.jl, verify version and return a reference."""
-    EquivalentCircuits = _load_julia_module(Main, "EquivalentCircuits")
-    _backend_version_assertion(Main)
-    return EquivalentCircuits
-
-
-def _load_julia_module(Main, module_name):
-    """Load a Julia module and return a reference to the module."""
-    import importlib
-    try:
-        Main.eval(f"using {module_name}")
-    except (JuliaError, RuntimeError) as e:
-        _raise_import_error(root=e) 
-    ref = importlib.import_module(f"julia.{module_name}")
-    return ref
