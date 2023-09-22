@@ -180,6 +180,14 @@ def import_julia_module(Main, module_name):
     return ref
 
 
+def add_to_PATH(path):
+    if not os.path.exists(path):
+        raise ValueError(f"The provided path '{path}' does not exist.")
+    
+    if path not in os.environ["PATH"].split(os.pathsep):
+        os.environ["PATH"] += os.pathsep + path
+
+
 def _raise_import_error(root: Exception=None):
     """Raise ImportError if Julia dependencies are not installed."""
     raise ImportError(
