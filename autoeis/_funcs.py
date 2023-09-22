@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import re
+from typing import Optional, Union
 
 import arviz as az
 import dill
@@ -16,6 +17,9 @@ from impedance.validation import linKK
 from jax import random
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
+
+import autoeis.julia_helpers
+from autoeis.julia_helpers import import_julia_module, init_julia
 
 log = logging.getLogger(__name__)
 
@@ -2209,58 +2213,46 @@ def EIS_auto(
     -------
     results: pd.DataFrame
         Dataframe containing effective ECMs after filtering + BI results (12 columns)
-
-    """
-    # Set the plotting style
-    set_parameter()
-    ec, jl_df, jl_pd, jl_Base = import_julia()
-
+    """    
     # Preprocessing + store preprocessed data
-    data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)
-    path_data_preprocessed = save_processed_data(input_name=fname, data=data_processed)
+    log.info("Pre-processing EIS data using KK filter")
+    data, ohmic_resistance, rmse = preprocess(impedance, freq, 0.05, fname)
 
     # Call EquivalentCircuits.jl
-    print("> ECM generation in progress...")
-    df_results = ECM_generation(data=data_processed, times=iter_number)
-    if df_results is None: return
-    # Alternative: Direcly call Julia script (might be faster)
-    # run_julia = j.include('test_julia.jl')
+    log.info("Generating equivalent circuits using GEP")
+    circuits_unfiltered = generate_equivalent_circuits(data=data, iters=iters)
+    if circuits_unfiltered is None: return
 
-    # Load the results - 1.from the results file
-    # path_results = "df_results.csv"
-    # df_circuits = load_results(file_path = path_results)
-
-    # Load the results
-    df_circuits = split_components(df_results)
-    df_circuits = capacitance_filter(df_circuits)
-    df_circuits = series_filter(df_circuits)
-    df_circuits = ohmic_resistance_filter(df_circuits, ohmic_resistance)
-    df_circuits = generate_mathematical_expression(df_circuits)
-    new_df = combine_expression(df_circuits)
+    log.info("Filtering the equivalent circuits using heuristic rules")
+    circuits = split_components(circuits_unfiltered)
+    circuits = capacitance_filter(circuits)
+    circuits = series_filter(circuits)
+    circuits = ohmic_resistance_filter(circuits, ohmic_resistance)
+    circuits = generate_mathematical_expression(circuits)
+    # ?: Why do we make a new dataframe here?
+    new_df = combine_expression(circuits)
     new_df = calculate_length(new_df)
     new_df = split_variables(new_df)
-    results = Bayesian_inference(data=data_processed, data_path=fname, df=new_df, ECM_figure=plot_ECM)
+
+    log.info("Applying Bayesian inference on the equivalent circuits")
+    results = perform_bayesian_inference(eis_data=data, data_path=fname, ecms=new_df, draw_ecm=plot_ECM)
 
     return results
 
 
 if __name__ == "__main__":
-    import autoeis as ae
-
     # Initialize Julia
-    jl = ae.set_julia("/home/amin/.juliaup/bin/julia")
-    ae.initialize_julia()
-    ae.set_parameter()
+    Main = init_julia()
 
-    # Load the EIS data
+    # Load EIS data
     fname = "testdata.txt"
     df = load_data(fname)
     # Fetch frequency and impedance data
-    frequencies = np.array(df["freq/Hz"]).astype(float)
+    freqs = np.array(df["freq/Hz"]).astype(float)
     reals = np.array(df["Re(Z)/Ohm"]).astype(float)
     imags = -np.array(df["-Im(Z)/Ohm"]).astype(float)
 
     # Perform EIS analysis
     measurements = reals + imags * 1j
-    results = EIS_auto(impedance=measurements, freq=frequencies, fname=fname, iter_number=100)
+    results = EIS_auto(impedance=measurements, freq=freqs, fname=fname, iters=100)
     print(results)
