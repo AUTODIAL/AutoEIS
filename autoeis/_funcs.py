@@ -17,7 +17,7 @@ import numpyro.distributions as dist
 import pandas as pd
 from impedance.validation import linKK
 from jax import random
-from julia import Julia
+from julia import Base, Julia, Pkg
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
 
@@ -41,18 +41,31 @@ def initialize_julia_runtime(executable_path: str) -> "julia.core.LegacyJulia":
     return Julia(runtime=executable_path, compiled_modules=False)
 
 
-def initialize_julia():
+def install_julia_dependencies():
     """Installs Julia's dependencies"""
-    from julia import Base, Pkg
+    try:
+        # Set Python executable for Julia
+        Base.ENV["PYTHON"] = sys.executable
+        
+        # Build and install required Julia packages
+        Pkg.build("PyCall")
+        
+        # List of packages to install
+        julia_packages = [
+            "EquivalentCircuits",
+            "DelimitedFiles",
+            "StringEncodings",
+            "Pandas",
+            "DataFrames"
+        ]
+        
+        # Install packages if they are not already installed
+        for package in julia_packages:
+            if package not in Pkg.installed():
+                Pkg.add(package)
 
-    # Install the required Julia packages
-    Base.ENV["PYTHON"] = sys.executable
-    Pkg.build("PyCall")
-    Pkg.add("EquivalentCircuits")
-    Pkg.add("DelimitedFiles")
-    Pkg.add("StringEncodings")
-    Pkg.add("Pandas")
-    Pkg.add("DataFrames")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 def import_julia():
@@ -432,7 +445,10 @@ def pre_processing(
     plt.show()
 
     if threshold != 0.06:
-        log.warn(f"Default threshold ({threshold-0.01}) dropped too many points; Proceed with caution.")
+        log.warn(
+            f"Default threshold ({threshold-0.01}) dropped too many points. "
+            " Proceed with caution."
+        )
 
     return Zdf_mask, ohmic_resistance, RMSE_value
 
@@ -2257,7 +2273,6 @@ def EIS_auto(
     ec, jl_df, jl_pd, jl_Base = import_julia()
 
     # Preprocessing + store preprocessed data
-    print("> Data processing...")
     data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)
     path_data_preprocessed = save_processed_data(input_name=fname, data=data_processed)
 
