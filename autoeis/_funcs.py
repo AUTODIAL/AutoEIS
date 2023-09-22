@@ -1,77 +1,71 @@
 import itertools
 import json
 import logging
-import math
 import os
 import pickle
 import re
 import sys
 import warnings
-from os.path import basename
 
 import arviz as az
 import dill
-import impedance
-import jax
-import jax.numpy as jnp
+import julia
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
 import pandas as pd
-from impedance import preprocessing
 from impedance.validation import linKK
-from IPython.display import set_matplotlib_formats
-from jax import random, vmap
-from jax.scipy.special import logsumexp
-from julia import Julia
-from numpyro import handlers
-from numpyro.diagnostics import hpdi
-from numpyro.infer import (
-    HMC,
-    HMCECS,
-    MCMC,
-    NUTS,
-    BarkerMH,
-    DiscreteHMCGibbs,
-    HMCGibbs,
-    Predictive,
-)
-from numpyro.infer.util import log_density, log_likelihood
+from jax import random
+from julia import Base, Julia, Pkg
+from numpyro.diagnostics import summary
+from numpyro.infer import MCMC, NUTS, Predictive
 
 log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 
-def set_julia(julia_exec_path: str):
-    """
-    Set the julia environment in python
-
+def initialize_julia_runtime(executable_path: str) -> "julia.core.LegacyJulia":
+    """Initialize the Julia runtime with the given executable path.
+    
     Parameters
     ----------
-    julia_executable_path:str
-        Path of Julia executable in your computer
-
+    executable_path : str
+        The path to the Julia executable.
+        
     Returns
     -------
-    Handle to Julia runtime
-
+    LegacyJulia
+        A handle to the initialized Julia runtime.
     """
-    return Julia(runtime=julia_exec_path, compiled_modules=False)
+    return Julia(runtime=executable_path, compiled_modules=False)
 
 
-def initialize_julia():
+def install_julia_dependencies():
     """Installs Julia's dependencies"""
-    from julia import Base, Pkg
+    try:
+        # Set Python executable for Julia
+        Base.ENV["PYTHON"] = sys.executable
+        
+        # Build and install required Julia packages
+        Pkg.build("PyCall")
+        
+        # List of packages to install
+        julia_packages = [
+            "EquivalentCircuits",
+            "DelimitedFiles",
+            "StringEncodings",
+            "Pandas",
+            "DataFrames"
+        ]
+        
+        # Install packages if they are not already installed
+        for package in julia_packages:
+            if package not in Pkg.installed():
+                Pkg.add(package)
 
-    # Install the required Julia packages
-    Base.ENV["PYTHON"] = sys.executable
-    Pkg.build("PyCall")
-    Pkg.add("EquivalentCircuits")
-    Pkg.add("DelimitedFiles")
-    Pkg.add("StringEncodings")
-    Pkg.add("Pandas")
-    Pkg.add("DataFrames")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 def import_julia():
@@ -268,7 +262,7 @@ def find_ohmic_resistance(
 
 def pre_processing(
     impedance: "np.ndarray", freq: "np.ndarray", threshold: float, fname: str
-) -> "Returns: pd.DataFrame / float / float":
+) -> tuple["pd.DataFrame", float, float]:
     """Pre-process impedance data by deleting data with positive imaginary part at high-freq range, and by kk validation
 
     Parameters
@@ -451,7 +445,10 @@ def pre_processing(
     plt.show()
 
     if threshold != 0.06:
-        log.warn(f"Default threshold ({threshold-0.01}) dropped too many points; Proceed with caution.")
+        log.warn(
+            f"Default threshold ({threshold-0.01}) dropped too many points. "
+            " Proceed with caution."
+        )
 
     return Zdf_mask, ohmic_resistance, RMSE_value
 
@@ -2276,7 +2273,6 @@ def EIS_auto(
     ec, jl_df, jl_pd, jl_Base = import_julia()
 
     # Preprocessing + store preprocessed data
-    print("> Data processing...")
     data_processed, ohmic_resistance, RMSE = pre_processing(impedance, freq, 0.05, fname)
     path_data_preprocessed = save_processed_data(input_name=fname, data=data_processed)
 
