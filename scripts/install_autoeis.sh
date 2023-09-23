@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -i
+#!/usr/bin/env bash
 
 # The following lines are not needed if your .bashrc has them
 eval "$(pyenv init -)"
@@ -37,6 +37,10 @@ pip install --upgrade pip -q
 pip install -r "$PYTHON_DEPS" -q
 # Optional requirements
 pip install ipython ipykernel -q
+echo -e "$DONE_MSG"
+# Install AutoEIS
+echo -n "> Installing AutoEIS ... "
+pip install -e . -q
 echo -e "$DONE_MSG"
 
 # Install Julia and packages
