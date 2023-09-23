@@ -192,7 +192,7 @@ def _raise_import_error(root: Exception=None):
     """Raise ImportError if Julia dependencies are not installed."""
     raise ImportError(
         "Required dependencies are not installed or built. Run the "
-        "following command: import autoeis; autoeis.install()."
+        "following command: import autoeis; autoeis.julia_helpers.install()."
     ) from root
 
 
@@ -317,13 +317,13 @@ def _backend_version_assertion(Main):
                 f"AutoEIS backend (EquivalentCircuits.jl) version {backend_version} "
                 f"does not match expected version {expected_backend_version}. "
                 "Things may break. Please update your AutoEIS installation with "
-                "`import autoeis; autoeis.install()`."
+                "`import autoeis; autoeis.julia_helpers.install()`."
             )
     except JuliaError:  # pragma: no cover
         log.warn(
             "You seem to have an outdated version of EquivalentCircuits.jl. "
             "Things may break. Please update your AutoEIS installation with "
-            "`import autoeis; autoeis.install()`."
+            "`import autoeis; autoeis.julia_helpers.install()`."
         )
 
 
