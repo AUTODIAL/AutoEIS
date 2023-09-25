@@ -306,8 +306,9 @@ def generate_equivalent_circuits(
         return None
     
     circuits_df = pd_jl.DataFrame(df_jl.DataFrame(circuits))
-    # ?: What is this string conversion for?
-    circuits_df["Parameters"] = circuits_df["Parameters"].apply(Main.string)    
+    # TODO: Relying on circuits __str__ to fetch informatio is not robust, refactor
+    for index, param in enumerate(circuits_df["Parameters"]):
+        circuits_df.at[index, "Parameters"] = Main.string(param)
 
     if saveto is not None:
         fpath = os.path.join(saveto, "circuits_dataframe.csv")
