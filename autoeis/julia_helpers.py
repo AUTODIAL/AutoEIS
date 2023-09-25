@@ -23,6 +23,7 @@ julia_kwargs_at_initialization = None
 julia_activated_env = None
 
 log = logging.getLogger(__name__)
+# TODO: For virtualenvs see https://github.com/JuliaPy/PyCall.jl?tab=readme-ov-file#python-virtual-environments
 
 
 def install(julia_project=None, quiet=False, precompile=None):  # pragma: no cover
@@ -162,8 +163,10 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
     return Main
 
 
-def import_backend(Main):
+def import_backend(Main=None):
     """Load EquivalentCircuits.jl, verify version and return a reference."""
+    if Main is None:
+        Main = init_julia()
     EquivalentCircuits = import_julia_module(Main, "EquivalentCircuits")
     _backend_version_assertion(Main)
     return EquivalentCircuits
