@@ -1518,26 +1518,26 @@ def perform_bayesian_inference(
         print("> Julia circuit's fitting")
 
         r2_value = float(r2_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"  r2_value:{r2_value}")
+        print(f"  R²:{r2_value}")
         R2_list.append(r2_value)
 
         r2_real = r2_calculator(Zreal, ECM_data.real)
-        print(f"  r2_real_part:{r2_real}")
+        print(f"  R² (Re):{r2_real}")
         R2_real_list.append(r2_real)
         r2_imag = r2_calculator(Zimag, ECM_data.imag)
-        print(f"  r2_imag_part:{r2_imag}")
+        print(f"  R² (Im):{r2_imag}")
         R2_imag_list.append(r2_imag)
 
         MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"  MSE_value:{MSE_value}")
+        print(f"  MSW:{MSE_value}")
         MSE_list.append(MSE_value)
 
         RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"  RMSE_value:{RMSE_value}")
+        print(f"  RMSE:{RMSE_value}")
         RMSE_list.append(RMSE_value)
 
         MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"  MAPE_value:{MAPE_value}")
+        print(f"  MAPE:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
         if plot:
@@ -1934,18 +1934,23 @@ def analyze_eis_data(
 
 
 if __name__ == "__main__":
+    import numpy as np
+
+    import autoeis as ae
+    from autoeis.julia_helpers import init_julia
+
     # Initialize Julia
     Main = init_julia()
 
     # Load EIS data
-    fname = "testdata.txt"
-    df = load_eis_data(fname)
+    fname = "assets/test_data.txt"
+    df = ae.io.load_eis_data(fname)
     # Fetch frequency and impedance data
-    freqs = np.array(df["freq/Hz"]).astype(float)
-    reals = np.array(df["Re(Z)/Ohm"]).astype(float)
-    imags = -np.array(df["-Im(Z)/Ohm"]).astype(float)
+    freq = np.array(df["freq/Hz"]).astype(float)
+    Re_Z = np.array(df["Re(Z)/Ohm"]).astype(float)
+    Im_Z = -np.array(df["-Im(Z)/Ohm"]).astype(float)
 
     # Perform EIS analysis
-    measurements = reals + imags * 1j
-    results = analyze_eis_data(impedance=measurements, freq=freqs, saveto=fname, iters=100)
+    Z = Re_Z + Im_Z * 1j
+    results = ae.analyze_eis_data(impedance=Z, freq=freq, saveto=fname, iters=100)
     print(results)
