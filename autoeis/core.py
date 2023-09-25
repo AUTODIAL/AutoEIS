@@ -1898,8 +1898,8 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
 
 
 def analyze_eis_data(
-    impedance: np.ndarray,
-    freq: np.ndarray,
+    impedance: np.ndarray[complex],
+    freq: np.ndarray[float],
     saveto: str,
     iters: int = 100,
     plot: bool = False,
@@ -1910,9 +1910,9 @@ def analyze_eis_data(
 
     Parameters
     ----------
-    impedance : np.ndarray
+    impedance : np.ndarray[complex]
         Impedance data.
-    freq : np.ndarray
+    freq : np.ndarray[float]
         Frequencies corresponding to the impedance data.
     saveto : str
         Path to the directory where the results will be saved.
@@ -1926,22 +1926,33 @@ def analyze_eis_data(
     Returns
     -------
     results: pd.DataFrame
-        Dataframe containing plausible ECMs with BI results.
-    """    
+        Dataframe containing plausible ECMs with Bayesian inference results.
+    """
+    # Make a new folder to store the results
+    utils.make_dir(saveto)
+
     # Preprocessing + store preprocessed data
     log.info("Pre-processing EIS data using KK filter")
-    data, ohmic_resistance, rmse = preprocess_impedance_data(
-        impedance, freq, threshold=0.05, saveto=saveto, plot=plot
-    )
-    return
+    kwargs = {"threshold": 0.05, "saveto": saveto, "plot": plot}
+    data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
 
-    # Call EquivalentCircuits.jl
+    # Generate a pool of potential ECMs via an evolutionary algorithm
     log.info("Generating equivalent circuits using GEP")
-    circuits_unfiltered = generate_equivalent_circuits(data=data, iters=iters)
-    if circuits_unfiltered is None: return
+    circuits_unfiltered = generate_equivalent_circuits(impedance, freq, iters=iters, saveto=saveto)
+    if circuits_unfiltered is None:
+        return
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
+
+    # Perform Bayesian inference on the filtered ECMs
+    results = perform_bayesian_inference(
+        eis_data=data,
+        data_path=saveto,
+        ecms=circuits,
+        draw_ecm=draw_ecm,
+        plot=plot
+    )
 
     return results
 
