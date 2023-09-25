@@ -111,7 +111,8 @@ def find_ohmic_resistance(
     ohmic_resistance = high_f_real[index[0]]
 
     if saveto is not None:
-        np.savetxt(saveto, [ohmic_resistance])
+        fpath = os.path.join(saveto, "ohmic_resistance.txt")
+        np.savetxt(fpath, [ohmic_resistance])
 
     return ohmic_resistance
 
@@ -147,16 +148,14 @@ def preprocess_impedance_data(
         - rmse (float): Root mean square error of KK validated data vs. measurements.
     """
     # Make a new folder to store the results
-    EXPORT_DIR = saveto
-    utils.make_dir(EXPORT_DIR)
+    utils.make_dir(saveto)
 
     # Fetch the real and imaginary part of the impedance data
     Re_Z = impedance.real
     Im_Z = impedance.imag
 
     if plot:
-        saveto = "Non-filtered Nyquist and Bode plots.png"
-        fpath = os.path.join(EXPORT_DIR, saveto)
+        fpath = os.path.join(saveto, "Non-filtered Nyquist and Bode plots.png")
         viz.plot_eis_data(Re_Z, Im_Z, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
@@ -199,8 +198,7 @@ def preprocess_impedance_data(
 
     # Plot residuals of Lin-KK validation
     if plot:
-        saveto = "Lin-KK residuals.png"
-        fpath = os.path.join(EXPORT_DIR, saveto)
+        fpath = os.path.join(saveto, "Lin-KK residuals.png")
         viz.plot_linKK_residuals(freq, res_real, res_imag, saveto=fpath)
 
     # Need to set a threshold limit for when to filter out the noisy data
@@ -239,8 +237,7 @@ def preprocess_impedance_data(
 
         # Find the ohmic resistance
         try:
-            fpath = os.path.join(EXPORT_DIR, "ohmic_resistance.txt")
-            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, saveto=fpath)
+            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, saveto=saveto)
         except ValueError:
             log.error("Ohmic resistance not found. Check data or increase KK threshold.")
 
@@ -254,7 +251,7 @@ def preprocess_impedance_data(
 
     # Plot the filtered Nyquist and Bode plots
     if plot:
-        saveto = os.path.join(EXPORT_DIR, "Filtered Nyquist and Bode plots.png")
+        saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
         viz.plot_eis_data(Re_Z_mask, Im_Z_mask, freq_mask, saveto=saveto)
 
     # ?: What's the logic behind this?
@@ -264,11 +261,12 @@ def preprocess_impedance_data(
     return Zdf_mask, ohmic_resistance, rmse
 
 
+# TODO: `data` is vague, refactor to explicitly accept frequency and impedance
 def generate_equivalent_circuits(
         data: pd.DataFrame, 
         iters: int = 100, 
         complexity: int = 12, 
-        save: bool = True
+        saveto: str = None
 ) -> Optional[pd.DataFrame]:
     """Generate potential ECMs using evolutionary algorithms.
     
@@ -280,8 +278,8 @@ def generate_equivalent_circuits(
         Number of ECM generation iterations (default is 100).
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
-    save : bool, optional
-        Whether to save the results to a CSV file (default is True).
+    saveto : str, optional
+        Path to the directory where the results will be saved (default is None).
         
     Returns
     -------
@@ -311,8 +309,9 @@ def generate_equivalent_circuits(
     # ?: What is this string conversion for?
     circuits_df["Parameters"] = circuits_df["Parameters"].apply(Main.string)    
 
-    if save:
-        circuits_df.to_csv("df_circuits.csv", index=False)
+    if saveto is not None:
+        fpath = os.path.join(saveto, "circuits_dataframe.csv")
+        circuits_df.to_csv(fpath, index=False)
 
     return circuits_df
 
