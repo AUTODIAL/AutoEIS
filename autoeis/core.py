@@ -25,6 +25,7 @@ from autoeis.julia_helpers import import_julia_module, init_julia
 
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output(linKK)
+warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = logging.getLogger(__name__)
 
 __all__ = [
