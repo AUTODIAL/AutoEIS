@@ -384,10 +384,9 @@ def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) 
     df_circuits: pd.DataFrame
         Dataframe containing ECMs filtered based on ohmic resistance (6 columns)
     """
-
-    for i in range(len(df_circuits["Circuit"])):
+    for i in range(len(df_circuits["circuitstring"])):
         # Find the series elements
-        series_circuit = find_series_elements(circuit=df_circuits["Circuit"][i])
+        series_circuit = find_series_elements(circuit=df_circuits["circuitstring"][i])
         # Find the series resistors
         find_R = re.compile(r"R[0-9]")
         series_resistors = find_R.findall(series_circuit)
@@ -419,7 +418,7 @@ def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) 
     return df_circuits
 
 
-def series_filter(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
+def series_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
     """
     Filters the circuits by checking if any parallel route includes capacitors.
 
@@ -435,8 +434,8 @@ def series_filter(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
 
     """
     test_pattern = re.compile(r"\[")
-    for i in range(len(df_circuits["Circuit"])):
-        test_circuit = df_circuits["Circuit"][i]
+    for i in range(len(df_circuits["circuitstring"])):
+        test_circuit = df_circuits["circuitstring"][i]
         if test_pattern.findall(test_circuit) == False:
             df_circuits.drop([i], inplace=True)
     df_circuits.reset_index(drop=True, inplace=True)
@@ -465,8 +464,8 @@ def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
     # Create a list to store the mathematical expressions
     new_circuits = []
 
-    for i in range(len(df_circuits["Circuit"])):
-        circuit = df_circuits["Circuit"][i]
+    for i in range(len(df_circuits["circuitstring"])):
+        circuit = df_circuits["circuitstring"][i]
         for j, k in zip(["-", "[", ",", "]"], ["+", "((", ")**(-1)+(", ")**(-1))**(-1)"]):
             circuit = circuit.replace(j, k)
         test_results = test_pattern.findall(circuit)
@@ -911,12 +910,12 @@ def identifior(df_circuits: "pd.DataFrame") -> (list, list):
     """
     equal_lists = []
     equal_lists_seq = []
-    for i in range(len(df_circuits["Circuit"])):
-        feature_i = feature_store(df_circuits["Circuit"][i])
+    for i in range(len(df_circuits["circuitstring"])):
+        feature_i = feature_store(df_circuits["circuitstring"][i])
         equal_list = []
         equal_list_seq = []
-        for j in range(len(df_circuits["Circuit"])):
-            feature_j = feature_store(df_circuits["Circuit"][j])
+        for j in range(len(df_circuits["circuitstring"])):
+            feature_j = feature_store(df_circuits["circuitstring"][j])
             # if (feature_i['Feature 1'] == feature_j['Feature 1']).all() and (feature_i['Feature 2'] == feature_j['Feature 2']).all() and (feature_i['Feature 2.5'] == feature_j['Feature 2.5']).all() and feature_i['Feature 3'] == feature_j['Feature 3']:
             if len(feature_i) == len(feature_j) == 5:
                 if (
@@ -925,14 +924,14 @@ def identifior(df_circuits: "pd.DataFrame") -> (list, list):
                     and feature_i["Feature 2.5"].tolist() == feature_j["Feature 2.5"].tolist()
                     and feature_i["Feature 3"] == feature_j["Feature 3"]
                 ):
-                    equal_list.append(df_circuits["Circuit"][j])
+                    equal_list.append(df_circuits["circuitstring"][j])
                     equal_list_seq.append(j)
             else:
                 if (
                     feature_i["Feature 1"].tolist() == feature_j["Feature 1"].tolist()
                     and feature_i["Feature 2"].tolist() == feature_j["Feature 2"].tolist()
                 ):
-                    equal_list.append(df_circuits["Circuit"][j])
+                    equal_list.append(df_circuits["circuitstring"][j])
                     equal_list_seq.append(j)
         equal_lists.append(equal_list)
         equal_lists_seq.append(equal_list_seq)
@@ -1069,7 +1068,7 @@ def combine_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     )
 
     for i in range(len(similar_expression_index)):
-        combined_expressions.append(df_circuits["Circuit"][similar_expression_index[i][0]])
+        combined_expressions.append(df_circuits["circuitstring"][similar_expression_index[i][0]])
         combined_value = []
         for j in range(len(similar_expression_index[i])):
             if j == 0:
@@ -1082,10 +1081,10 @@ def combine_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
                         component_values_lists[similar_expression_index[i][j]]
                     )
                     combined_expressions[i] = [
-                        df_circuits["Circuit"][similar_expression_index[i][0]]
+                        df_circuits["circuitstring"][similar_expression_index[i][0]]
                     ]
                     combined_expressions[i].append(
-                        df_circuits["Circuit"][similar_expression_index[i][j]]
+                        df_circuits["circuitstring"][similar_expression_index[i][j]]
                     )
                     # BUG: Correspond the combined circuit values with expressions
 
@@ -1359,6 +1358,7 @@ def posterior_evaluation(posteriors):
 
 
 def model_evaluation(results):
+    # TODO: Relying on the column index is not a good idea, refactor.
     evaluation_results = results[results.columns[[0, 17, 18, 19, 20, 23, 25]]]
 
     evaluation_results["Consistency"] = pd.to_numeric(
