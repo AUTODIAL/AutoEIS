@@ -4,11 +4,13 @@ import logging
 import os
 import pickle
 import re
+import warnings
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import arviz as az
 import dill
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
@@ -25,57 +27,15 @@ from autoeis.julia_helpers import import_julia_module, init_julia
 
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output(linKK)
+warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = logging.getLogger(__name__)
 
 __all__ = [
     "analyze_eis_data",
     "generate_equivalent_circuits",
-    "load_eis_data",
     "perform_bayesian_inference",
     "preprocess_impedance_data",
 ]
-
-
-def load_eis_data(fname: str) -> pd.DataFrame:
-    """Load EIS (Electrochemical Impedance Spectroscopy) data from a file.
-
-    Parameters
-    ----------
-    fname : str
-        Path to the EIS data file.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame containing impedance and frequency data.
-
-    Raises
-    ------
-    ValueError:
-        If the file format is not supported.
-    FileNotFoundError:
-        If the file does not exist.
-    """
-    path = Path(fname)
-
-    if not path.exists():
-        log.error(f"No such file or directory: {path}")
-        raise FileNotFoundError(f"No such file or directory: {path}")
-
-    loaders = {
-        ".json": lambda: pd.DataFrame(json.loads(path.read_text())),
-        ".csv": lambda: pd.read_csv(path),
-        ".txt": lambda: pd.read_csv(path, sep="\t"),
-        ".xlsx": lambda: pd.read_excel(path),
-        ".pkl": lambda: pd.DataFrame(pickle.loads(path.read_bytes()))
-    }
-
-    loader = loaders.get(path.suffix)
-    if loader:
-        return loader()
-    else:
-        log.error("Unsupported file format.")
-        raise ValueError("Unsupported file format.")
 
 
 def find_ohmic_resistance(
@@ -108,7 +68,8 @@ def find_ohmic_resistance(
     ohmic_resistance = high_f_real[index[0]]
 
     if saveto is not None:
-        np.savetxt(saveto, [ohmic_resistance])
+        fpath = os.path.join(saveto, "ohmic_resistance.txt")
+        np.savetxt(fpath, [ohmic_resistance])
 
     return ohmic_resistance
 
@@ -144,16 +105,14 @@ def preprocess_impedance_data(
         - rmse (float): Root mean square error of KK validated data vs. measurements.
     """
     # Make a new folder to store the results
-    EXPORT_DIR = saveto
-    utils.make_dir(EXPORT_DIR)
+    utils.make_dir(saveto)
 
     # Fetch the real and imaginary part of the impedance data
     Re_Z = impedance.real
     Im_Z = impedance.imag
 
     if plot:
-        saveto = "Non-filtered Nyquist and Bode plots.png"
-        fpath = os.path.join(EXPORT_DIR, saveto)
+        fpath = os.path.join(saveto, "Non-filtered Nyquist and Bode plots.png")
         viz.plot_eis_data(Re_Z, Im_Z, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
@@ -196,8 +155,7 @@ def preprocess_impedance_data(
 
     # Plot residuals of Lin-KK validation
     if plot:
-        saveto = "Lin-KK residuals.png"
-        fpath = os.path.join(EXPORT_DIR, saveto)
+        fpath = os.path.join(saveto, "Lin-KK residuals.png")
         viz.plot_linKK_residuals(freq, res_real, res_imag, saveto=fpath)
 
     # Need to set a threshold limit for when to filter out the noisy data
@@ -236,8 +194,7 @@ def preprocess_impedance_data(
 
         # Find the ohmic resistance
         try:
-            fpath = os.path.join(EXPORT_DIR, "ohmic_resistance.txt")
-            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, saveto=fpath)
+            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, saveto=saveto)
         except ValueError:
             log.error("Ohmic resistance not found. Check data or increase KK threshold.")
 
@@ -251,7 +208,7 @@ def preprocess_impedance_data(
 
     # Plot the filtered Nyquist and Bode plots
     if plot:
-        saveto = os.path.join(EXPORT_DIR, "Filtered Nyquist and Bode plots.png")
+        saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
         viz.plot_eis_data(Re_Z_mask, Im_Z_mask, freq_mask, saveto=saveto)
 
     # ?: What's the logic behind this?
@@ -261,11 +218,12 @@ def preprocess_impedance_data(
     return Zdf_mask, ohmic_resistance, rmse
 
 
+# TODO: `data` is vague, refactor to explicitly accept frequency and impedance
 def generate_equivalent_circuits(
         data: pd.DataFrame, 
         iters: int = 100, 
         complexity: int = 12, 
-        save: bool = True
+        saveto: str = None
 ) -> Optional[pd.DataFrame]:
     """Generate potential ECMs using evolutionary algorithms.
     
@@ -277,8 +235,8 @@ def generate_equivalent_circuits(
         Number of ECM generation iterations (default is 100).
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
-    save : bool, optional
-        Whether to save the results to a CSV file (default is True).
+    saveto : str, optional
+        Path to the directory where the results will be saved (default is None).
         
     Returns
     -------
@@ -305,32 +263,15 @@ def generate_equivalent_circuits(
         return None
     
     circuits_df = pd_jl.DataFrame(df_jl.DataFrame(circuits))
-    # ?: What is this string conversion for?
-    circuits_df["Parameters"] = circuits_df["Parameters"].apply(Main.string)    
+    # TODO: Relying on circuits __str__ to fetch informatio is not robust, refactor
+    for index, param in enumerate(circuits_df["Parameters"]):
+        circuits_df.at[index, "Parameters"] = Main.string(param)
 
-    if save:
-        circuits_df.to_csv("df_circuits.csv", index=False)
+    if saveto is not None:
+        fpath = os.path.join(saveto, "circuits_dataframe.csv")
+        circuits_df.to_csv(fpath, index=False)
 
     return circuits_df
-
-
-def load_results(fname: str) -> pd.DataFrame:
-    """Load the generated ECMs and convert to a dataframe.
-
-    Parameters
-    ----------
-    fname: str
-        Path of the file containing the generated ECMs
-
-    Returns:
-    --------
-    df_circuits: pd.DataFrame
-        Dataframe containing ECMs (2 columns)
-    """
-    df_circuits = pd.read_csv(fname)
-    if len(df_circuits) == 0:
-        log.error("No plausible ECMs found. Consider increasing the iterations.")
-    return df_circuits
 
 
 def split_components(df_circuits: pd.DataFrame) -> pd.DataFrame:
@@ -502,7 +443,7 @@ def series_filter(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     return df_circuits
 
 
-def generate_mathematical_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
+def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
     """
     Generates the mathematical expression of each circuit.
 
@@ -1459,42 +1400,11 @@ def model_evaluation(results):
     return results_sorted
 
 
-def plot_ecm(circuit: str):
-    """Visualize circuit model using lcapy.
-
-    Parameters
-    ----------
-    circuit: str
-        The string that stores the circuit configuration
-
-    Returns
-    -------
-    fig: lcapy.figure
-        Handle of the circuit figure
-    """
-    from lcapy import CPE as P
-    from lcapy import C, L, R
-
-    # Replace square brackets with parentheses
-    circuit = circuit.replace("[", "(").replace("]", ")")
-    # Replace commas with vertical bars
-    circuit = circuit.replace(",", "|")
-    # Replace dashes with plus signs
-    circuit = circuit.replace("-", "+")
-    # Surround all numbers with parentheses
-    circuit = re.sub(r"([A-Z])(\d+)", r'\1("\1\2")', circuit)
-
-    fig = eval(circuit)
-    fig.draw(style="american")
-
-    return fig
-
-
 def perform_bayesian_inference(
     eis_data: pd.DataFrame,
     ecms: pd.DataFrame,
     data_path: str,
-    plot: bool = True,
+    plot: bool = False,
     save: bool = True,
     draw_ecm=False,
 ) -> pd.DataFrame:
@@ -1524,9 +1434,6 @@ def perform_bayesian_inference(
     # Determine if there's any ECM that passed post-filtering process
     if len(ecms) == 0:
         log.error("No plausible ECMs found. Try increasing the iterations.")
-
-    # Set the parameters for plots
-    az.style.use("arviz-darkgrid")
 
     freq = np.array(eis_data["freq"])
     Zreal = np.array(eis_data["Zreal"])
@@ -1603,7 +1510,7 @@ def perform_bayesian_inference(
         print(f"Elements: ({name_i})\nValues: ({value_i})")
 
         if plot and draw_ecm:
-            plot_ecm(circuit_name_i)
+            viz.plot_ecm(circuit_name_i)
 
         ECM_data = function_i(value_i, freq)
         ECMs_data.append(ECM_data)
@@ -1611,26 +1518,26 @@ def perform_bayesian_inference(
         print("> Julia circuit's fitting")
 
         r2_value = float(r2_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"  r2_value:{r2_value}")
+        print(f"  R²:{r2_value}")
         R2_list.append(r2_value)
 
         r2_real = r2_calculator(Zreal, ECM_data.real)
-        print(f"  r2_real_part:{r2_real}")
+        print(f"  R² (Re):{r2_real}")
         R2_real_list.append(r2_real)
         r2_imag = r2_calculator(Zimag, ECM_data.imag)
-        print(f"  r2_imag_part:{r2_imag}")
+        print(f"  R² (Im):{r2_imag}")
         R2_imag_list.append(r2_imag)
 
         MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"  MSE_value:{MSE_value}")
+        print(f"  MSW:{MSE_value}")
         MSE_list.append(MSE_value)
 
         RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"  RMSE_value:{RMSE_value}")
+        print(f"  RMSE:{RMSE_value}")
         RMSE_list.append(RMSE_value)
 
         MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"  MAPE_value:{MAPE_value}")
+        print(f"  MAPE:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
         if plot:
@@ -1957,10 +1864,9 @@ def perform_bayesian_inference(
         saveto = os.path.join(folder_name, "results.pkl")
         with open(saveto, "wb") as handle:
             dill.dump(df_dict, handle)
-
         # with open(f'{data_path}_results.json','w') as file_obj:
         #     json.dumbp(df_dict,file_obj)
-    # load data:
+    # Load data
     # with open('file.pkl', 'rb') as f:
     #     input_dict = dill.load(f)
 
@@ -2021,25 +1927,30 @@ def analyze_eis_data(
     new_df = calculate_length(new_df)
     new_df = split_variables(new_df)
 
-    log.info("Applying Bayesian inference on the equivalent circuits")
+    log.info("Applying Bayesian inference on the generated circuits")
     results = perform_bayesian_inference(eis_data=data, data_path=saveto, ecms=new_df, draw_ecm=draw_ecm)
 
     return results
 
 
 if __name__ == "__main__":
+    import numpy as np
+
+    import autoeis as ae
+    from autoeis.julia_helpers import init_julia
+
     # Initialize Julia
     Main = init_julia()
 
     # Load EIS data
-    fname = "testdata.txt"
-    df = load_eis_data(fname)
+    fname = "assets/test_data.txt"
+    df = ae.io.load_eis_data(fname)
     # Fetch frequency and impedance data
-    freqs = np.array(df["freq/Hz"]).astype(float)
-    reals = np.array(df["Re(Z)/Ohm"]).astype(float)
-    imags = -np.array(df["-Im(Z)/Ohm"]).astype(float)
+    freq = np.array(df["freq/Hz"]).astype(float)
+    Re_Z = np.array(df["Re(Z)/Ohm"]).astype(float)
+    Im_Z = -np.array(df["-Im(Z)/Ohm"]).astype(float)
 
     # Perform EIS analysis
-    measurements = reals + imags * 1j
-    results = analyze_eis_data(impedance=measurements, freq=freqs, saveto=fname, iters=100)
+    Z = Re_Z + Im_Z * 1j
+    results = ae.analyze_eis_data(impedance=Z, freq=freq, saveto=fname, iters=100)
     print(results)

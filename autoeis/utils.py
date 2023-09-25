@@ -54,7 +54,7 @@ def get_fileext(path: str) -> str:
     return Path(path).suffix
 
 
-# TODO: Remove this function
+# TODO: Remove this function, we should not be changing the working directory.
 def reset_storage():
     """Reset the storage path to the current working directory."""
     for _ in range(2):
