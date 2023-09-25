@@ -505,7 +505,7 @@ def series_filter(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     return df_circuits
 
 
-def generate_mathematical_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
+def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
     """
     Generates the mathematical expression of each circuit.
 
@@ -1497,9 +1497,6 @@ def perform_bayesian_inference(
     if len(ecms) == 0:
         log.error("No plausible ECMs found. Try increasing the iterations.")
 
-    # Set the parameters for plots
-    az.style.use("arviz-darkgrid")
-
     freq = np.array(eis_data["freq"])
     Zreal = np.array(eis_data["Zreal"])
     Zimag = np.array(eis_data["Zimag"])
@@ -1929,10 +1926,9 @@ def perform_bayesian_inference(
         saveto = os.path.join(folder_name, "results.pkl")
         with open(saveto, "wb") as handle:
             dill.dump(df_dict, handle)
-
         # with open(f'{data_path}_results.json','w') as file_obj:
         #     json.dumbp(df_dict,file_obj)
-    # load data:
+    # Load data
     # with open('file.pkl', 'rb') as f:
     #     input_dict = dill.load(f)
 
@@ -1993,7 +1989,7 @@ def analyze_eis_data(
     new_df = calculate_length(new_df)
     new_df = split_variables(new_df)
 
-    log.info("Applying Bayesian inference on the equivalent circuits")
+    log.info("Applying Bayesian inference on the generated circuits")
     results = perform_bayesian_inference(eis_data=data, data_path=saveto, ecms=new_df, draw_ecm=draw_ecm)
 
     return results
