@@ -50,13 +50,13 @@ def load_eis_data(fname: str) -> pd.DataFrame:
         raise ValueError("Unsupported file format.")
 
 
-def load_results(fname: str) -> pd.DataFrame:
-    """Load the generated ECMs and convert to a dataframe.
+def load_results_dataframe(fname: str) -> pd.DataFrame:
+    """Load AutoEIS results CSV file and convert it to a dataframe.
 
     Parameters
     ----------
     fname: str
-        Path of the file containing the generated ECMs
+        Path of the CSV file containing AutoEIS results.
 
     Returns:
     --------
@@ -64,6 +64,4 @@ def load_results(fname: str) -> pd.DataFrame:
         Dataframe containing ECMs (2 columns)
     """
     df_circuits = pd.read_csv(fname)
-    if len(df_circuits) == 0:
-        log.error("No plausible ECMs found. Consider increasing the iterations.")
     return df_circuits
