@@ -1404,7 +1404,7 @@ def perform_bayesian_inference(
     eis_data: pd.DataFrame,
     ecms: pd.DataFrame,
     data_path: str,
-    plot: bool = True,
+    plot: bool = False,
     save: bool = True,
     draw_ecm=False,
 ) -> pd.DataFrame:
