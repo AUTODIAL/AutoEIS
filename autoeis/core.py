@@ -4,11 +4,13 @@ import logging
 import os
 import pickle
 import re
+import warnings
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import arviz as az
 import dill
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
