@@ -210,7 +210,7 @@ def preprocess_impedance_data(
 
     # ?: What's the logic behind this?
     if threshold != 0.06:
-        log.warn(f"Default threshold ({threshold-0.01}) dropped too many points.")
+        log.warning(f"Default threshold ({threshold-0.01}) dropped too many points.")
 
     return Zdf_mask, ohmic_resistance, rmse
 
@@ -256,7 +256,7 @@ def generate_equivalent_circuits(
         circuits.append(circuit) if circuit != Main.nothing else None
 
     if not circuits:
-        log.warn("No plausible ECMs found. Try increasing the iterations.")
+        log.warning("No plausible ECMs found. Try increasing the iterations.")
         return None
     
     circuits_df = pd_jl.DataFrame(df_jl.DataFrame(circuits))
@@ -1428,6 +1428,8 @@ def perform_bayesian_inference(
     df : pd.DataFrame
         Dataframe containing the ECMs with the Bayesian inference results (12 columns)
     """
+    log.info("Applying Bayesian inference on the generated circuits")
+
     # Determine if there's any ECM that passed post-filtering process
     if len(ecms) == 0:
         log.error("No plausible ECMs found. Try increasing the iterations.")
