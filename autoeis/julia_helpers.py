@@ -239,7 +239,7 @@ def _get_julia_env_dir():
 def _set_julia_project_env(julia_project, is_shared):
     """Set JULIA_PROJECT environment variable."""
     if is_shared:
-        if is_julia_version_greater_eq(version=(1, 7, 0)):
+        if _is_julia_version_greater_eq(version=(1, 7, 0)):
             os.environ["JULIA_PROJECT"] = "@" + str(julia_project)
         else:
             julia_env_dir = _get_julia_env_dir()
@@ -251,7 +251,7 @@ def _set_julia_project_env(julia_project, is_shared):
 def _get_io_arg(quiet):
     """Return Julia-compatible IO arg that suppresses output if quiet=True."""
     io = "devnull" if quiet else "stderr"
-    io_arg = f"io={io}" if is_julia_version_greater_eq(version=(1, 6, 0)) else ""
+    io_arg = f"io={io}" if _is_julia_version_greater_eq(version=(1, 6, 0)) else ""
     return io_arg
 
 
@@ -268,7 +268,7 @@ def _process_julia_project(julia_project):
     return processed_julia_project, is_shared
 
 
-def is_julia_version_greater_eq(juliainfo=None, version=(1, 6, 0)):
+def _is_julia_version_greater_eq(juliainfo=None, version=(1, 6, 0)):
     """Check if Julia version is greater than specified version."""
     if juliainfo is None:
         juliainfo = _load_juliainfo()
@@ -303,7 +303,7 @@ def _escape_filename(filename):
 
 def _julia_version_assertion():
     """Check if Julia version is greater than 1.9"""
-    if not is_julia_version_greater_eq(version=(1, 9, 0)):
+    if not _is_julia_version_greater_eq(version=(1, 9, 0)):
         raise NotImplementedError(
             "AutoEIS requires Julia 1.9.0 or greater. "
             "Please update your Julia installation."
