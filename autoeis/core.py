@@ -1459,37 +1459,6 @@ def model_evaluation(results):
     return results_sorted
 
 
-def plot_ecm(circuit: str):
-    """Visualize circuit model using lcapy.
-
-    Parameters
-    ----------
-    circuit: str
-        The string that stores the circuit configuration
-
-    Returns
-    -------
-    fig: lcapy.figure
-        Handle of the circuit figure
-    """
-    from lcapy import CPE as P
-    from lcapy import C, L, R
-
-    # Replace square brackets with parentheses
-    circuit = circuit.replace("[", "(").replace("]", ")")
-    # Replace commas with vertical bars
-    circuit = circuit.replace(",", "|")
-    # Replace dashes with plus signs
-    circuit = circuit.replace("-", "+")
-    # Surround all numbers with parentheses
-    circuit = re.sub(r"([A-Z])(\d+)", r'\1("\1\2")', circuit)
-
-    fig = eval(circuit)
-    fig.draw(style="american")
-
-    return fig
-
-
 def perform_bayesian_inference(
     eis_data: pd.DataFrame,
     ecms: pd.DataFrame,
@@ -1603,7 +1572,7 @@ def perform_bayesian_inference(
         print(f"Elements: ({name_i})\nValues: ({value_i})")
 
         if plot and draw_ecm:
-            plot_ecm(circuit_name_i)
+            viz.plot_ecm(circuit_name_i)
 
         ECM_data = function_i(value_i, freq)
         ECMs_data.append(ECM_data)

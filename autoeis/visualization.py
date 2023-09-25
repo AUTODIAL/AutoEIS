@@ -1,5 +1,45 @@
+import logging
+
 import arviz
 import matplotlib.pyplot as plt
+
+log = logging.getLogger(__name__)
+
+
+def plot_ecm(circuit: str):
+    """Visualize circuit model using lcapy.
+
+    Parameters
+    ----------
+    circuit: str
+        The string that stores the circuit configuration
+
+    Returns
+    -------
+    fig: lcapy.figure
+        Handle of the circuit figure
+    """
+    try:
+        from lcapy import CPE as P
+        from lcapy import C, L, R
+    except ImportError:
+        msg = "lcapy is not installed. Please install it using `pip install lcapy`."
+        log.error(msg)
+        return
+
+    # Replace square brackets with parentheses
+    circuit = circuit.replace("[", "(").replace("]", ")")
+    # Replace commas with vertical bars
+    circuit = circuit.replace(",", "|")
+    # Replace dashes with plus signs
+    circuit = circuit.replace("-", "+")
+    # Surround all numbers with parentheses
+    circuit = re.sub(r"([A-Z])(\d+)", r'\1("\1\2")', circuit)
+
+    fig = eval(circuit)
+    fig.draw(style="american")
+
+    return fig
 
 
 def plot_eis_data(Re_Z, Im_Z, freq, saveto=None):
@@ -43,6 +83,7 @@ def plot_linKK_residuals(frequencies, Re_res, Im_res, saveto=None):
     ax.set_ylabel("delta %")
     ax.set_xscale("log")
     ax.set_title("Lin-KK validation")
+    ax.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
     ax.legend()
 
     if saveto is not None:
