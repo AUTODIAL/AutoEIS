@@ -1871,6 +1871,32 @@ def perform_bayesian_inference(
     return ecms
 
 
+def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFrame:
+    """Apply heuristic rules to filter the generated ECMs.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame
+        DataFrame containing the generated ECMs.
+
+    Returns
+    -------
+    circuits : pd.DataFrame
+        DataFrame containing the filtered ECMs.
+    """
+    log.info("Filtering the circuits using heuristic rules.")
+    circuits = split_components(circuits)
+    circuits = capacitance_filter(circuits)
+    circuits = series_filter(circuits)
+    circuits = ohmic_resistance_filter(circuits, ohmic_resistance)
+    circuits = generate_mathematical_expression(circuits)
+    # ?: Why do we make a new dataframe here?
+    circuits2 = combine_expression(circuits)
+    circuits2 = calculate_length(circuits2)
+    circuits2 = split_variables(circuits2)
+    return circuits2
+
+
 def analyze_eis_data(
     impedance: np.ndarray,
     freq: np.ndarray,
@@ -1914,19 +1940,8 @@ def analyze_eis_data(
     circuits_unfiltered = generate_equivalent_circuits(data=data, iters=iters)
     if circuits_unfiltered is None: return
 
-    log.info("Filtering the equivalent circuits using heuristic rules")
-    circuits = split_components(circuits_unfiltered)
-    circuits = capacitance_filter(circuits)
-    circuits = series_filter(circuits)
-    circuits = ohmic_resistance_filter(circuits, ohmic_resistance)
-    circuits = generate_mathematical_expression(circuits)
-    # ?: Why do we make a new dataframe here?
-    new_df = combine_expression(circuits)
-    new_df = calculate_length(new_df)
-    new_df = split_variables(new_df)
-
-    log.info("Applying Bayesian inference on the generated circuits")
-    results = perform_bayesian_inference(eis_data=data, data_path=saveto, ecms=new_df, draw_ecm=draw_ecm)
+    # Apply heuristic rules to filter unphysical circuits
+    circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
 
     return results
 
