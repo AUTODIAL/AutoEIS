@@ -215,9 +215,9 @@ def preprocess_impedance_data(
     return Zdf_mask, ohmic_resistance, rmse
 
 
-# TODO: `data` is vague, refactor to explicitly accept frequency and impedance
 def generate_equivalent_circuits(
-        data: pd.DataFrame, 
+        impedance: np.ndarray[complex],
+        freq: np.ndarray[float],
         iters: int = 100, 
         complexity: int = 12, 
         saveto: str = None
@@ -226,8 +226,10 @@ def generate_equivalent_circuits(
     
     Parameters
     ----------
-    data : pd.DataFrame
-        Processed EIS data, ideally after KK validation.
+    Z : np.ndarray[complex]
+        Impedance measurements.
+    freq : np.ndarray[float]
+        Frequencies corresponding to impedance measurements.
     iters : int, optional
         Number of ECM generation iterations (default is 100).
     complexity : int, optional
@@ -246,13 +248,10 @@ def generate_equivalent_circuits(
     pd_jl = import_julia_module(Main, "Pandas")
 
     circuits = []
+    kwargs = {"head": complexity, "terminals": "RLP", "convergence_threshold": 1e-2}
+
     for _ in range(iters):
-        circuit = ec.circuit_evolution(
-            np.array(data["Zreal"]) + 1j * np.array(data["Zimag"]),
-            np.array(data["freq"]),
-            head=complexity,
-            terminals="RLP",
-        )
+        circuit = ec.circuit_evolution(impedance, freq, **kwargs)
         circuits.append(circuit) if circuit != Main.nothing else None
 
     if not circuits:
