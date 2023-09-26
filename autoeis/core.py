@@ -75,7 +75,7 @@ def preprocess_impedance_data(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
     threshold: float,
-    saveto: str,
+    saveto: str = None,
     plot: bool = False
 ) -> tuple[pd.DataFrame, float, float]:
     """Preprocess impedance data, filtering out data with a positive
@@ -102,7 +102,8 @@ def preprocess_impedance_data(
         - rmse (float): Root mean square error of KK validated data vs. measurements.
     """
     # Make a new folder to store the results
-    utils.make_dir(saveto)
+    if saveto is not None:
+        utils.make_dir(saveto)
 
     # Fetch the real and imaginary part of the impedance data
     Re_Z = impedance.real
