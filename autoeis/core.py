@@ -1,6 +1,7 @@
 import itertools
 import os
 import re
+import time
 import warnings
 from typing import Optional
 
@@ -21,7 +22,6 @@ from numpyro.infer import MCMC, NUTS, Predictive
 import autoeis.julia_helpers as julia_helpers
 import autoeis.utils as utils
 import autoeis.visualization as viz
-from autoeis.julia_helpers import import_julia_module, init_julia
 
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output(linKK)
@@ -144,7 +144,7 @@ def preprocess_impedance_data(
     Re_Z = np.delete(Re_Z, positive_im)
     Im_Z = np.delete(Im_Z, positive_im)
     Z = np.delete(Z, positive_im)
-    
+
     # Filter 2 - Low Frequency Region
     # Lin-KK data validation to remove 'noisy' data
     # For Lin-KK, the residuals of Re(Z) and Im(Z) are what will be used as a filter.
@@ -222,14 +222,14 @@ def preprocess_impedance_data(
 def generate_equivalent_circuits(
         impedance: np.ndarray[complex],
         freq: np.ndarray[float],
-        iters: int = 100, 
-        complexity: int = 12, 
+        iters: int = 100,
+        complexity: int = 12,
         tol: float = 1e-2,
         saveto: str = None,
         parallel: bool = True,
 ) -> pd.DataFrame:
     """Generate potential ECMs using evolutionary algorithms.
-    
+
     Parameters
     ----------
     Z : np.ndarray[complex]
@@ -241,12 +241,12 @@ def generate_equivalent_circuits(
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
     tol : float, optional
-        Convergence threshold for the ECM search (default is 1e-2).        
+        Convergence threshold for the ECM search (default is 1e-2).
     saveto : str, optional
         Path to the directory where the results will be saved (default is None).
     parallel : bool, optional
         If True, the ECM search will be performed in parallel (default is True).
-        
+
     Returns
     -------
     pd.DataFrame or None
@@ -257,9 +257,9 @@ def generate_equivalent_circuits(
     ec_kwargs = {
         "head": complexity,
         "terminals": "RLP",
-        "convergence_threshold": 1e10,  # TODO: set me to tol
-        "generations": 1,               # TODO: set me to 10
-        "population_size": 3            # TODO: set me to 30
+        "convergence_threshold": tol,
+        "generations": 10,
+        "population_size": 30
     }
 
     ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
@@ -267,7 +267,7 @@ def generate_equivalent_circuits(
 
     if not len(circuits):
         log.warning("No plausible circuits found. Try increasing `iters`.")
-    
+
     if saveto is not None:
         fpath = os.path.join(saveto, "circuits_dataframe.csv")
         circuits.to_csv(fpath, index=False)
@@ -291,11 +291,11 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs):
             continue
         if circuit != Main.nothing:
             circuits.append(circuit)
-        
+
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
     df = [(c.circuitstring, Main.string(c.Parameters)) for c in circuits]
     df = pd.DataFrame(df, columns=["circuitstring", "Parameters"])
-    
+
     return df
 
 
@@ -335,15 +335,15 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
             circuits = pool.map(circuit_evolution, range(iters), **mpire_kwargs)
         except RuntimeError:
             runtime_error = True
-        
+
     if runtime_error:
         raise RuntimeError(f"Julia must not be manually initialized, restart the kernel.")
-    
+
     # Remove None values
     circuits = [circuit for circuit in circuits if circuit != None]
 
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])    
+    df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
 
     return df
 
@@ -1487,7 +1487,7 @@ def perform_bayesian_inference(
     Parameters
     ----------
     eis_data : pd.DataFrame
-        DataFrame with pre-processed data; expected columns are frequency, 
+        DataFrame with pre-processed data; expected columns are frequency,
         real part, and imaginary part of the impedance data.
     ecms : pd.DataFrame
         DataFrame with filtered ECMs.
@@ -1998,7 +1998,7 @@ def perform_full_analysis(
     saveto : str
         Path to the directory where the results will be saved.
     plot : bool, optional
-        If True, the results will be plotted. Default is False.        
+        If True, the results will be plotted. Default is False.
     draw_ecm : bool, optional
         If True, the ECM will be plotted. Default is False.
     parallel : bool, optional
