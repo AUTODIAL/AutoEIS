@@ -1938,25 +1938,25 @@ def analyze_eis_data(
     # Preprocessing + store preprocessed data
     log.info("Pre-processing EIS data using KK filter")
     kwargs = {"threshold": 0.05, "saveto": saveto, "plot": plot}
-    data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
+    eis_data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
+    Z_clean = eis_data["Zreal"] + 1j * eis_data["Zimag"]
+    freq_clean = eis_data["freq"]
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
     log.info("Generating equivalent circuits using GEP")
-    circuits_unfiltered = generate_equivalent_circuits(impedance, freq, iters=iters, saveto=saveto)
+    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-2, "saveto": saveto}
+    circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
+    
     if circuits_unfiltered is None:
+        log.error("No plausible ECMs found. Try increasing `iters`.")
         return
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
 
     # Perform Bayesian inference on the filtered ECMs
-    results = perform_bayesian_inference(
-        eis_data=data,
-        data_path=saveto,
-        ecms=circuits,
-        draw_ecm=draw_ecm,
-        plot=plot
-    )
+    kwargs = {"data_path": saveto, "plot": plot, "draw_ecm": draw_ecm}
+    results = perform_bayesian_inference(eis_data, circuits, **kwargs)
 
     return results
 
