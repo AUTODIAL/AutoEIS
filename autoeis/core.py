@@ -1903,8 +1903,8 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
 def analyze_eis_data(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
-    saveto: str,
     iters: int = 100,
+    saveto: str = None,
     plot: bool = False,
     draw_ecm: bool = False,
 ) -> pd.DataFrame:
@@ -1917,10 +1917,10 @@ def analyze_eis_data(
         Impedance data.
     freq : np.ndarray[float]
         Frequencies corresponding to the impedance data.
-    saveto : str
-        Path to the directory where the results will be saved.
     iters : int, optional
         Number of iterations for ECM generation. Default is 100.
+    saveto : str
+        Path to the directory where the results will be saved.
     plot : bool, optional
         If True, the results will be plotted. Default is False.        
     draw_ecm : bool, optional
@@ -1932,7 +1932,8 @@ def analyze_eis_data(
         Dataframe containing plausible ECMs with Bayesian inference results.
     """
     # Make a new folder to store the results
-    utils.make_dir(saveto)
+    if saveto is not None:
+        utils.make_dir(saveto)
 
     # Preprocessing + store preprocessed data
     log.info("Pre-processing EIS data using KK filter")
