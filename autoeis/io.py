@@ -9,6 +9,7 @@ import autoeis.utils as utils
 log = utils.get_logger(__name__)
 
 
+# TODO: We're not really providing any value here.
 def load_eis_data(fname: str) -> pd.DataFrame:
     """Load EIS (Electrochemical Impedance Spectroscopy) data from a file.
 
@@ -51,6 +52,7 @@ def load_eis_data(fname: str) -> pd.DataFrame:
         raise ValueError("Unsupported file format.")
 
 
+# TODO: We're not really providing any value here.
 def load_results_dataframe(fname: str) -> pd.DataFrame:
     """Load AutoEIS results CSV file and convert it to a dataframe.
 
