@@ -220,6 +220,7 @@ def generate_equivalent_circuits(
         freq: np.ndarray[float],
         iters: int = 100, 
         complexity: int = 12, 
+        tol: float = 1e-2,
         saveto: str = None
 ) -> Optional[pd.DataFrame]:
     """Generate potential ECMs using evolutionary algorithms.
@@ -234,6 +235,8 @@ def generate_equivalent_circuits(
         Number of ECM generation iterations (default is 100).
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
+    tol : float, optional
+        Convergence threshold for the ECM search (default is 1e-2).        
     saveto : str, optional
         Path to the directory where the results will be saved (default is None).
         
@@ -248,7 +251,7 @@ def generate_equivalent_circuits(
     pd_jl = import_julia_module(Main, "Pandas")
 
     circuits = []
-    kwargs = {"head": complexity, "terminals": "RLP", "convergence_threshold": 1e-2}
+    kwargs = {"head": complexity, "terminals": "RLP", "convergence_threshold": tol}
 
     for _ in range(iters):
         circuit = ec.circuit_evolution(impedance, freq, **kwargs)
