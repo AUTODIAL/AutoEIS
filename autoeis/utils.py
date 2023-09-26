@@ -11,18 +11,16 @@ from rich.logging import RichHandler
 
 def get_logger(name: str) -> logging.Logger:
     """Get a logger with the given name."""
-    return logging.getLogger(name)
-
-
-def setup_rich_logger() -> None:
-    """Set up a logger to use rich for nicer logging."""
-    FORMAT = "%(message)s"
-    logging.basicConfig(
-        level="WARNING",
-        format=FORMAT,
-        datefmt="[%X]",
-        handlers=[RichHandler(rich_tracebacks=True)]
-    )
+    logger = logging.getLogger(name)
+    if logger.hasHandlers():
+        # If logger has handlers, do not add another to avoid duplicate logs
+        return logger
+    
+    logger.setLevel(logging.INFO)  # Set the logging level to INFO for this logger.
+    handler = RichHandler(rich_tracebacks=True)
+    handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
+    logger.addHandler(handler)
+    return logger
 
 
 def setup_rich_tracebacks() -> None:
