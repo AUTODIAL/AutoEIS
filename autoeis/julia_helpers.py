@@ -5,15 +5,14 @@
 # Original repository: https://github.com/MilesCranmer/PySR
 # Commit reference: 976f8d8 dated 2023-09-16.
 
-"""Functions for initializing the Julia environment and installing deps."""
-
-import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 from julia.api import JuliaError
+
+import autoeis.utils as utils
 
 from .version import __equivalent_circuits_jl_version__, __version__
 
@@ -22,7 +21,7 @@ julia_initialized = False
 julia_kwargs_at_initialization = None
 julia_activated_env = None
 
-log = logging.getLogger(__name__)
+log = utils.get_logger(__name__)
 # TODO: For virtualenvs see https://github.com/JuliaPy/PyCall.jl?tab=readme-ov-file#python-virtual-environments
 
 

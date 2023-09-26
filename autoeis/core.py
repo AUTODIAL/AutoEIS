@@ -1,5 +1,4 @@
 import itertools
-import logging
 import os
 import re
 import warnings
@@ -25,10 +24,10 @@ from autoeis.julia_helpers import import_julia_module, init_julia
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
-log = logging.getLogger(__name__)
+log = utils.get_logger(__name__)
 
 __all__ = [
-    "analyze_eis_data",
+    "auto_eis_analysis",
     "generate_equivalent_circuits",
     "perform_bayesian_inference",
     "preprocess_impedance_data",
@@ -101,6 +100,8 @@ def preprocess_impedance_data(
         - ohmic_resistance (float): Ohmic resistance extracted from impedance data.
         - rmse (float): Root mean square error of KK validated data vs. measurements.
     """
+    log.info("Pre-processing impedance data using KK filter")
+
     # Make a new folder to store the results
     if saveto is not None:
         utils.make_dir(saveto)
@@ -246,6 +247,8 @@ def generate_equivalent_circuits(
     pd.DataFrame or None
         DataFrame containing ECM solutions or None if no solutions are found.
     """
+    log.info("Generating equivalent circuits via evolutionary algorithms")
+
     Main = init_julia()
     ec = import_julia_module(Main, "EquivalentCircuits")
     df_jl = import_julia_module(Main, "DataFrames")
@@ -1424,7 +1427,7 @@ def perform_bayesian_inference(
     save : bool, optional
         If True, saves the data (default is True).
     draw_ecm : bool, optional
-        If True, includes the ECM figure (default is False).
+        If True, draws the circuit model (default is False).
 
     Returns
     -------
@@ -1512,7 +1515,7 @@ def perform_bayesian_inference(
         print(f"Elements: ({name_i})\nValues: ({value_i})")
 
         if plot and draw_ecm:
-            viz.plot_ecm(circuit_name_i)
+            viz.draw_circuit(circuit_name_i)
 
         ECM_data = function_i(value_i, freq)
         ECMs_data.append(ECM_data)
@@ -1901,7 +1904,7 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
     return circuits2
 
 
-def analyze_eis_data(
+def auto_eis_analysis(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
     iters: int = 100,
@@ -1937,14 +1940,12 @@ def analyze_eis_data(
         utils.make_dir(saveto)
 
     # Preprocessing + store preprocessed data
-    log.info("Pre-processing EIS data using KK filter")
     kwargs = {"threshold": 0.05, "saveto": saveto, "plot": plot}
     eis_data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
-    Z_clean = eis_data["Zreal"] + 1j * eis_data["Zimag"]
-    freq_clean = eis_data["freq"]
+    Z_clean = eis_data["Zreal"].to_numpy() + 1j * eis_data["Zimag"].to_numpy()
+    freq_clean = eis_data["freq"].to_numpy()
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    log.info("Generating equivalent circuits using GEP")
     kwargs = {"iters": iters, "complexity": 12, "tol": 1e-2, "saveto": saveto}
     circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
     
@@ -1981,5 +1982,5 @@ if __name__ == "__main__":
 
     # Perform EIS analysis
     Z = Re_Z + Im_Z * 1j
-    results = ae.analyze_eis_data(impedance=Z, freq=freq, saveto=fname, iters=100)
+    results = auto_eis_analysis(impedance=Z, freq=freq, saveto=fname, iters=100)
     print(results)

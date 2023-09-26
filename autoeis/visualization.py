@@ -1,12 +1,21 @@
-import logging
+import re
 
 import arviz
 import matplotlib.pyplot as plt
 
-log = logging.getLogger(__name__)
+import autoeis.utils as utils
+
+log = utils.get_logger(__name__)
+
+__all__ = [
+    "draw_circuit",
+    "plot_eis_data",
+    "plot_linKK_residuals",
+    "set_plot_style",
+]
 
 
-def plot_ecm(circuit: str):
+def draw_circuit(circuit: str):
     """Visualize circuit model using lcapy.
 
     Parameters
@@ -92,7 +101,7 @@ def plot_linKK_residuals(frequencies, Re_res, Im_res, saveto=None):
     return fig, ax
 
 
-def set_plotting_style(use_arviz=True) -> None:
+def set_plot_style(use_arviz=True) -> None:
     """Modify the default arviz/matplotlib parameters for prettier plots."""
     # Arviz
     if use_arviz:

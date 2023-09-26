@@ -1,11 +1,12 @@
 import json
-import logging
 import pickle
 from pathlib import Path
 
 import pandas as pd
 
-log = logging.getLogger(__name__)
+import autoeis.utils as utils
+
+log = utils.get_logger(__name__)
 
 
 def load_eis_data(fname: str) -> pd.DataFrame:
