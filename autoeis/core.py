@@ -72,8 +72,8 @@ def find_ohmic_resistance(
 
 
 def preprocess_impedance_data(
-    impedance: np.ndarray,
-    freq: np.ndarray,
+    impedance: np.ndarray[complex],
+    freq: np.ndarray[float],
     threshold: float,
     saveto: str,
     plot: bool = False
