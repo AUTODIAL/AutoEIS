@@ -169,19 +169,21 @@ def import_backend(Main=None):
     """Load EquivalentCircuits.jl, verify version and return a reference."""
     if Main is None:
         Main = init_julia()
-    EquivalentCircuits = import_julia_module(Main, "EquivalentCircuits")
+    EquivalentCircuits = import_package("EquivalentCircuits", Main=Main)
     _backend_version_assertion(Main)
     return EquivalentCircuits
 
 
-def import_julia_module(Main, module_name):
-    """Load a Julia module and return a reference to the module."""
+def import_package(pkg_name, Main=None):
+    """Load a Julia package and return a reference to it."""
     import importlib
+    if Main is None:
+        Main = init_julia()
     try:
-        Main.eval(f"using {module_name}")
+        Main.eval(f"using {pkg_name}")
     except (JuliaError, RuntimeError) as e:
         _raise_import_error(root=e) 
-    ref = importlib.import_module(f"julia.{module_name}")
+    ref = importlib.import_module(f"julia.{pkg_name}")
     return ref
 
 
