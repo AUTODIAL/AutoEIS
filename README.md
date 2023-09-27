@@ -6,98 +6,87 @@ Please be aware that the current version is still under development and has not 
 ## Installation
 The easiest way to install this package is using pip install from [pypi](https://pypi.org/project/autoeis/):
 
+1. [Insall Julia](https://github.com/JuliaLang/juliaup)
+The official way (other than directly downloading binaries) to install Julia is through [juliaup](https://github.com/JuliaLang/juliaup). It provides an automated command line interface to install Julia and manage Julia installations on macOS, Windows, and Linux. Please follow the instructions on [juliaup](https://github.com/JuliaLang/juliaup) repository.
+
+2. Install AutoEIS using [pip](https://pypi.org/project/autoeis)
 ```bash
-pip install autoeis
+pip install -U autoeis
+```
+
+3. Install Julia dependencies
+```bash
+python -c "from autoeis.julia_helpers import install; install()"
 ```
 
 ## Dependencies
-The circuits generation is realized based on the julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. It requires a installation of [Julia programming language](https://julialang.org/).
+The circuits generation is done using the Julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. You need a working installation of Julia (see ##Installation).
 
-AutoEIS depends on the following libraries:
-**Python programming language (>=3.7, <3.11)**
-- NumPy (>=1.20)
-- Matplotlib (>=3.3)
-- Pandas (>=1.1)
-- impedance (>=1.4)
-- regex (>=2.2)
-- arviz (>=2.2.1)
-- numpyro (=0.10.1)
-- dill (>=0.3.4)
-- PyJulia (>=0.5.7)
-- IPython (>=7.19.0)
-- jax (>=0.3.9)
-
-*Note*: If your operating system is Windows, after installing `jax`, you will also need to install `jaxlib`. However, the installation of `jaxlib` on Windows is not supported via PyPI. You may need to visit [this](https://github.com/cloudhan/jax-windows-builder) repository to find the version corresponding to your Python version and then install it using a wheel.
-
-**Julia programming language (>=1.7.0)**
-- equivalentcircuit (>=0.1.3)
-- CSV
-- DataFrame
-- Pandas
-- PyCall
-- DelimitedFiles
-- StringEncodings
+### JAX
+If you're on Windows, after installing `jax`, you will also need to install `jaxlib`. However, `jaxlib` for Windows is not on PyPI. You may need to visit [this](https://github.com/cloudhan/jax-windows-builder) repository to find the version corresponding to your Python version and then install it using a wheel.
 
 ## Workflow
 The schematic workflow of AutoEis is shown below:
 ![AutoEIS workflow](./static/workflow.png)
 It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference, and the model evaluation process. Through this workflow, AutoEis can prioritize the statistically optimal ECM and also retain suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be found in the [paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta).
 
+## Julia set up
+To enable interaction between Python and Julia, you must first set the Julia executable path. If you install Julia using juliaup, this will be automatically handled. Otherwise, the default location of the Julia executable varies depending on the operating system you are using. Below are the common default locations for each supported OS:
+
+```shell
+- Windows: C:\\Users\\<username>\\AppData\\Local\\Julia-<version>\\bin
+- macOS:   /Applications/Julia-<version>.app/Contents/Resources/julia/bin
+- Linux:   /usr/local/julia-<version>/bin
+```
+
+`<version>` refers to the specific version of Julia you have installed, and `<username>` is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command `which julia` (for Unix-based systems) or `where julia` (for Windows). This will display the full path of the Julia executable file.
+
+**That said, we strongly recommend that you install Julia using juliaup.**
+
+Once you locate the Julia executable path, you can set it in Python using the following command:
+
+```python
+from autoeis.julia_helpers import set_julia_path
+set_julia_path("/path/to/julia/executable")
+```
+
+Note that you must do this every time you start a new Python session -> Another reason to use juliaup 😎. Now, you're all set.
+
 ## Usage
-To enable interaction between Python and Julia, you must first set the Julia executable path. The default location of the Julia executable varies depending on the operating system you are using. Below are the common default locations for each supported OS:
-
-- Windows: `C:\Users\<username>\AppData\Local\Julia-<version>\bin`
-- macOS: `/Applications/Julia-<version>.app/Contents/Resources/julia/bin`
-- Linux: `/usr/local/julia-<version>/bin`
-
-Please note that `<version>` refers to the specific version of Julia you have installed, and `<username>` is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command `which julia` (for Unix-based systems) or `where julia` (for Windows). This will display the full path of the Julia executable file.
+To use AutoEIS, you can either perform the ECM generation and evaluation process step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function:
 
 ```python
-import AutoEis as ae
-j = ae.set_julia(r"D:\Julia-1.7.2\bin\julia.exe")
+import numpy as np
+import autoeis as ae
+
+# Load EIS data
+fname = "assets/test_data.txt"
+df = ae.io.load_eis_data(fname)
+# Fetch frequency and impedance data
+freq = df["freq/Hz"].to_numpy()
+Re_Z = df["Re(Z)/Ohm"]).to_numpy()
+Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
+
+# Perform EIS analysis
+Z = Re_Z + Im_Z * 1j
+results = perform_full_analysis(impedance=Z, freq=freq, iters=100)
+print(results)
 ```
 
-Then by calling the function `initialize_julia()`, AutoEIS will automatically install Julia's dependencies. This step is only required the first time you use AutoEIS.
-
-```python
-ae.initialize_julia()
-```
-
-Now, you're all set. You can load your data and perform all the analyses using just one function:
-
-```python
-# Modify default parameters to make nicer plots
-ae.set_parameter()
-
-# Load the EIS data
-data_path = "test_data.txt"
-df = ae.load_data(data_path)
-frequencies = ...
-reals = ...
-imags = ...
-measurements = reals + 1j*imags
-
-# Perform automated ECM generation and evaluation
-ae.EIS_auto(
-    impedance=measurements,
-    freq=frequencies,
-    data_path=data_path,
-    iter_number=100,
-    plot_ECM=False
-)
-```
-
-- `impedance` : the measured electrochemical impedance
-- `freq`: the measured frequencies
-- `data_path`: the pathway of loaded data (this path will be used for the results storage)
-- `iter_number`: the numbers of ECM generation to be performed (default = 100)
-- `plot_ECM`: to plot ECM or not (*Note: To enable this parameter, a [LaTex compiler](https://www.latex-project.org/get/) is required.*) 
+- `impedance`: electrochemical impedance measurements
+- `freq`: frequencies corresponding to the impedance measurements
+- `saveto`: the name of the folder to save the results
+- `iters`: the numbers of equivalent circuit generation to be performed
+- `draw_ecm`: flag to plot equivalent circuits. (requires a [LaTeX compiler](https://www.latex-project.org/get/)) 
   
-An example that demonstrate how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/main/example.ipynb). 
+An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/main/examples/demo_brief.ipynb). 
 
-# Work in progress
-- The graphical user interface for a more friendly interaction is under development. Please be patient :)
-- Also the codes is still a bit rough for the current moment, but it is under constant improvement. Any feedback/suggestions would be greatly appreciated!
+# Work in progress/known issues
+- [ ] Refactor the code as it's still a bit rough and not production-ready.
+- [ ] Speed up the code; Currently, it takes ~ 4 hours to generate 100 equivalent circuits (your mileage may vary depending on your hardware).
+- [ ] Add proper unit/integration tests.
+- [ ] Add proper documentation (API, more examples, etc.).
+- [ ] Add a graphical user interface for a more user-friendly interaction.
 
 # Acknowledgement
 The authors extend their heartfelt gratitude to the following individuals for their invaluable guidance and support throughout the development of this work:
@@ -117,6 +106,6 @@ The authors also wish to express their sincere appreciation to the following exp
 - Dr. Alvin Virya
 - Dr. Austin McDannald
 - Dr. Fuzhan Rahmanian
-- Prof.Helge Stein
+- Prof. Helge Stein
   
 Special thanks go to Prof. John R. Scully and Dr. Debashish Sur for graciously allowing us to utilize their corrosion data as an illustrative example to showcase the functionality of AutoEIS. Their contributions have been immensely helpful in shaping this research, and their unwavering support is deeply appreciated.
