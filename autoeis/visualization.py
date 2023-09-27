@@ -9,7 +9,7 @@ log = utils.get_logger(__name__)
 
 __all__ = [
     "draw_circuit",
-    "plot_eis_data",
+    "plot_impedance",
     "plot_linKK_residuals",
     "set_plot_style",
 ]
@@ -51,15 +51,17 @@ def draw_circuit(circuit: str):
     return fig
 
 
-def plot_eis_data(Re_Z, Im_Z, freq, saveto=None):
+def plot_impedance(Z, freq, saveto=None):
     """Plot EIS data in Nyquist and Bode plots."""
+    Re_Z = Z.real
+    Im_Z = Z.imag
+
     fig, axes = plt.subplots(1, 2, figsize=(8, 3))
 
     # Nyquist plot
     axes[0].scatter(Re_Z, -Im_Z, s=1.5)
     axes[0].set_xlabel(r"$Re(Z) / \Omega$")
     axes[0].set_ylabel(r"$-Im(Z) / \Omega$")
-    axes[0].set_title("Non-filtered")
 
     # Bode plot (magnitude) <- Re(Z)
     ax1 = axes[1]
@@ -74,8 +76,6 @@ def plot_eis_data(Re_Z, Im_Z, freq, saveto=None):
     ax2.scatter(freq, -Im_Z, s=1.5, color='red', label=r'$-Im(Z)$')
     ax2.set_ylabel(r"$-Im(Z) / \Omega$")
     ax2.legend(loc='upper right')
-
-    axes[1].set_title("Non-filtered")
 
     if saveto is not None:
         fig.savefig(saveto, dpi=300)
