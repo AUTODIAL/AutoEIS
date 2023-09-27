@@ -25,7 +25,7 @@ log = utils.get_logger(__name__)
 # TODO: For virtualenvs see https://github.com/JuliaPy/PyCall.jl?tab=readme-ov-file#python-virtual-environments
 
 
-def install(julia_project=None, quiet=False, precompile=None):  # pragma: no cover
+def install(julia_project=None, quiet=False, precompile=None, offline=False):  # pragma: no cover
     """Install all required dependencies for EquivalentCircuits.jl."""
     import julia
 
@@ -36,6 +36,9 @@ def install(julia_project=None, quiet=False, precompile=None):  # pragma: no cov
 
     if precompile == False:
         os.environ["JULIA_PKG_PRECOMPILE_AUTO"] = "0"
+    
+    if offline:
+        os.environ["JULIA_PKG_OFFLINE"] = "true"
 
     try:
         julia.install(quiet=quiet)
@@ -166,19 +169,21 @@ def import_backend(Main=None):
     """Load EquivalentCircuits.jl, verify version and return a reference."""
     if Main is None:
         Main = init_julia()
-    EquivalentCircuits = import_julia_module(Main, "EquivalentCircuits")
+    EquivalentCircuits = import_package("EquivalentCircuits", Main=Main)
     _backend_version_assertion(Main)
     return EquivalentCircuits
 
 
-def import_julia_module(Main, module_name):
-    """Load a Julia module and return a reference to the module."""
+def import_package(pkg_name, Main=None):
+    """Load a Julia package and return a reference to it."""
     import importlib
+    if Main is None:
+        Main = init_julia()
     try:
-        Main.eval(f"using {module_name}")
+        Main.eval(f"using {pkg_name}")
     except (JuliaError, RuntimeError) as e:
         _raise_import_error(root=e) 
-    ref = importlib.import_module(f"julia.{module_name}")
+    ref = importlib.import_module(f"julia.{pkg_name}")
     return ref
 
 

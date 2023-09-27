@@ -16,7 +16,7 @@ def get_logger(name: str) -> logging.Logger:
         # If logger has handlers, do not add another to avoid duplicate logs
         return logger
     
-    logger.setLevel(logging.INFO)  # Set the logging level to INFO for this logger.
+    logger.setLevel(logging.WARNING)  # Set the logging level to INFO for this logger.
     handler = RichHandler(rich_tracebacks=True)
     handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
     logger.addHandler(handler)

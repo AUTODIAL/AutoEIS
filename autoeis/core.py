@@ -1,6 +1,7 @@
 import itertools
 import os
 import re
+import time
 import warnings
 from typing import Optional
 
@@ -14,12 +15,14 @@ import numpyro.distributions as dist
 import pandas as pd
 from impedance.validation import linKK
 from jax import random
+from mpire import WorkerPool
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
+from tqdm.auto import tqdm
 
+import autoeis.julia_helpers as julia_helpers
 import autoeis.utils as utils
 import autoeis.visualization as viz
-from autoeis.julia_helpers import import_julia_module, init_julia
 
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output(linKK)
@@ -27,7 +30,7 @@ warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
 __all__ = [
-    "auto_eis_analysis",
+    "perform_full_analysis",
     "generate_equivalent_circuits",
     "perform_bayesian_inference",
     "preprocess_impedance_data",
@@ -112,7 +115,7 @@ def preprocess_impedance_data(
 
     if plot:
         fpath = os.path.join(saveto, "Non-filtered Nyquist and Bode plots.png")
-        viz.plot_eis_data(Re_Z, Im_Z, freq, saveto=fpath)
+        viz.plot_impedance(impedance, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
     # Find index where phase_Zwe == minimum, remove all high frequency imag values below zero
@@ -142,7 +145,7 @@ def preprocess_impedance_data(
     Re_Z = np.delete(Re_Z, positive_im)
     Im_Z = np.delete(Im_Z, positive_im)
     Z = np.delete(Z, positive_im)
-    
+
     # Filter 2 - Low Frequency Region
     # Lin-KK data validation to remove 'noisy' data
     # For Lin-KK, the residuals of Re(Z) and Im(Z) are what will be used as a filter.
@@ -208,7 +211,7 @@ def preprocess_impedance_data(
     # Plot the filtered Nyquist and Bode plots
     if plot:
         saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
-        viz.plot_eis_data(Re_Z_mask, Im_Z_mask, freq_mask, saveto=saveto)
+        viz.plot_impedance(Z_mask, freq_mask, saveto=saveto)
 
     # ?: What's the logic behind this?
     if threshold != 0.06:
@@ -220,13 +223,14 @@ def preprocess_impedance_data(
 def generate_equivalent_circuits(
         impedance: np.ndarray[complex],
         freq: np.ndarray[float],
-        iters: int = 100, 
-        complexity: int = 12, 
-        tol: float = 1e-2,
-        saveto: str = None
-) -> Optional[pd.DataFrame]:
+        iters: int = 100,
+        complexity: int = 12,
+        tol: float = 5e-4,
+        saveto: str = None,
+        parallel: bool = True,
+) -> pd.DataFrame:
     """Generate potential ECMs using evolutionary algorithms.
-    
+
     Parameters
     ----------
     Z : np.ndarray[complex]
@@ -238,10 +242,12 @@ def generate_equivalent_circuits(
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
     tol : float, optional
-        Convergence threshold for the ECM search (default is 1e-2).        
+        Convergence threshold for the ECM search (default is 1e-2).
     saveto : str, optional
         Path to the directory where the results will be saved (default is None).
-        
+    parallel : bool, optional
+        If True, the ECM search will be performed in parallel (default is True).
+
     Returns
     -------
     pd.DataFrame or None
@@ -249,32 +255,103 @@ def generate_equivalent_circuits(
     """
     log.info("Generating equivalent circuits via evolutionary algorithms")
 
-    Main = init_julia()
-    ec = import_julia_module(Main, "EquivalentCircuits")
-    df_jl = import_julia_module(Main, "DataFrames")
-    pd_jl = import_julia_module(Main, "Pandas")
+    ec_kwargs = {
+        "head": complexity,
+        "terminals": "RLP",
+        "convergence_threshold": tol,
+        "generations": 10,
+        "population_size": 30
+    }
 
-    circuits = []
-    kwargs = {"head": complexity, "terminals": "RLP", "convergence_threshold": tol}
+    ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
+    circuits = ecm_generator(impedance, freq, iters, ec_kwargs)
 
-    for _ in range(iters):
-        circuit = ec.circuit_evolution(impedance, freq, **kwargs)
-        circuits.append(circuit) if circuit != Main.nothing else None
-
-    if not circuits:
-        log.warning("No plausible ECMs found. Try increasing the iterations.")
-        return None
-    
-    circuits_df = pd_jl.DataFrame(df_jl.DataFrame(circuits))
-    # TODO: Relying on circuits __str__ to fetch informatio is not robust, refactor
-    for index, param in enumerate(circuits_df["Parameters"]):
-        circuits_df.at[index, "Parameters"] = Main.string(param)
+    if not len(circuits):
+        log.warning("No plausible circuits found. Try increasing `iters`.")
 
     if saveto is not None:
         fpath = os.path.join(saveto, "circuits_dataframe.csv")
-        circuits_df.to_csv(fpath, index=False)
+        circuits.to_csv(fpath, index=False)
 
-    return circuits_df
+    return circuits
+
+
+def _generate_ecm_serial(impedance, freq, iters, ec_kwargs):
+    """Generate potential ECMs using EquivalentCircuits.jl in serial."""
+    Main = julia_helpers.init_julia()
+    # Suppress Julia warnings (coming from Optim.jl)
+    Main.redirect_stderr()
+    ec = julia_helpers.import_backend(Main)
+
+    circuits = []
+    for _ in tqdm(range(iters), desc="Circuit Evolution"):
+        try:
+            circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
+        except Exception as e:
+            log.error(f"Error generating circuit: {e}")
+            continue
+        if circuit != Main.nothing:
+            circuits.append(circuit)
+
+    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
+    df = [(c.circuitstring, Main.string(c.Parameters)) for c in circuits]
+    df = pd.DataFrame(df, columns=["circuitstring", "Parameters"])
+
+    return df
+
+
+def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
+    """Generate potential ECMs using EquivalentCircuits.jl in parallel."""
+
+    def circuit_evolution(proc_id: int):
+        """Closure to generate a single circuit to be used with multiprocessing."""
+        Main = julia_helpers.init_julia()
+        # Set a different random seed for each process (Python and Julia)
+        np.random.seed(proc_id * time.time_ns() % 2**32)
+        Main.eval(f"import Random; Random.seed!({proc_id}*time_ns())")
+        # Suppress Julia warnings (coming from Optim.jl)
+        Main.redirect_stderr()
+        # Suppress Julia output (coming from EquivalentCircuits.jl) until
+        # MaximeVH/EquivalentCircuits.jl/issues/28 is fixed
+        Main.redirect_stdout()
+        ec = julia_helpers.import_backend(Main)
+        try:
+            circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
+        except Exception as e:
+            log.error(f"Error generating circuit: {e}")
+            return None
+        if circuit == Main.nothing:
+            return None
+        # Format output as list of strings since Julia objects cannot be pickled
+        return [circuit.circuitstring, Main.string(circuit.Parameters)]
+
+    nproc = os.cpu_count()
+    mpire_kwargs = {
+        "iterable_len": iters,
+        "progress_bar": True,
+        "progress_bar_style": "notebook",
+        "progress_bar_options": {"desc": "Circuit Evolution"},
+    }
+
+    # Julia cannot be initialized in the main process -> guard against this
+    runtime_error = False
+
+    with WorkerPool(n_jobs=nproc) as pool:
+        try:
+            circuits = pool.map(circuit_evolution, range(iters), **mpire_kwargs)
+        except RuntimeError:
+            runtime_error = True
+
+    if runtime_error:
+        raise RuntimeError(f"Julia must not be manually initialized, restart the kernel.")
+
+    # Remove None values
+    circuits = [circuit for circuit in circuits if circuit != None]
+
+    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
+    df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
+
+    return df
 
 
 def split_components(df_circuits: pd.DataFrame) -> pd.DataFrame:
@@ -1416,7 +1493,7 @@ def perform_bayesian_inference(
     Parameters
     ----------
     eis_data : pd.DataFrame
-        DataFrame with pre-processed data; expected columns are frequency, 
+        DataFrame with pre-processed data; expected columns are frequency,
         real part, and imaginary part of the impedance data.
     ecms : pd.DataFrame
         DataFrame with filtered ECMs.
@@ -1438,7 +1515,7 @@ def perform_bayesian_inference(
 
     # Determine if there's any ECM that passed post-filtering process
     if len(ecms) == 0:
-        log.error("No plausible ECMs found. Try increasing the iterations.")
+        raise Exception("`ecms` is empty! Please check the filtering process.")
 
     freq = np.array(eis_data["freq"])
     Zreal = np.array(eis_data["Zreal"])
@@ -1904,13 +1981,14 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
     return circuits2
 
 
-def auto_eis_analysis(
+def perform_full_analysis(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
     iters: int = 100,
     saveto: str = None,
     plot: bool = False,
     draw_ecm: bool = False,
+    parallel: bool = True,
 ) -> pd.DataFrame:
     """Perform automated EIS analysis by generating plausible ECMs
     followed by Bayesian inference on component values.
@@ -1926,9 +2004,11 @@ def auto_eis_analysis(
     saveto : str
         Path to the directory where the results will be saved.
     plot : bool, optional
-        If True, the results will be plotted. Default is False.        
+        If True, the results will be plotted. Default is False.
     draw_ecm : bool, optional
         If True, the ECM will be plotted. Default is False.
+    parallel : bool, optional
+        If True, the ECM generation will be done in parallel. Default is True.
 
     Returns
     -------
@@ -1944,14 +2024,10 @@ def auto_eis_analysis(
     eis_data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
     Z_clean = eis_data["Zreal"].to_numpy() + 1j * eis_data["Zimag"].to_numpy()
     freq_clean = eis_data["freq"].to_numpy()
-
-    # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-2, "saveto": saveto}
-    circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
     
-    if circuits_unfiltered is None:
-        log.error("No plausible ECMs found. Try increasing `iters`.")
-        return
+    # Generate a pool of potential ECMs via an evolutionary algorithm
+    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-1, "saveto": saveto, "parallel": parallel}
+    circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
@@ -1965,22 +2041,17 @@ def auto_eis_analysis(
 
 if __name__ == "__main__":
     import numpy as np
-
     import autoeis as ae
-    from autoeis.julia_helpers import init_julia
-
-    # Initialize Julia
-    Main = init_julia()
 
     # Load EIS data
     fname = "assets/test_data.txt"
     df = ae.io.load_eis_data(fname)
     # Fetch frequency and impedance data
-    freq = np.array(df["freq/Hz"]).astype(float)
-    Re_Z = np.array(df["Re(Z)/Ohm"]).astype(float)
-    Im_Z = -np.array(df["-Im(Z)/Ohm"]).astype(float)
+    freq = df["freq/Hz"].to_numpy()
+    Re_Z = df["Re(Z)/Ohm"]).to_numpy()
+    Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
 
     # Perform EIS analysis
     Z = Re_Z + Im_Z * 1j
-    results = auto_eis_analysis(impedance=Z, freq=freq, saveto=fname, iters=100)
+    results = perform_full_analysis(impedance=Z, freq=freq, iters=100)
     print(results)
