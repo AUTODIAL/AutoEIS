@@ -46,8 +46,8 @@ To enable interaction between Python and Julia, you must first set the Julia exe
 Once you locate the Julia executable path, you can set it in Python using the following command:
 
 ```python
-from autoeis.julia_helpers import set_julia_path
-set_julia_path("/path/to/julia/executable")
+from autoeis.julia_helpers import add_to_path
+add_to_path("/path/to/julia/executable")
 ```
 
 Note that you must do this every time you start a new Python session -> Another reason to use juliaup 😎. Now, you're all set.
