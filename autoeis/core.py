@@ -2026,10 +2026,8 @@ def perform_full_analysis(
     freq_clean = eis_data["freq"].to_numpy()
     
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 5e-4, "saveto": saveto, "parallel": parallel}
+    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-1, "saveto": saveto, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
-
-    return circuits_unfiltered
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
@@ -2043,22 +2041,17 @@ def perform_full_analysis(
 
 if __name__ == "__main__":
     import numpy as np
-
     import autoeis as ae
-    import autoeis.julia_helpers as julia_helpers
-
-    # Initialize Julia
-    Main = julia_helpers.init_julia()
 
     # Load EIS data
     fname = "assets/test_data.txt"
     df = ae.io.load_eis_data(fname)
     # Fetch frequency and impedance data
-    freq = np.array(df["freq/Hz"]).astype(float)
-    Re_Z = np.array(df["Re(Z)/Ohm"]).astype(float)
-    Im_Z = -np.array(df["-Im(Z)/Ohm"]).astype(float)
+    freq = df["freq/Hz"].to_numpy()
+    Re_Z = df["Re(Z)/Ohm"]).to_numpy()
+    Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
 
     # Perform EIS analysis
     Z = Re_Z + Im_Z * 1j
-    results = perform_full_analysis(impedance=Z, freq=freq, saveto=fname, iters=100)
+    results = perform_full_analysis(impedance=Z, freq=freq, iters=100)
     print(results)
