@@ -71,7 +71,7 @@ Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
 
 # Perform EIS analysis
 Z = Re_Z + Im_Z * 1j
-results = perform_full_analysis(impedance=Z, freq=freq, iters=100)
+results = ae.perform_full_analysis(impedance=Z, freq=freq, iters=100)
 print(results)
 ```
 
