@@ -18,6 +18,7 @@ from jax import random
 from mpire import WorkerPool
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
+from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
 import autoeis.utils as utils
@@ -114,7 +115,7 @@ def preprocess_impedance_data(
 
     if plot:
         fpath = os.path.join(saveto, "Non-filtered Nyquist and Bode plots.png")
-        viz.plot_eis_data(Re_Z, Im_Z, freq, saveto=fpath)
+        viz.plot_impedance(impedance, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
     # Find index where phase_Zwe == minimum, remove all high frequency imag values below zero
@@ -210,7 +211,7 @@ def preprocess_impedance_data(
     # Plot the filtered Nyquist and Bode plots
     if plot:
         saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
-        viz.plot_eis_data(Re_Z_mask, Im_Z_mask, freq_mask, saveto=saveto)
+        viz.plot_impedance(Z_mask, freq_mask, saveto=saveto)
 
     # ?: What's the logic behind this?
     if threshold != 0.06:
@@ -224,7 +225,7 @@ def generate_equivalent_circuits(
         freq: np.ndarray[float],
         iters: int = 100,
         complexity: int = 12,
-        tol: float = 1e-2,
+        tol: float = 5e-4,
         saveto: str = None,
         parallel: bool = True,
 ) -> pd.DataFrame:
@@ -283,7 +284,7 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs):
     ec = julia_helpers.import_backend(Main)
 
     circuits = []
-    for _ in range(iters):
+    for _ in tqdm(range(iters), desc="Circuit Evolution"):
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
         except Exception as e:
@@ -305,6 +306,9 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
     def circuit_evolution(proc_id: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
         Main = julia_helpers.init_julia()
+        # Set a different random seed for each process (Python and Julia)
+        np.random.seed(proc_id * time.time_ns() % 2**32)
+        Main.eval(f"import Random; Random.seed!({proc_id}*time_ns())")
         # Suppress Julia warnings (coming from Optim.jl)
         Main.redirect_stderr()
         ec = julia_helpers.import_backend(Main)
@@ -324,7 +328,6 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
         "progress_bar": True,
         "progress_bar_style": "notebook",
         "progress_bar_options": {"desc": "Circuit Evolution"},
-        "worker_init": lambda: np.random.seed(),
     }
 
     # Julia cannot be initialized in the main process -> guard against this
@@ -2018,10 +2021,12 @@ def perform_full_analysis(
     eis_data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
     Z_clean = eis_data["Zreal"].to_numpy() + 1j * eis_data["Zimag"].to_numpy()
     freq_clean = eis_data["freq"].to_numpy()
-
+    
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-4, "saveto": saveto, "parallel": parallel}
+    kwargs = {"iters": iters, "complexity": 12, "tol": 5e-4, "saveto": saveto, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
+
+    return circuits_unfiltered
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
