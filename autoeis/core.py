@@ -311,6 +311,9 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
         Main.eval(f"import Random; Random.seed!({proc_id}*time_ns())")
         # Suppress Julia warnings (coming from Optim.jl)
         Main.redirect_stderr()
+        # Suppress Julia output (coming from EquivalentCircuits.jl) until
+        # MaximeVH/EquivalentCircuits.jl/issues/28 is fixed
+        Main.redirect_stdout()
         ec = julia_helpers.import_backend(Main)
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
