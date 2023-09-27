@@ -10,4 +10,6 @@ matplotlib
 numpy
 numpyro
 pandas
+pytest      # for testing
 rich
+tqdm
