@@ -294,8 +294,6 @@ def _add_ec_to_julia_project(Main, io_arg):
         version="v" + __equivalent_circuits_jl_version__,
     )
     Main.eval(f"Pkg.add([ec_spec], {io_arg})")
-    # Install dependencies
-    Main.eval(f'Pkg.add(["Pandas", "DataFrames"], {io_arg})')
 
 
 def _escape_filename(filename):
