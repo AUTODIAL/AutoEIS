@@ -1,4 +1,5 @@
 # AutoEIS
+## What is AutoEIS?
 AutoEIS is a Python package that automatically proposes statistically plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradation.
 
 Please be aware that the current version is still under development and has not been formally released. If you find any bugs or have any suggestions, please file an [issue](https://github.com/AUTODIAL/AutoEIS/issues) or directly submit a [pull request](https://github.com/AUTODIAL/AutoEIS/pulls). We would greatly appreciate any contributions from the community.
@@ -20,18 +21,21 @@ python -c "from autoeis.julia_helpers import install; install()"
 ```
 
 ## Dependencies
-The circuits generation is done using the Julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. You need a working installation of Julia (see ##Installation).
+### Julia
+The circuits generation is done using the Julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. You need a working installation of Julia (see [Installation](##Installation)).
 
 ### JAX
 If you're on Windows, after installing `jax`, you will also need to install `jaxlib`. However, `jaxlib` for Windows is not on PyPI. You may need to visit [this](https://github.com/cloudhan/jax-windows-builder) repository to find the version corresponding to your Python version and then install it using a wheel.
 
 ## Workflow
 The schematic workflow of AutoEis is shown below:
-![AutoEIS workflow](./static/workflow.png)
+![AutoEIS workflow](assets/workflow.png)
 It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference, and the model evaluation process. Through this workflow, AutoEis can prioritize the statistically optimal ECM and also retain suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be found in the [paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta).
 
-## Julia set up
-To enable interaction between Python and Julia, you must first set the Julia executable path. If you install Julia using juliaup, this will be automatically handled. Otherwise, the default location of the Julia executable varies depending on the operating system you are using. Below are the common default locations for each supported OS:
+## Julia manual setup
+**We strongly recommend that you install Julia using juliaup (see [Installation](#Installation)).**
+
+To enable interaction between Python and Julia, you must first set the Julia executable path. If you install Julia using juliaup (see [Installation](#Installation)), this will be automatically handled. Otherwise, the default location of the Julia executable varies depending on the operating system you are using. Below are the common default locations for each supported OS:
 
 ```shell
 - Windows: C:\\Users\\<username>\\AppData\\Local\\Julia-<version>\\bin
@@ -41,8 +45,6 @@ To enable interaction between Python and Julia, you must first set the Julia exe
 
 `<version>` refers to the specific version of Julia you have installed, and `<username>` is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command `which julia` (for Unix-based systems) or `where julia` (for Windows). This will display the full path of the Julia executable file.
 
-**That said, we strongly recommend that you install Julia using juliaup.**
-
 Once you locate the Julia executable path, you can set it in Python using the following command:
 
 ```python
@@ -50,7 +52,7 @@ from autoeis.julia_helpers import add_to_path
 add_to_path("/path/to/julia/executable")
 ```
 
-Note that you must do this every time you start a new Python session -> Another reason to use juliaup 😎. Now, you're all set.
+Note that you must do this every time you start a new Python session 🡢 Another reason to use juliaup 😎. Now, you're all set.
 
 ## Usage
 To use AutoEIS, you can either perform the ECM generation and evaluation process step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function:
@@ -73,11 +75,11 @@ results = perform_full_analysis(impedance=Z, freq=freq, iters=100)
 print(results)
 ```
 
-- `impedance`: electrochemical impedance measurements
-- `freq`: frequencies corresponding to the impedance measurements
-- `saveto`: the name of the folder to save the results
-- `iters`: the numbers of equivalent circuit generation to be performed
-- `draw_ecm`: flag to plot equivalent circuits. (requires a [LaTeX compiler](https://www.latex-project.org/get/)) 
+- `impedance`: Electrochemical impedance measurements
+- `freq`: Frequencies corresponding to the impedance measurements
+- `saveto`: Name of the folder to save the results
+- `iters`: Numbers of equivalent circuit generation to be performed
+- `draw_ecm`: Flag to plot equivalent circuits. (requires a [LaTeX compiler](https://www.latex-project.org/get/)) 
   
 An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/main/examples/demo_brief.ipynb). 
 
