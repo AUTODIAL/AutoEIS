@@ -187,7 +187,7 @@ def import_package(pkg_name, Main=None):
     return ref
 
 
-def add_to_PATH(path):
+def add_to_path(path):
     if not os.path.exists(path):
         raise ValueError(f"The provided path '{path}' does not exist.")
     
