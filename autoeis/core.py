@@ -57,6 +57,7 @@ def find_ohmic_resistance(
     ohmic_resistance: float
         The ohmic resistance of impedance data
     """
+    # TODO: The logic behind this function is not robust enough, need to be improved
     # Select the high-frequency impedance data
     high_f_real = reals[0:10]
     high_f_imag = imags[0:10]
@@ -103,7 +104,7 @@ def preprocess_impedance_data(
         - ohmic_resistance (float): Ohmic resistance extracted from impedance data.
         - rmse (float): Root mean square error of KK validated data vs. measurements.
     """
-    log.info("Pre-processing impedance data using KK filter")
+    log.info("Pre-processing impedance data using KK filter.")
 
     # Make a new folder to store the results
     if saveto is not None:
@@ -253,7 +254,7 @@ def generate_equivalent_circuits(
     pd.DataFrame or None
         DataFrame containing ECM solutions or None if no solutions are found.
     """
-    log.info("Generating equivalent circuits via evolutionary algorithms")
+    log.info("Generating equivalent circuits via evolutionary algorithms.")
 
     ec_kwargs = {
         "head": complexity,
@@ -1511,11 +1512,11 @@ def perform_bayesian_inference(
     df : pd.DataFrame
         Dataframe containing the ECMs with the Bayesian inference results (12 columns)
     """
-    log.info("Applying Bayesian inference on the generated circuits")
+    log.info("Applying Bayesian inference on the circuits.")
 
     # Determine if there's any ECM that passed post-filtering process
     if len(ecms) == 0:
-        raise Exception("`ecms` is empty! Please check the filtering process.")
+        raise Exception("Circuits' dataframe is empty!")
 
     freq = np.array(eis_data["freq"])
     Zreal = np.array(eis_data["Zreal"])
@@ -1969,16 +1970,21 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
         DataFrame containing the filtered ECMs.
     """
     log.info("Filtering the circuits using heuristic rules.")
+
+    if len(circuits) == 0:
+        log.warning("Circuits' dataframe is empty!")
+        return circuits
+    
     circuits = split_components(circuits)
     circuits = capacitance_filter(circuits)
     circuits = series_filter(circuits)
     circuits = ohmic_resistance_filter(circuits, ohmic_resistance)
     circuits = generate_mathematical_expression(circuits)
-    # ?: Why do we make a new dataframe here?
-    circuits2 = combine_expression(circuits)
-    circuits2 = calculate_length(circuits2)
-    circuits2 = split_variables(circuits2)
-    return circuits2
+    circuits = combine_expression(circuits)
+    circuits = calculate_length(circuits)
+    circuits = split_variables(circuits)
+
+    return circuits
 
 
 def perform_full_analysis(
@@ -2041,6 +2047,7 @@ def perform_full_analysis(
 
 if __name__ == "__main__":
     import numpy as np
+
     import autoeis as ae
 
     # Load EIS data
