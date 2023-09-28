@@ -192,7 +192,7 @@ def import_package(pkg_name, Main=None):
         num_failed_imports += 1
         if num_failed_imports > 3:
             _raise_import_error(root=e)
-        import_package(pkg_name, Main=Main)
+        ref = import_package(pkg_name, Main=Main)
 
     return ref
 
