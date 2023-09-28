@@ -5,11 +5,11 @@ from autoeis.julia_helpers import install
 
 @click.group("autoeis")
 @click.pass_context
-def autoeis(context):
+def autoeis_installer(context):
     ctx = context
 
 
-@autoeis.command("install", help="Install Julia dependencies for AutoEIS.")
+@autoeis_installer.command("install", help="Install Julia dependencies for AutoEIS.")
 @click.option(
     "-p",
     "julia_project",

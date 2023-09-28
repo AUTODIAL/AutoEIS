@@ -1,4 +1,4 @@
-from autoeis.cli.main import autoeis as cli
+from .cli import autoeis_installer
 
 if __name__ == "__main__":
-    cli(prog_name="autoeis")
+    autoeis_installer(prog_name="autoeis")
