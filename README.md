@@ -5,10 +5,13 @@ AutoEIS is a Python package that automatically proposes statistically plausible 
 Please be aware that the current version is still under development and has not been formally released. If you find any bugs or have any suggestions, please file an [issue](https://github.com/AUTODIAL/AutoEIS/issues) or directly submit a [pull request](https://github.com/AUTODIAL/AutoEIS/pulls). We would greatly appreciate any contributions from the community.
 
 ## Installation
-The easiest way to install this package is using pip install from [pypi](https://pypi.org/project/autoeis/):
+Follow the instructions below to install AutoEIS and its dependencies:
 
 ### Install Julia
-The official way to install Julia (other than directly downloading the binaries from [here](https://julialang.org/downloads/)) is via [juliaup](https://github.com/JuliaLang/juliaup). [Juliaup](https://github.com/JuliaLang/juliaup) provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with [juliaup](https://github.com/JuliaLang/juliaup) is straightforward; Please follow the instructions on its GitHub [page](https://github.com/JuliaLang/juliaup).
+The official way to install Julia is via [juliaup](https://github.com/JuliaLang/juliaup). [Juliaup](https://github.com/JuliaLang/juliaup) provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with [juliaup](https://github.com/JuliaLang/juliaup) is straightforward; Please follow the instructions on its GitHub [page](https://github.com/JuliaLang/juliaup).
+
+### Julia manual setup (not recommended)
+**We strongly recommend that you install Julia using juliaup (see [Install Julia](#install-julia)). If you've already done so, skip this step and go the [next](#install-autoeis-using-pip)**. However, if for any reason, you insist on using your own Julia installation, you need to ensure that `julia` command can be found in your `PATH` environment variable. You can test this by running the command `julia` in a terminal (or command prompt on Windows). If an error message appears stating `julia is not recognized as an internal or external command`, you need to add the path to the Julia executable to your `PATH` environment variable. You can find instructions on how to do this [here](https://julialang.org/downloads/platform/#windows).
 
 ### Install AutoEIS using [pip](https://pypi.org/project/autoeis)
 Open a terminal (or command prompt on Windows) and run the following command:
@@ -55,16 +58,6 @@ The schematic workflow of AutoEIS is shown below:
 
 It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference, and the model evaluation process. Through this workflow, AutoEis can prioritize the statistically optimal ECM and also retain suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be found in the [paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta).
 
-## Julia manual setup
-**We strongly recommend that you install Julia using juliaup (see [Installation](#Installation)).** However, if for some reason, you insist on using your own Julia installation, you need to ensure that `julia` command can be found in your `PATH` environment variable. You can test this by running the command `julia` in a terminal (or command prompt on Windows). If an error message appears stating `julia is not recognized as an internal or external command`, you need to add the path to the Julia executable to your `PATH` environment variable. AutoEIS provides a helper function to do this for you. Add the following lines to the begining of your Python script:
-
-```python
-from autoeis.julia_helpers import add_to_path
-add_to_path("/path/to/julia/executable")
-```
-
-Note that you must do this every time you start a new Python session.
-
 ## Usage
 To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function:
 
@@ -93,7 +86,7 @@ print(results)
 - `iters`: Numbers of equivalent circuit generation to be performed
 - `draw_ecm`: Flag to plot equivalent circuits. (requires a [LaTeX compiler](https://www.latex-project.org/get/)) 
   
-An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/main/examples/demo_brief.ipynb).
+An example notebook that demonstrates how to use AutoEIS can be found [here](examples/demo_brief.ipynb).
 
 # Work in progress/known issues
 - [ ] Refactor the code as it is still in the developmental stage and not yet production-ready.
