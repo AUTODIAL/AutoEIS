@@ -27,6 +27,7 @@ setup(
         "jax",
         "julia",
         "matplotlib",
+        "mpire",
         "numpy",
         "numpyro",
         "pandas",
