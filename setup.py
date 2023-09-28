@@ -19,6 +19,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "arviz",
+        "click",
         "dill",
         "impedance",
         "ipython",
@@ -26,6 +27,7 @@ setup(
         "jax",
         "julia",
         "matplotlib",
+        "mpire",
         "numpy",
         "numpyro",
         "pandas",

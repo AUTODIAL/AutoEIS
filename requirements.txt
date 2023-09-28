@@ -1,4 +1,5 @@
 arviz
+click
 dill
 impedance
 ipython
@@ -7,6 +8,7 @@ jax
 jaxlib
 julia
 matplotlib
+mpire
 numpy
 numpyro
 pandas
