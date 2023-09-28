@@ -5,6 +5,7 @@
 # Original repository: https://github.com/MilesCranmer/PySR
 # Commit reference: 976f8d8 dated 2023-09-16.
 
+import importlib
 import os
 import subprocess
 import sys
@@ -174,16 +175,25 @@ def import_backend(Main=None):
     return EquivalentCircuits
 
 
+# HACK: On Windows, for some reason the first two imports fail, fix this.
 def import_package(pkg_name, Main=None):
     """Load a Julia package and return a reference to it."""
-    import importlib
-    if Main is None:
-        Main = init_julia()
+    num_failed_imports = 0
+
     try:
-        Main.eval(f"using {pkg_name}")
-    except (JuliaError, RuntimeError) as e:
-        _raise_import_error(root=e) 
-    ref = importlib.import_module(f"julia.{pkg_name}")
+        if Main is None:
+            Main = init_julia()
+        try:
+            Main.eval(f"using {pkg_name}")
+        except (JuliaError, RuntimeError) as e:
+            _raise_import_error(root=e)
+        ref = importlib.import_module(f"julia.{pkg_name}")
+    except ImportError:
+        num_failed_imports += 1
+        if num_failed_imports > 3:
+            _raise_import_error(root=e)
+        import_package(pkg_name, Main=Main)
+
     return ref
 
 
