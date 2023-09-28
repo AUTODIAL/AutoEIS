@@ -1,6 +1,10 @@
-name: Tests
+name: Nightly
 
-on: pull_request
+on:
+  schedule:
+    # Run (on default branch only) at 05:00 (hr:mm) UTC -> 12am EST
+    - cron: "0 5 * * *"
+  workflow_dispatch:
 
 jobs:
   test:
@@ -11,7 +15,7 @@ jobs:
     strategy:
       matrix:
         julia-version: ['1.9']
-        python-version: ['3.10']
+        python-version: ['3.9', '3.10', '3.11']
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
