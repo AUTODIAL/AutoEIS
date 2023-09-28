@@ -2048,7 +2048,7 @@ if __name__ == "__main__":
     df = ae.io.load_eis_data(fname)
     # Fetch frequency and impedance data
     freq = df["freq/Hz"].to_numpy()
-    Re_Z = df["Re(Z)/Ohm"]).to_numpy()
+    Re_Z = df["Re(Z)/Ohm"].to_numpy()
     Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
 
     # Perform EIS analysis
