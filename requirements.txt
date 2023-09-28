@@ -1,8 +1,8 @@
 arviz
 dill
 impedance
-ipython     # for notebook support
-ipywidgets  # for notebook support
+ipython
+ipywidgets
 jax
 jaxlib
 julia
@@ -10,6 +10,6 @@ matplotlib
 numpy
 numpyro
 pandas
-pytest      # for testing
+pytest
 rich
 tqdm
