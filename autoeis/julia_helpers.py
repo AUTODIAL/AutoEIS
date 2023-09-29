@@ -109,15 +109,21 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
     try:
         Julia(**julia_kwargs)
     except UnsupportedPythonError:
-        # Static python binary, so we turn off pre-compiled modules.
-        julia_kwargs = {**julia_kwargs, "compiled_modules": False}
-        Julia(**julia_kwargs)
-        log.warn(
-            "Your system's Python library is static (e.g., conda), "
-            "so precompilation will be turned off. For a dynamic library, "
-            "try using `pyenv` and installing with `--enable-shared`: "
-            "https://github.com/pyenv/pyenv/blob/master/plugins/python-build/README.md"
-        )
+        # HACK: When switching virtualenvs, we also get UnsupportedPythonError.
+        # Check if it resolves by recompiling PyCall, if not turn off compiled_modules
+        _recompile_pycall()
+        try:
+            Julia(**julia_kwargs)
+        except UnsupportedPythonError:
+            # Static python binary, so we turn off pre-compiled modules.
+            julia_kwargs = {**julia_kwargs, "compiled_modules": False}
+            Julia(**julia_kwargs)
+            log.warn(
+                "Your system's Python library is static (e.g., conda), "
+                "so precompilation will be turned off. For a dynamic library, "
+                "try using `pyenv` and installing with `--enable-shared`: "
+                "https://github.com/pyenv/pyenv/blob/master/plugins/python-build/README.md"
+            )
 
     using_compiled_modules = (not "compiled_modules" in julia_kwargs) or julia_kwargs[
         "compiled_modules"
@@ -203,6 +209,15 @@ def add_to_path(path):
     
     if path not in os.environ["PATH"].split(os.pathsep):
         os.environ["PATH"] += os.pathsep + path
+
+
+def _recompile_pycall():
+    import julia
+    try:
+        os.environ["PYCALL_JL_RUNTIME_PYTHON"] = sys.executable
+        julia.install(quiet=True)
+    except julia.tools.PyCallInstallError:
+        pass    
 
 
 def _raise_import_error(root: Exception=None):
