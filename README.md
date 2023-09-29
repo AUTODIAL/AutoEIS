@@ -10,8 +10,12 @@ Follow the instructions below to install AutoEIS and its dependencies:
 ### Install Julia
 The official way to install Julia is via [juliaup](https://github.com/JuliaLang/juliaup). [Juliaup](https://github.com/JuliaLang/juliaup) provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with [juliaup](https://github.com/JuliaLang/juliaup) is straightforward; Please follow the instructions on its GitHub [page](https://github.com/JuliaLang/juliaup).
 
-### Julia manual setup (not recommended)
-**We strongly recommend that you install Julia using juliaup (see [Install Julia](#install-julia)). If you've already done so, skip this step and go the [next](#install-autoeis-using-pip)**. However, if for any reason, you insist on using your own Julia installation, you need to ensure that `julia` command can be found in your `PATH` environment variable. You can test this by running the command `julia` in a terminal (or command prompt on Windows). If an error message appears stating `julia is not recognized as an internal or external command`, you need to add the path to the Julia executable to your `PATH` environment variable. You can find instructions on how to do this [here](https://julialang.org/downloads/platform/#windows).
+<details>
+  <summary>Julia manual setup (not recommended)</summary>
+  
+  **We strongly recommend that you install Julia using juliaup (see [Install Julia](#install-julia)). If you've already done so, skip this step and go the [next](#install-autoeis-using-pip)**. However, if for any reason, you insist on using your own Julia installation, you need to ensure that `julia` command can be found in your `PATH` environment variable. You can test this by running the command `julia` in a terminal (or command prompt on Windows). If an error message appears stating `julia is not recognized as an internal or external command`, you need to add the path to the Julia executable to your `PATH` environment variable. You can find instructions on how to do this [here](https://julialang.org/downloads/platform/#windows).
+
+</details>
 
 ### Install AutoEIS using [pip](https://pypi.org/project/autoeis)
 Open a terminal (or command prompt on Windows) and run the following command:
@@ -20,20 +24,24 @@ Open a terminal (or command prompt on Windows) and run the following command:
 pip install -U autoeis
 ```
 
-### Install JAX (only required on Windows)
-If you're on Windows, you **might** need to install `jaxlib` (We recommend that you skip this step for now, and come back only if you encounter any errors while using AutoEIS). For CPU version, run the following command in a command prompt:
+<details>
+  <summary>Install JAX (skip now, come back only if you encounter errors on Windows)</summary>
+  
+  If you're on Windows, you **might** need to manually install `jaxlib` (We recommend that you skip this step for now, and come back only if you encounter any errors while using AutoEIS). For CPU version, run the following command in a command prompt:
+  
+  ```shell
+  pip install "jax[cpu]===0.4.11" -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
+  ```
+  
+  For GPU support, use the following command instead:
+  
+  ```shell
+  pip install jax[cuda111] -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
+  ```
+  
+  If you encounter any problem running above commands, visit [jax-windows-builder](https://github.com/cloudhan/jax-windows-builder) repository to find and install a compatible version. You can find more detailed instructions there.
 
-```shell
-pip install "jax[cpu]===0.3.14" -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
-```
-
-For GPU support, use the following command instead:
-
-```shell
-pip install jax[cuda111] -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
-```
-
-If you encounter any problem running above commands, visit [jax-windows-builder](https://github.com/cloudhan/jax-windows-builder) repository to find and install a compatible version. You can find more detailed instructions there.
+</details>
 
 ### Install Julia dependencies
 The circuit generation is done using the Julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl). AutoEIS provides a helper function to automatically install the required Julia dependencies. Open a terminal (or command prompt on Windows) and run the following command:
