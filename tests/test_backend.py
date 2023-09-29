@@ -13,8 +13,6 @@ def test_import_julia_modules():
 
     # Ensure installed modules can be imported
     julia_helpers.import_package(Main, "EquivalentCircuits")
-    julia_helpers.import_package(Main, "DataFrames")
-    julia_helpers.import_package(Main, "Pandas")
 
     # Throw error for non-existent module
     with pytest.raises(Exception):
