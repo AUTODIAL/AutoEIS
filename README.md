@@ -21,7 +21,7 @@ pip install -U autoeis
 ```
 
 ### Install JAX (only required on Windows)
-If you're on Windows, you will also need to install `jaxlib` (since it's not on PyPI). For CPU version, run the following command in a command prompt:
+If you're on Windows, you **might** need to install `jaxlib` (We recommend that you skip this step for now, and come back only if you encounter any errors while using AutoEIS). For CPU version, run the following command in a command prompt:
 
 ```shell
 pip install "jax[cpu]===0.3.14" -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
@@ -54,7 +54,7 @@ python -c "import autoeis; print(autoeis.__version__)"
 ## Workflow
 The schematic workflow of AutoEIS is shown below:
 
-![AutoEIS workflow](assets/workflow.png)
+![AutoEIS workflow](https://raw.githubusercontent.com/AUTODIAL/AutoEIS/develop/assets/workflow.png)
 
 It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference, and the model evaluation process. Through this workflow, AutoEis can prioritize the statistically optimal ECM and also retain suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be found in the [paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta).
 
@@ -86,7 +86,7 @@ print(results)
 - `iters`: Numbers of equivalent circuit generation to be performed
 - `draw_ecm`: Flag to plot equivalent circuits. (requires a [LaTeX compiler](https://www.latex-project.org/get/)) 
   
-An example notebook that demonstrates how to use AutoEIS can be found [here](examples/demo_brief.ipynb).
+An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/demo_brief.ipynb).
 
 # Work in progress/known issues
 - [ ] Refactor the code as it is still in the developmental stage and not yet production-ready.
