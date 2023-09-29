@@ -39,7 +39,7 @@ If you encounter any problem running above commands, visit [jax-windows-builder]
 The circuit generation is done using the Julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl). AutoEIS provides a helper function to automatically install the required Julia dependencies. Open a terminal (or command prompt on Windows) and run the following command:
 
 ```shell
-python -c "from autoeis.julia_helpers import install; install()"
+python -m autoeis install
 ```
 
 **Note:** AutoEIS doesn't pollute your global Julia environment. Instead, it creates a new shared environment called `autoeis-VERSION_NUMBER` (`VERSION_NUMBER` is the AutoEIS version) and installs the required packages there. This way, you can safely use AutoEIS without worrying about breaking your existing Julia environment. Shared environments are stored in the `~/.julia/environments` directory on Unix-based systems and `%USERPROFILE%\.julia\environments` on Windows.
