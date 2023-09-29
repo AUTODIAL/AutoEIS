@@ -1,3 +1,59 @@
 [build-system]
-requires = ["setuptools>=60"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autoeis"
+dynamic = ["version"]
+description = "A tool for automated EIS analysis by proposing statistically plausible ECMs."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    { name = "Runze Zhang", email = "runzee.zhang@mail.utoronto.ca" },
+    { name = "Robert Black", email = "robert.black@nrc-cnrc.gc.ca" },
+    { name = "Jason Hattrick-Simpers", email = "jason.hattrick.simpers@utoronto.ca" },
+]
+maintainers = [
+  { name = "Amin Sadeghi", email = "amin.sadeghi@live.com" }
+]
+keywords = [
+    "bayesian inference",
+    "electrochemical impedance spectroscopy",
+    "equivalent circuit model",
+    "evolutionary algorithm",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "arviz",
+    "click",
+    "dill",
+    "impedance",
+    "ipython",
+    "ipywidgets",
+    "jax",
+    "julia",
+    "matplotlib",
+    "mpire",
+    "numpy",
+    "numpyro",
+    "pandas",
+    "rich",
+    "tqdm",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/AUTODIAL/AutoEIS"
+"Bug Tracker" = "https://github.com/AUTODIAL/AutoEIS/issues"
+
+[tool.hatch.version]
+path = "autoeis/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/autoeis",
+]
