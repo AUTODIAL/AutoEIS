@@ -51,7 +51,7 @@ def draw_circuit(circuit: str):
     return fig
 
 
-def plot_impedance(Z, freq, saveto=None):
+def plot_impedance(Z, freq, saveto=None, size=1.5):
     """Plot EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
     Im_Z = Z.imag
@@ -59,13 +59,13 @@ def plot_impedance(Z, freq, saveto=None):
     fig, axes = plt.subplots(1, 2, figsize=(8, 3))
 
     # Nyquist plot
-    axes[0].scatter(Re_Z, -Im_Z, s=1.5)
+    axes[0].scatter(Re_Z, -Im_Z, s=size)
     axes[0].set_xlabel(r"$Re(Z) / \Omega$")
     axes[0].set_ylabel(r"$-Im(Z) / \Omega$")
 
     # Bode plot (magnitude) <- Re(Z)
     ax1 = axes[1]
-    ax1.scatter(freq, Re_Z, s=1.5, color='blue', label=r'$Re(Z)$')
+    ax1.scatter(freq, Re_Z, s=size, color='blue', label=r'$Re(Z)$')
     ax1.set_xscale("log")
     ax1.set_xlabel("freq (Hz)")
     ax1.set_ylabel(r"$Re(Z) / \Omega$")
@@ -73,7 +73,7 @@ def plot_impedance(Z, freq, saveto=None):
 
     # Bode plot (phase) <- Im(Z)
     ax2 = ax1.twinx()  # instantiate a second y-axis sharing the same x-axis
-    ax2.scatter(freq, -Im_Z, s=1.5, color='red', label=r'$-Im(Z)$')
+    ax2.scatter(freq, -Im_Z, s=size, color='red', label=r'$-Im(Z)$')
     ax2.set_ylabel(r"$-Im(Z) / \Omega$")
     ax2.legend(loc='upper right')
 
