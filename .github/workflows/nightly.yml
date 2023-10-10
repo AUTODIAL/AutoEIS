@@ -42,9 +42,4 @@ jobs:
             python -m autoeis install
       - name: "Run tests"
         run: |
-          # Test package is importable
-          python -c 'import autoeis as ae; print("From Python!")'
-          # Test Julia is accessible
-          python -c 'import autoeis as ae; Main = ae.julia_helpers.init_julia(); Main.println("From Julia!")'
-          # Test Julia backend is importable
-          python -c 'import autoeis as ae; ec = ae.julia_helpers.import_backend(); print(ec)'
+          pytest .
