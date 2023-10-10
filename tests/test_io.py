@@ -15,8 +15,8 @@ def test_load_eis_data():
         ae.load_eis_data("nonexistentfile.csv")
 
     # Load a valid txt file of EIS data
-    fpath = ASSETS_DIR / 'testdata.txt'
-    df = ae.load_eis_data(fpath)
+    fpath = ASSETS_DIR / 'test_data.txt'
+    df = ae.io.load_eis_data(fpath)
     frequencies = np.array(df["freq/Hz"]).astype(float)
     reals = np.array(df["Re(Z)/Ohm"]).astype(float)
     imags = -np.array(df["-Im(Z)/Ohm"]).astype(float)
