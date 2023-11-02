@@ -1,3 +1,18 @@
+r"""
+
+Collection of functions for importing and exporting EIS data
+############################################################
+
+.. currentmodule:: autoeis.io
+
+.. autosummary::
+   :toctree: generated/
+
+    load_eis_data
+    load_results_dataframe
+
+"""
+
 import json
 import pickle
 from pathlib import Path
