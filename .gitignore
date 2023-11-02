@@ -70,6 +70,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+doc/_build/
 
 # PyBuilder
 .pybuilder/
@@ -163,3 +164,4 @@ cython_debug/
 examples/**/*.png
 examples/**/*.csv
 examples/**/*.txt
+results*/
