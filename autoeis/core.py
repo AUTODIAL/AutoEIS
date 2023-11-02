@@ -43,7 +43,7 @@ def find_ohmic_resistance(
     """Extracts the ohmic resistance of impedance data by performing 5th
     order polynomial fit (with 5% tolerance as relative error).
 
-    Parameters:
+    Parameters
     ----------
     reals: np.ndarray[float]
         The real part of the impedance data
@@ -52,7 +52,7 @@ def find_ohmic_resistance(
     fname: str
         The storage path
 
-    Return:
+    Returns
     -------
     ohmic_resistance: float
         The ohmic resistance of impedance data
