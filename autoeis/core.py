@@ -565,7 +565,8 @@ def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
             elif test_results[m][0] == "P":
                 circuit = circuit.replace(
                     test_results_2[m],
-                    "X*(2*np.pi*F)**(-Y)*(np.cos((np.pi*Y)*0.5)-np.sin((np.pi*X)*0.5)*1j)",
+                    # "X*(2*np.pi*F)**(-Y)*(np.cos((np.pi*Y)*0.5)-np.sin((np.pi*X)*0.5)*1j)",
+                    "(1/(X*(2*1j*np.pi*F)**(Y)))" # modify the math function
                 )
 
         new_temp_circuit = []
