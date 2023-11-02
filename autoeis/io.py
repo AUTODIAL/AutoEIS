@@ -61,8 +61,8 @@ def load_results_dataframe(fname: str) -> pd.DataFrame:
     fname: str
         Path of the CSV file containing AutoEIS results.
 
-    Returns:
-    --------
+    Returns
+    -------
     df_circuits: pd.DataFrame
         Dataframe containing ECMs (2 columns)
     """
