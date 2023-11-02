@@ -168,6 +168,10 @@ def preprocess_impedance_data(
     # ?: What's the logic behind this?
     Zdf_mask = np.arange(1)
 
+    # Keep track of the initial threshold value
+    threshold_init = threshold
+    step = 0.01
+
     while len(Zdf_mask) <= 0.7 * len(Z):
         # Filter the data according to imaginary residuals
         mask = [False] * (len(res_imag))
@@ -205,7 +209,7 @@ def preprocess_impedance_data(
         values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
         labels = ["freq", "Zreal", "Zimag"]
         Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
-        threshold += 0.01
+        threshold += step
 
     log.info(f"Ohmic resistance = {ohmic_resistance}")
 
@@ -214,9 +218,8 @@ def preprocess_impedance_data(
         saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
         viz.plot_impedance(Z_mask, freq_mask, saveto=saveto)
 
-    # ?: What's the logic behind this?
-    if threshold != 0.06:
-        log.warning(f"Default threshold ({threshold-0.01}) dropped too many points.")
+    if not np.isclose(threshold - step, threshold_init):
+        log.warning(f"Default threshold ({threshold_init}) dropped too many points.")
 
     return Zdf_mask, ohmic_resistance, rmse
 
