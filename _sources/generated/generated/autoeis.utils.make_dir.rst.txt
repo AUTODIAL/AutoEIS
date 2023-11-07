@@ -1,0 +1,6 @@
+make\_dir
+=========
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: make_dir

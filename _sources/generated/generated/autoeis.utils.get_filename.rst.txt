@@ -1,0 +1,6 @@
+get\_filename
+=============
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: get_filename

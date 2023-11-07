@@ -1,0 +1,6 @@
+perform\_full\_analysis
+=======================
+
+.. currentmodule:: autoeis.core
+
+.. autofunction:: perform_full_analysis

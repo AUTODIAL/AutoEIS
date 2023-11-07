@@ -1,0 +1,6 @@
+plot\_linKK\_residuals
+======================
+
+.. currentmodule:: autoeis.visualization
+
+.. autofunction:: plot_linKK_residuals

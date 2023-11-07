@@ -1,0 +1,6 @@
+generate\_equivalent\_circuits
+==============================
+
+.. currentmodule:: autoeis.core
+
+.. autofunction:: generate_equivalent_circuits

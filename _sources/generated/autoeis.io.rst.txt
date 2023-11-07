@@ -1,0 +1,6 @@
+﻿:noindex:
+
+io
+==
+
+.. automodule:: autoeis.io

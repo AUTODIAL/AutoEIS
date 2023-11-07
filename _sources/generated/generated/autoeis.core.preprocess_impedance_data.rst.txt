@@ -1,0 +1,6 @@
+preprocess\_impedance\_data
+===========================
+
+.. currentmodule:: autoeis.core
+
+.. autofunction:: preprocess_impedance_data

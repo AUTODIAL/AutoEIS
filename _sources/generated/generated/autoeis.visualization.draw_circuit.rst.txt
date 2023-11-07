@@ -1,0 +1,6 @@
+draw\_circuit
+=============
+
+.. currentmodule:: autoeis.visualization
+
+.. autofunction:: draw_circuit

@@ -1,0 +1,6 @@
+perform\_bayesian\_inference
+============================
+
+.. currentmodule:: autoeis.core
+
+.. autofunction:: perform_bayesian_inference

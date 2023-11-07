@@ -1,0 +1,6 @@
+﻿:noindex:
+
+core
+====
+
+.. automodule:: autoeis.core

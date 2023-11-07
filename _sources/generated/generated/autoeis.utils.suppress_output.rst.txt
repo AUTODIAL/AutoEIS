@@ -1,0 +1,6 @@
+suppress\_output
+================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: suppress_output

@@ -1,0 +1,6 @@
+get\_logger
+===========
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: get_logger
