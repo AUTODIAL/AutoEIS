@@ -1,3 +1,16 @@
+"""
+Collection of functions for importing and exporting EIS data/results.
+
+.. currentmodule:: autoeis.io
+
+.. autosummary::
+   :toctree: generated/
+
+    load_eis_data
+    load_results_dataframe
+
+"""
+
 import json
 import pickle
 from pathlib import Path
@@ -61,8 +74,8 @@ def load_results_dataframe(fname: str) -> pd.DataFrame:
     fname: str
         Path of the CSV file containing AutoEIS results.
 
-    Returns:
-    --------
+    Returns
+    -------
     df_circuits: pd.DataFrame
         Dataframe containing ECMs (2 columns)
     """

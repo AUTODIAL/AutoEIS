@@ -1,3 +1,18 @@
+"""
+Core functions including finding the best fit and Bayesian analysis.
+
+.. currentmodule:: autoeis.core
+
+.. autosummary::
+   :toctree: generated/
+
+    perform_full_analysis
+    generate_equivalent_circuits
+    perform_bayesian_inference
+    preprocess_impedance_data 
+
+"""
+
 import itertools
 import os
 import re
@@ -43,7 +58,7 @@ def find_ohmic_resistance(
     """Extracts the ohmic resistance of impedance data by performing 5th
     order polynomial fit (with 5% tolerance as relative error).
 
-    Parameters:
+    Parameters
     ----------
     reals: np.ndarray[float]
         The real part of the impedance data
@@ -52,7 +67,7 @@ def find_ohmic_resistance(
     fname: str
         The storage path
 
-    Return:
+    Returns
     -------
     ohmic_resistance: float
         The ohmic resistance of impedance data
@@ -168,6 +183,10 @@ def preprocess_impedance_data(
     # ?: What's the logic behind this?
     Zdf_mask = np.arange(1)
 
+    # Keep track of the initial threshold value
+    threshold_init = threshold
+    step = 0.01
+
     while len(Zdf_mask) <= 0.7 * len(Z):
         # Filter the data according to imaginary residuals
         mask = [False] * (len(res_imag))
@@ -205,7 +224,7 @@ def preprocess_impedance_data(
         values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
         labels = ["freq", "Zreal", "Zimag"]
         Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
-        threshold += 0.01
+        threshold += step
 
     log.info(f"Ohmic resistance = {ohmic_resistance}")
 
@@ -214,9 +233,8 @@ def preprocess_impedance_data(
         saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
         viz.plot_impedance(Z_mask, freq_mask, saveto=saveto)
 
-    # ?: What's the logic behind this?
-    if threshold != 0.06:
-        log.warning(f"Default threshold ({threshold-0.01}) dropped too many points.")
+    if not np.isclose(threshold - step, threshold_init):
+        log.warning(f"Default threshold ({threshold_init}) dropped too many points.")
 
     return Zdf_mask, ohmic_resistance, rmse
 
@@ -1442,29 +1460,24 @@ def model_evaluation(results):
     # TODO: Relying on the column index is not a good idea, refactor.
     evaluation_results = results[results.columns[[0, 17, 18, 19, 20, 23, 25]]]
 
-    evaluation_results["Consistency"] = pd.to_numeric(
-        evaluation_results["Consistency"], errors="coerce"
-    )
+    # FIXME: Remove next line once confirmed that `loc` is correctly used.
+    # evaluation_results["Consistency"] = pd.to_numeric(evaluation_results["Consistency"], errors="coerce")
+    evaluation_results.loc[:, "Consistency"] = pd.to_numeric(evaluation_results["Consistency"], errors="coerce")
     evaluation_results.loc[evaluation_results["Consistency"].isna(), "Consistency"] = np.inf
 
-    def absolute_difference(x):
-        if np.isinf(x):
-            return np.inf
-        else:
-            return abs(x - 1)
+    def absdiff(x):
+        return np.inf if np.isinf(x) else np.abs(x - 1)
 
     def custom_sort(x):
-        if x == "F":
-            return -1000
-        else:
-            return x
+        return -1000 if x == "F" else x
 
-    evaluation_results["Consistency"] = evaluation_results["Consistency"].apply(
-        absolute_difference
-    )
-    evaluation_results["Posterior_shape"] = evaluation_results["Posterior_shape"].apply(
-        custom_sort
-    )
+    # FIXME: Remove next line once confirmed that `loc` is correctly used.
+    # evaluation_results["Consistency"] = evaluation_results["Consistency"].apply(absdiff)
+    evaluation_results.loc[:, "Consistency"] = evaluation_results["Consistency"].apply(absdiff)    
+    # FIXME: Remove next line once confirmed that `loc` is correctly used.
+    # evaluation_results["Posterior_shape"] = evaluation_results["Posterior_shape"].apply(custom_sort)
+    evaluation_results.loc[:, "Posterior_shape"] = evaluation_results["Posterior_shape"].apply(custom_sort)    
+
     evaluation_results_sorted = evaluation_results.sort_values(
         by=[
             "Divergences",
@@ -1683,7 +1696,9 @@ def perform_bayesian_inference(
         traces.append(trace)
         # Calculate AIC
 
-        AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
+        # FIXME: Remove next line once confirmed that `iloc` is correctly used.
+        # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
+        AIC_value = az.waic(mcmc_i).iloc[0] * (-2) + 2 * len(name_i)
         AIC.append(AIC_value)
         print(f"AIC value = {AIC_value}")
 

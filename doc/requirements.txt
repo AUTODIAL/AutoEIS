@@ -1,0 +1,5 @@
+sphinx
+myst-parser
+linkify-it-py
+sphinx-copybutton
+sphinx-autodoc2

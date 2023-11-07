@@ -1,3 +1,18 @@
+"""
+Collection of functions for visualizing EIS data and results.
+
+.. currentmodule:: autoeis.visualization
+
+.. autosummary::
+   :toctree: generated/
+
+    draw_circuit
+    plot_impedance
+    plot_linKK_residuals
+    set_plot_style
+
+"""
+
 import re
 
 import arviz
