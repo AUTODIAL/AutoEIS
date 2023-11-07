@@ -18,11 +18,9 @@ import os
 import re
 import time
 import warnings
-from typing import Optional
 
 import arviz as az
 import dill
-import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
@@ -362,10 +360,10 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
             runtime_error = True
 
     if runtime_error:
-        raise RuntimeError(f"Julia must not be manually initialized, restart the kernel.")
+        raise RuntimeError("Julia must not be manually initialized, restart the kernel.")
 
     # Remove None values
-    circuits = [circuit for circuit in circuits if circuit != None]
+    circuits = [circuit for circuit in circuits if circuit is not None]
 
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
     df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
@@ -535,7 +533,7 @@ def series_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
     test_pattern = re.compile(r"\[")
     for i in range(len(df_circuits["circuitstring"])):
         test_circuit = df_circuits["circuitstring"][i]
-        if test_pattern.findall(test_circuit) == False:
+        if test_pattern.findall(test_circuit) is False:
             df_circuits.drop([i], inplace=True)
     df_circuits.reset_index(drop=True, inplace=True)
     return df_circuits
@@ -973,7 +971,7 @@ def feature_store(circuit: str) -> dict:
     components_numbers = count_components(circuit)
     # Feature 2 - same series configurations
     series_numbers = count_components(find_series_elements(circuit))
-    if test_pattern.findall(circuit) == True:
+    if test_pattern.findall(circuit) is True:
         # Feature 2.5 - same configurations at different parallel levels
         characteristic_array = structure_extractor(circuit_array, ranks_array, indexs_lists)
         # Feature 3 - all parallel subcircuit shoule be identical
@@ -985,7 +983,7 @@ def feature_store(circuit: str) -> dict:
     characteristic_features["Circuit_Name"] = circuit
     characteristic_features["Feature 1"] = components_numbers
     characteristic_features["Feature 2"] = series_numbers
-    if test_pattern.findall(circuit) == True:
+    if test_pattern.findall(circuit) is True:
         characteristic_features["Feature 2.5"] = characteristic_array
         characteristic_features["Feature 3"] = level_lists
 
@@ -1099,8 +1097,8 @@ def component_values(input: "pd.Series") -> (list, list, list):
     names_lists: list
         The list that only stores the component names
     """
-    # Delete the ( and ) in the string
-    delete_p = re.compile(r"[^()]")
+    # Remove brackets '(' and ')' from the string
+    remove_brackets = re.compile(r"[^()]")
 
     # Store the values of each component in 4 digits
     digit_p = re.compile(r"\-?[0-9]+\.[0-9]+e*-*[0-9]*")
@@ -1120,7 +1118,7 @@ def component_values(input: "pd.Series") -> (list, list, list):
         # Store the values of each component
         values_list = digit_p.findall(input[i])
         for j in range(len(values_list)):
-            if e_p.findall(values_list[j]) == False:
+            if e_p.findall(values_list[j]) is False:
                 values_list[j] = "%e" % values_list[j]
             values_list[j] = float(values_list[j])
             values_list[j] = "{:0.4e}".format(values_list[j])
@@ -1644,7 +1642,7 @@ def perform_bayesian_inference(
             plt.title("Nyquist plots of original and simulated data")
             plt.legend()
             if save:
-                plt.savefig(f"Nyquist_simulated.png", dpi=300)
+                plt.savefig("Nyquist_simulated.png", dpi=300)
             plt.show()
 
         def model_i(
@@ -1711,7 +1709,7 @@ def perform_bayesian_inference(
             print(f"{circuit_name_i}: Prior distributions with trajectories")
             az.plot_trace(prior_prediction, var_names=name_i)
             if save:
-                plt.savefig(f"Prior distributions.png", dpi=300)
+                plt.savefig("Prior distributions.png", dpi=300)
             plt.show()
 
         # Prior predictions
@@ -1738,12 +1736,12 @@ def perform_bayesian_inference(
             ax.set_ylabel("Im(impedance)")
             ax.set_title("Prior predictive checks")
             if save:
-                plt.savefig(f"Prior predictions.png", dpi=300)
+                plt.savefig("Prior predictions.png", dpi=300)
             plt.show()
 
         # Posterior distributions
         if plot:
-            print(f"{circuit_name_i}: Posterior distributions with HDI")
+            print("{circuit_name_i}: Posterior distributions with HDI")
             for i in range(len(name_i)):
                 name = name_i[i]
                 value = value_i[i]
@@ -1759,21 +1757,21 @@ def perform_bayesian_inference(
             # #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
             # #                         posterior_HDI[i][j].set_xlim(new_lim)
             if save:
-                plt.savefig(f"Posterior predictions with HDI.png", dpi=300)
+                plt.savefig("Posterior predictions with HDI.png", dpi=300)
             plt.show()
 
         # Posterior trajectories
         posterior_dist = az.plot_trace(trace, var_names=name_i)
 
         if plot:
-            print(f"{circuit_name_i}: Posterior distributions with trajectories")
+            print("{circuit_name_i}: Posterior distributions with trajectories")
             if save:
-                plt.savefig(f"Posterior distributions.png", dpi=300)
+                plt.savefig("Posterior distributions.png", dpi=300)
             plt.show()
 
         # Posterior predictions -- real part
         if plot:
-            print(f"{circuit_name_i}: Posterior predictions - real part")
+            print("{circuit_name_i}: Posterior predictions - real part")
             _, ax = plt.subplots()
 
         samples = mcmc_i.get_samples()
@@ -1813,7 +1811,7 @@ def perform_bayesian_inference(
             ax.set_ylabel("Real(impedance)")
             ax.set_title("Posterior predictive checks (Real)")
             if save:
-                plt.savefig(f"Posterior predictions (Real).png", dpi=300)
+                plt.savefig("Posterior predictions (Real).png", dpi=300)
             plt.legend()
             plt.show()
 
@@ -1855,7 +1853,7 @@ def perform_bayesian_inference(
             ax.set_ylabel("-Im(impedance)")
             ax.set_title("Posterior predictive checks (Im)")
             if save:
-                plt.savefig(f"Posterior predictions (Im).png", dpi=300)
+                plt.savefig("Posterior predictions (Im).png", dpi=300)
             plt.legend()
             plt.show()
 
@@ -1900,7 +1898,7 @@ def perform_bayesian_inference(
             ax.set_ylabel("Im(impedance)")
             ax.set_title("Posterior predictive checks")
             if save:
-                plt.savefig(f"Posterior predictions.png", dpi=300)
+                plt.savefig("Posterior predictions.png", dpi=300)
             plt.legend(loc="upper left", fontsize=18)
             plt.show()
 
