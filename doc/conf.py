@@ -1,6 +1,16 @@
 from datetime import date
 
-import autoeis
+
+def get_version_from_file(file_path):
+    version = None
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('__version__'):
+                # Assuming the line is in the form of '__version__ = "0.0.17"'
+                version = line.split('=')[1].strip().strip('"').strip("'")
+                break
+    return version
+
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -13,7 +23,7 @@ import autoeis
 project = 'AutoEIS'
 copyright = f"{date.today().year}, AutoEIS developers"
 author = 'Runze Zhang, Amin Sadeghi, Jason Hattrick-Simpers'
-version = autoeis.__version__
+version = get_version_from_file("../autoeis/version.py")
 release = version
 
 # -- General configuration ---------------------------------------------------
