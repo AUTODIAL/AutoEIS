@@ -22,6 +22,7 @@ jobs:
       # Build the documentation
       - name: Build the documentation
         run: |
+          pip install -r doc/requirements.txt
           cd doc
           make html
 
