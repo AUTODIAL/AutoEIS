@@ -1445,29 +1445,24 @@ def model_evaluation(results):
     # TODO: Relying on the column index is not a good idea, refactor.
     evaluation_results = results[results.columns[[0, 17, 18, 19, 20, 23, 25]]]
 
-    evaluation_results["Consistency"] = pd.to_numeric(
-        evaluation_results["Consistency"], errors="coerce"
-    )
+    # FIXME: Remove next line once confirmed that `loc` is correctly used.
+    # evaluation_results["Consistency"] = pd.to_numeric(evaluation_results["Consistency"], errors="coerce")
+    evaluation_results.loc[:, "Consistency"] = pd.to_numeric(evaluation_results["Consistency"], errors="coerce")
     evaluation_results.loc[evaluation_results["Consistency"].isna(), "Consistency"] = np.inf
 
-    def absolute_difference(x):
-        if np.isinf(x):
-            return np.inf
-        else:
-            return abs(x - 1)
+    def absdiff(x):
+        return np.inf if np.isinf(x) else np.abs(x - 1)
 
     def custom_sort(x):
-        if x == "F":
-            return -1000
-        else:
-            return x
+        return -1000 if x == "F" else x
 
-    evaluation_results["Consistency"] = evaluation_results["Consistency"].apply(
-        absolute_difference
-    )
-    evaluation_results["Posterior_shape"] = evaluation_results["Posterior_shape"].apply(
-        custom_sort
-    )
+    # FIXME: Remove next line once confirmed that `loc` is correctly used.
+    # evaluation_results["Consistency"] = evaluation_results["Consistency"].apply(absdiff)
+    evaluation_results.loc[:, "Consistency"] = evaluation_results["Consistency"].apply(absdiff)    
+    # FIXME: Remove next line once confirmed that `loc` is correctly used.
+    # evaluation_results["Posterior_shape"] = evaluation_results["Posterior_shape"].apply(custom_sort)
+    evaluation_results.loc[:, "Posterior_shape"] = evaluation_results["Posterior_shape"].apply(custom_sort)    
+
     evaluation_results_sorted = evaluation_results.sort_values(
         by=[
             "Divergences",
@@ -1686,7 +1681,9 @@ def perform_bayesian_inference(
         traces.append(trace)
         # Calculate AIC
 
-        AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
+        # FIXME: Remove next line once confirmed that `iloc` is correctly used.
+        # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
+        AIC_value = az.waic(mcmc_i).iloc[0] * (-2) + 2 * len(name_i)
         AIC.append(AIC_value)
         print(f"AIC value = {AIC_value}")
 
