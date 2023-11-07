@@ -1,3 +1,18 @@
+"""
+Core functions including finding the best fit and Bayesian analysis.
+
+.. currentmodule:: autoeis.core
+
+.. autosummary::
+   :toctree: generated/
+
+    perform_full_analysis
+    generate_equivalent_circuits
+    perform_bayesian_inference
+    preprocess_impedance_data 
+
+"""
+
 import itertools
 import os
 import re

@@ -1,3 +1,22 @@
+"""
+Collection of utility functions used throughout the package.
+
+.. currentmodule:: autoeis.utils
+
+.. autosummary::
+   :toctree: generated/
+
+    get_logger
+    setup_rich_tracebacks
+    make_dir
+    get_dirname
+    get_filename
+    get_fileext
+    reset_storage
+    suppress_output
+
+"""
+
 import logging
 import os
 import sys

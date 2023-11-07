@@ -1,7 +1,5 @@
-r"""
-
-Collection of functions for importing and exporting EIS data
-############################################################
+"""
+Collection of functions for importing and exporting EIS data/results.
 
 .. currentmodule:: autoeis.io
 
