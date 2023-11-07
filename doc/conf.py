@@ -19,6 +19,9 @@ release = version
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+# For Sphinx not to complain about missing heading levels
+suppress_warnings = ["myst.header"]
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
@@ -57,7 +60,11 @@ autodoc2_packages = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'furo'
-html_logo = '_static/images/logo.png'
-html_title = ''
+# html_title = ''
 html_static_path = ['_static']
-html_css_files = ['css/custom.css']
+html_css_files = ['custom.css']
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "light_logo": "logo-light-mode.png",
+    "dark_logo": "logo-dark-mode.png",
+}
