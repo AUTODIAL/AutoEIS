@@ -1,5 +1,6 @@
-sphinx
-myst-parser
+furo
 linkify-it-py
+myst-parser
+sphinx
 sphinx-copybutton
 sphinx-autodoc2
