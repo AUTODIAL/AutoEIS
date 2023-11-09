@@ -1,3 +1,5 @@
+name: JOSS Paper Draft
+
 on: [push]
 
 jobs:
