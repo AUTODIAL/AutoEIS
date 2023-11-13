@@ -23,18 +23,20 @@ log = utils.get_logger(__name__)
 
 
 # TODO: We're not really providing any value here.
-def load_eis_data(fname: str) -> pd.DataFrame:
-    """Load EIS (Electrochemical Impedance Spectroscopy) data from a file.
+def load_eis_data(fname: str, column_indices=[0, 1, 2]) -> pd.DataFrame:
+    """Loads electrochemical impedance spectroscopy data from a file.
 
     Parameters
     ----------
     fname : str
         Path to the EIS data file.
+    column_indices : list[int]
+        Indices of the columns containing Re(Z), and Im(Z), and frequencies.
 
     Returns
     -------
     pd.DataFrame
-        DataFrame containing impedance and frequency data.
+        DataFrame with columns "freq", "Zreal", and "Zimag".
 
     Raises
     ------
@@ -45,14 +47,16 @@ def load_eis_data(fname: str) -> pd.DataFrame:
     """
     path = Path(fname)
 
-    if not path.exists():
-        log.error(f"No such file or directory: {path}")
-        raise FileNotFoundError(f"No such file or directory: {path}")
+    csv_args = {
+        "header": 0 if _includes_header(fname) else "infer",
+        "names": ["Zreal", "Zimag", "freq"],
+        "usecols": column_indices,
+    }
 
     loaders = {
         ".json": lambda: pd.DataFrame(json.loads(path.read_text())),
-        ".csv": lambda: pd.read_csv(path),
-        ".txt": lambda: pd.read_csv(path, sep="\t"),
+        ".csv": lambda: pd.read_csv(path, **csv_args),
+        ".txt": lambda: pd.read_csv(path, sep="\t", **csv_args),
         ".xlsx": lambda: pd.read_excel(path),
         ".pkl": lambda: pd.DataFrame(pickle.loads(path.read_bytes()))
     }
@@ -81,3 +85,13 @@ def load_results_dataframe(fname: str) -> pd.DataFrame:
     """
     df_circuits = pd.read_csv(fname)
     return df_circuits
+
+
+def _includes_header(fpath):
+    """Checks if a CSV file includes a header."""
+    df = pd.read_csv(fpath)
+    try:
+        df.columns.astype(float)
+    except ValueError:
+        return True
+    return False
