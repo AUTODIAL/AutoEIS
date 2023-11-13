@@ -99,7 +99,7 @@ def plot_impedance(Z, freq, saveto=None, size=1.5):
 
 
 def plot_linKK_residuals(frequencies, Re_res, Im_res, saveto=None):
-    """Plot the residuals of the linear Kramers-Kronig validation."""
+    """Plots the residuals of the linear Kramers-Kronig validation."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.plot(frequencies, Im_res, label="delta Im")
     ax.plot(frequencies, Re_res, label="delta Re")
