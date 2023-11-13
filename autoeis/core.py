@@ -1586,7 +1586,7 @@ def perform_bayesian_inference(
     expressions_strs = ecms["Mathematical expressions"]
     circuit_names = ecms["Combined Circuits"]
 
-    for i in range(len(ecms["Combined Circuits"])):
+    for i in tqdm(range(len(ecms["Combined Circuits"]))):
         circuit_name_i = circuit_names[i]
         value_i = values[i]
         name_i = names[i]
