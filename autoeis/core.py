@@ -129,7 +129,7 @@ def preprocess_impedance_data(
     Im_Z = impedance.imag
 
     if plot:
-        fpath = os.path.join(saveto, "Non-filtered Nyquist and Bode plots.png")
+        fpath = os.path.join(saveto, "nyquist_and_bode_raw.png")
         viz.plot_impedance(impedance, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
@@ -172,7 +172,7 @@ def preprocess_impedance_data(
 
     # Plot residuals of Lin-KK validation
     if plot:
-        fpath = os.path.join(saveto, "Lin-KK residuals.png")
+        fpath = os.path.join(saveto, "linkk_residuals.png")
         viz.plot_linKK_residuals(freq, res_real, res_imag, saveto=fpath)
 
     # Need to set a threshold limit for when to filter out the noisy data
@@ -229,7 +229,7 @@ def preprocess_impedance_data(
 
     # Plot the filtered Nyquist and Bode plots
     if plot:
-        saveto = os.path.join(saveto, "Filtered Nyquist and Bode plots.png")
+        saveto = os.path.join(saveto, "nyquist_and_bode_filtered.png")
         viz.plot_impedance(Z_mask, freq_mask, saveto=saveto)
 
     if not np.isclose(threshold - step, threshold_init):
@@ -1637,7 +1637,10 @@ def perform_bayesian_inference(
                 fig.savefig(fpath, dpi=300)
 
         def model_i(
-            values=value_i, func=function_i, true_data=eis_data, error=relative_error_accepted
+            values=value_i,
+            func=function_i,
+            true_data=eis_data,
+            error=relative_error_accepted
         ):
             true_freq = np.asarray(true_data["freq"])
             true_Zreal = np.asarray(true_data["Zreal"])
@@ -1684,9 +1687,9 @@ def perform_bayesian_inference(
         trace = az.convert_to_inference_data(mcmc_i)
         traces.append(trace)
 
-        # Save MCMC results to disk
+        # Export MCMC results to netcdf
         if saveto is not None:
-            fpath = os.path.join(saveto, "mcmc_circuit_{i}.nc")
+            fpath = os.path.join(saveto, f"mcmc_circuit_{i}.nc")
             trace.to_netcdf(fpath)
 
         # Calculate AIC
@@ -1697,15 +1700,13 @@ def perform_bayesian_inference(
         log.info(f"AIC value = {AIC_value}")
 
         divergence = np.asarray(mcmc_i.get_extra_fields()["diverging"].sum()).ravel()[0]
-
         divergences.append(divergence)
 
         # Prior distributions
         if plot:
-            print(f"{circuit_name_i}: Prior distributions with trajectories")
             ax = az.plot_trace(prior_prediction, var_names=name_i)
             if saveto is not None:
-                ax.figure.savefig("Prior distributions.png", dpi=300)
+                ax.figure.savefig(f"prior_distributions_{i}.png", dpi=300)
 
         # Prior predictions
         if plot:
@@ -1726,15 +1727,14 @@ def perform_bayesian_inference(
                 ax.plot(y.real, -y.imag, color="k", alpha=0.4)
         if plot:
             ax.plot(Zreal, -Zimag, c="b", alpha=1)
-            ax.set_xlabel("Real(impedance)")
-            ax.set_ylabel("Im(impedance)")
+            ax.set_xlabel("Re(Z)")
+            ax.set_ylabel("Im(Z)")
             ax.set_title("Prior predictive checks")
             if saveto is not None:
-                fig.savefig("Prior predictions.png", dpi=300)
+                fig.savefig(f"prior_predictions_{i}.png", dpi=300)
 
         # Posterior distributions
         if plot:
-            print("{circuit_name_i}: Posterior distributions with HDI")
             for i in range(len(name_i)):
                 name = name_i[i]
                 value = value_i[i]
@@ -1751,14 +1751,14 @@ def perform_bayesian_inference(
             #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
             #                         posterior_HDI[i][j].set_xlim(new_lim)
             if saveto is not None:
-                posterior_HDI.figure.savefig("Posterior predictions with HDI.png", dpi=300)
+                posterior_HDI.figure.savefig(f"posterior_predictions_with_HDI_{i}.png", dpi=300)
 
         # Posterior trajectories
         posterior_dist = az.plot_trace(trace, var_names=name_i)
 
         if plot:
             if saveto is not None:
-                posterior_dist.figure.savefig("Posterior distributions.png", dpi=300)
+                posterior_dist.figure.savefig(f"posterior_distributions_{i}.png", dpi=300)
 
         # Posterior predictions, real part
         if plot:
@@ -1786,7 +1786,7 @@ def perform_bayesian_inference(
 
         avg_mape_real = np.array(sep_mape_real_list).mean()
         avg_r2_real = np.array(sep_r2_real_list).mean()
-        log.info(f"Posterior real part's fit: MAPE = {avg_mape_real}; R2 = {avg_r2_real}")
+        log.info(f"Posterior real part's fit: MAPE = {avg_mape_real}; R² = {avg_r2_real}")
         Posterior_r2_real.append(avg_r2_real)
         Posterior_mape_real.append(avg_mape_real)
 
@@ -1798,7 +1798,7 @@ def perform_bayesian_inference(
             ax.set_title("Posterior predictive checks (Real)")
             ax.legend()
             if saveto is not None:
-                fig.savefig("Posterior predictions (Real).png", dpi=300)
+                fig.savefig("posterior_predictions_real.png", dpi=300)
 
         # Posterior predictions, imaginary part
         if plot:
@@ -1825,7 +1825,7 @@ def perform_bayesian_inference(
 
         avg_mape_imag = np.array(sep_mape_imag_list).mean()
         avg_r2_imag = np.array(sep_r2_imag_list).mean()
-        log.info(f"Posterior imag part's fit: MAPE = {avg_mape_imag}; R2 = {avg_r2_imag}")
+        log.info(f"Posterior imag part's fit: MAPE = {avg_mape_imag}; R² = {avg_r2_imag}")
         Posterior_r2_imag.append(avg_r2_imag)
         Posterior_mape_imag.append(avg_mape_imag)
         if plot:
@@ -1836,7 +1836,7 @@ def perform_bayesian_inference(
             ax.set_title("Posterior predictive checks (Im)")
             ax.legend()
             if saveto is not None:
-                fig.savefig("Posterior predictions (Im).png", dpi=300)
+                fig.savefig("posterior_predictions_imag.png", dpi=300)
 
         # Posterior predictions
         if plot:
@@ -1865,25 +1865,25 @@ def perform_bayesian_inference(
         # avg_mse = np.array(sep_mse_list).mean()
         avg_mape = np.array(sep_mape_list).mean()
         avg_r2 = np.array(sep_r2_list).mean()
-        log.info(f"Posterior fit: MAPE = {avg_mape}; R2 = {avg_r2}")
+        log.info(f"Posterior fit: MAPE = {avg_mape}; R² = {avg_r2}")
         Posterior_r2.append(avg_r2)
         Posterior_mape.append(avg_mape)
 
         if plot:
             ax.plot(BI_data.real, -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictions")
             ax.plot(Zreal, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="grount truth")
-            ax.set_xlabel("Real(impedance)")
-            ax.set_ylabel("Im(impedance)")
+            ax.set_xlabel("Re(Z)")
+            ax.set_ylabel("Im(Z)")
             ax.set_title("Posterior predictive checks")
-            ax.legend(loc="upper left", fontsize=18)
+            ax.legend(loc="upper left")
             if saveto is not None:
-                fig.savefig("Posterior predictions.png", dpi=300)
+                fig.savefig(f"posterior_predictions_{i}.png", dpi=300)
 
         # Pair relationship
         if plot:
             ax = az.plot_pair(mcmc_i, var_names=name_i)
             if saveto is not None:
-                ax.figure.savefig(f"Pair relationship plot ({circuit_name_i}).png", dpi=300)
+                ax.figure.savefig(f"pair_relationship_plot_{i}.png", dpi=300)
 
         # Estimate posterior distribution
         if any(len(result[0].lines[0].get_xydata().T[0]) == 2 for result in posterior_dist[:]):
