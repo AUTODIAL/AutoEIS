@@ -51,33 +51,6 @@ def setup_rich_tracebacks() -> None:
 
 # --- Filesystem utils --- # BEGIN
 
-def make_dir(path: str) -> None:
-    """Create a new folder if it doesn't exist."""
-    Path(path).mkdir(parents=True, exist_ok=True)
-
-
-def get_dirname(path: str) -> str:
-    """Get the name of the parent directory of a file."""
-    return Path(path).parent.name
-
-
-def get_filename(path: str) -> str:
-    """Get the name of a file without the extension."""
-    return Path(path).stem
-
-
-def get_fileext(path: str) -> str:
-    """Get the extension of a file."""
-    return Path(path).suffix
-
-
-# TODO: Remove this function, we should not be changing the working directory.
-def reset_storage():
-    """Reset the storage path to the current working directory."""
-    for _ in range(2):
-        os.chdir(os.path.abspath(os.path.dirname(os.getcwd())))
-
-
 class _SuppressOutput:
     def __enter__(self):
         self._original_stdout = sys.stdout

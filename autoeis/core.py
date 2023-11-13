@@ -18,6 +18,7 @@ import os
 import re
 import time
 import warnings
+from pathlib import Path
 
 import arviz as az
 import dill
@@ -122,7 +123,7 @@ def preprocess_impedance_data(
 
     # Make a new folder to store the results
     if saveto is not None:
-        utils.make_dir(saveto)
+        Path(saveto).mkdir(parents=True, exist_ok=True)
 
     # Fetch the real and imaginary part of the impedance data
     Re_Z = impedance.real
@@ -2010,7 +2011,7 @@ def perform_full_analysis(
     """
     # Make a new folder to store the results
     if saveto is not None:
-        utils.make_dir(saveto)
+        Path(saveto).mkdir(parents=True, exist_ok=True)
 
     # Preprocessing + store preprocessed data
     kwargs = {"threshold": 0.05, "saveto": saveto, "plot": plot}
