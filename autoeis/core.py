@@ -1536,6 +1536,7 @@ def perform_bayesian_inference(
     Zreal = np.array(eis_data["Zreal"])
     Zimag = np.array(eis_data["Zimag"])
 
+    # ?: Do we need this?
     amplifying_factor = abs(Zreal.max() - Zreal.min()) / abs(Zimag.max() - Zimag.min())
     relative_error_accepted = (((Zreal**2) + (Zimag**2)) ** (1 / 2)).mean()
 
@@ -1543,22 +1544,17 @@ def perform_bayesian_inference(
     R2_list = []
     R2_real_list = []
     R2_imag_list = []
-
     # Create a list to store fitting quality metrics of each ECM
     MSE_list = []
     RMSE_list = []
     MAPE_list = []
-
     # Create a list to store simulated ECM data
     ECMs_data = []
-
     # Create a list to store mean r2 in posteior distribution
     Posterior_r2 = []
     Posterior_r2_real = []
     Posterior_r2_imag = []
-
     # Create a list to store mean mse in posteior distribution
-
     Posterior_mape = []
     Posterior_mape_real = []
     Posterior_mape_imag = []
