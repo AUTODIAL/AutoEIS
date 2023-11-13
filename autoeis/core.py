@@ -21,6 +21,7 @@ import warnings
 
 import arviz as az
 import dill
+import jax.numpy as jnp  # noqa: F401
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
