@@ -1537,9 +1537,10 @@ def perform_bayesian_inference(
     if len(ecms) == 0:
         raise Exception("Circuits' dataframe is empty!")
 
-    freq = np.array(eis_data["freq"])
-    Zreal = np.array(eis_data["Zreal"])
-    Zimag = np.array(eis_data["Zimag"])
+    freq = eis_data["freq"].to_numpy()
+    Zreal = eis_data["Zreal"].to_numpy()
+    Zimag = eis_data["Zimag"].to_numpy()
+    Z = Zreal + 1j * Zimag
 
     # ?: Do we need this?
     amplifying_factor = abs(Zreal.max() - Zreal.min()) / abs(Zimag.max() - Zimag.min())
@@ -1599,31 +1600,31 @@ def perform_bayesian_inference(
         if plot and draw_ecm:
             viz.draw_circuit(circuit_name_i)
 
-        ECM_data = function_i(value_i, freq)
-        ECMs_data.append(ECM_data)
+        Zsim = function_i(value_i, freq)
+        ECMs_data.append(Zsim)
 
         log.info("Julia circuit's fitting")
 
-        r2_value = float(r2_calculator(Zreal + 1j * Zimag, ECM_data))
+        r2_value = float(r2_calculator(Zreal + 1j * Zimag, Zsim))
         log.info(f"R² = {r2_value}")
         R2_list.append(r2_value)
 
-        r2_real = r2_calculator(Zreal, ECM_data.real)
+        r2_real = r2_calculator(Zreal, Zsim.real)
         log.info(f"R² (Re) = {r2_real}")
         R2_real_list.append(r2_real)
-        r2_imag = r2_calculator(Zimag, ECM_data.imag)
+        r2_imag = r2_calculator(Zimag, Zsim.imag)
         log.info(f"R² (Im) = {r2_imag}")
         R2_imag_list.append(r2_imag)
 
-        MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data))
+        MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, Zsim))
         log.info(f"MSW:{MSE_value}")
         MSE_list.append(MSE_value)
 
-        RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
+        RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, Zsim) ** (1 / 2))
         log.info(f"RMSE:{RMSE_value}")
         RMSE_list.append(RMSE_value)
 
-        MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
+        MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, Zsim) ** (1 / 2))
         log.info(f"MAPE:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
