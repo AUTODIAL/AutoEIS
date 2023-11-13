@@ -1602,29 +1602,29 @@ def perform_bayesian_inference(
         ECM_data = function_i(value_i, freq)
         ECMs_data.append(ECM_data)
 
-        print("> Julia circuit's fitting")
+        log.info("Julia circuit's fitting")
 
         r2_value = float(r2_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"  R²:{r2_value}")
+        log.info(f"R² = {r2_value}")
         R2_list.append(r2_value)
 
         r2_real = r2_calculator(Zreal, ECM_data.real)
-        print(f"  R² (Re):{r2_real}")
+        log.info(f"R² (Re) = {r2_real}")
         R2_real_list.append(r2_real)
         r2_imag = r2_calculator(Zimag, ECM_data.imag)
-        print(f"  R² (Im):{r2_imag}")
+        log.info(f"R² (Im) = {r2_imag}")
         R2_imag_list.append(r2_imag)
 
         MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data))
-        print(f"  MSW:{MSE_value}")
+        log.info(f"MSW:{MSE_value}")
         MSE_list.append(MSE_value)
 
         RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"  RMSE:{RMSE_value}")
+        log.info(f"RMSE:{RMSE_value}")
         RMSE_list.append(RMSE_value)
 
         MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, ECM_data) ** (1 / 2))
-        print(f"  MAPE:{MAPE_value}")
+        log.info(f"MAPE:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
         if plot:
@@ -1695,7 +1695,7 @@ def perform_bayesian_inference(
         # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
         AIC_value = az.waic(mcmc_i).iloc[0] * (-2) + 2 * len(name_i)
         AIC.append(AIC_value)
-        print(f"AIC value = {AIC_value}")
+        log.info(f"AIC value = {AIC_value}")
 
         divergence = np.asarray(mcmc_i.get_extra_fields()["diverging"].sum()).ravel()[0]
 
@@ -1826,8 +1826,7 @@ def perform_bayesian_inference(
 
         avg_mape_imag = np.array(sep_mape_imag_list).mean()
         avg_r2_imag = np.array(sep_r2_imag_list).mean()
-        if plot:
-            print(f"Posterior imag part's fit: MAPE = {avg_mape_imag}; R2 = {avg_r2_imag}")
+        log.info(f"Posterior imag part's fit: MAPE = {avg_mape_imag}; R2 = {avg_r2_imag}")
         Posterior_r2_imag.append(avg_r2_imag)
         Posterior_mape_imag.append(avg_mape_imag)
         if plot:
