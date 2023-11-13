@@ -246,6 +246,8 @@ def generate_equivalent_circuits(
         tol: float = 5e-4,
         saveto: str = None,
         parallel: bool = True,
+        generations: int = 30,
+        population_size: int = 100,
 ) -> pd.DataFrame:
     """Generate potential ECMs using evolutionary algorithms.
 
@@ -265,6 +267,10 @@ def generate_equivalent_circuits(
         Path to the directory where the results will be saved (default is None).
     parallel : bool, optional
         If True, the ECM search will be performed in parallel (default is True).
+    generations : int, optional
+        Number of generations for the ECM search (default is 30).
+    population_size : int, optional
+        Number of ECMs to generate per generation (default is 100).
 
     Returns
     -------
@@ -277,8 +283,8 @@ def generate_equivalent_circuits(
         "head": complexity,
         "terminals": "RLP",
         "convergence_threshold": tol,
-        "generations": 10,
-        "population_size": 30
+        "generations": generations,
+        "population_size": population_size,
     }
 
     ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
