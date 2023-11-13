@@ -1498,6 +1498,7 @@ def perform_bayesian_inference(
     eis_data: pd.DataFrame,
     ecms: pd.DataFrame,
     data_path: str,
+    saveto: str = None,
     plot: bool = False,
     save: bool = True,
     draw_ecm=False,
@@ -1585,12 +1586,6 @@ def perform_bayesian_inference(
     posterior_shape = []
     consistency = []
 
-    dirStr, ext = os.path.splitext(data_path)
-    #     folder_name = dirStr.split('\\')[-1]
-    folder_name = dirStr
-
-    current_path = os.getcwd()
-
     for i in range(len(ecms["Combined Circuits"])):
         circuit_name_i = circuit_names[i]
         value_i = values[i]
@@ -1598,12 +1593,8 @@ def perform_bayesian_inference(
         expression_str_i = expressions_strs[i].replace("np.", "jnp.")
         function_i = eval(f"lambda X,F:{expression_str_i}")
 
-        # create a new folder to store these results
-        utils.make_dir(folder_name + f"\\{circuit_name_i}")
-        os.chdir(folder_name + f"\\{circuit_name_i}")
-
-        print(f"> Circuit {i}: {circuit_name_i}")
-        print(f"Elements: ({name_i})\nValues: ({value_i})")
+        log.info(f"Circuit {i}: {circuit_name_i}")
+        log.info(f"Elements: ({name_i})\nValues: ({value_i})")
 
         if plot and draw_ecm:
             viz.draw_circuit(circuit_name_i)
@@ -1637,15 +1628,15 @@ def perform_bayesian_inference(
         MAPE_list.append(MAPE_value)
 
         if plot:
-            plt.scatter(ECM_data.real, -ECM_data.imag, c="r", s=12, label="simulated")
-            plt.scatter(Zreal, -Zimag, c="b", s=12, label="original")
-            plt.xlabel("Real(impedance)")
-            plt.ylabel("-Im(impedance)")
-            plt.title("Nyquist plots of original and simulated data")
-            plt.legend()
-            if save:
-                plt.savefig("Nyquist_simulated.png", dpi=300)
-            plt.show()
+            fig, ax = plt.subplots()
+            ax.scatter(ECM_data.real, -ECM_data.imag, c="r", s=12, label="simulated")
+            ax.scatter(Zreal, -Zimag, c="b", s=12, label="original")
+            ax.set_xlabel("Real(impedance)")
+            ax.set_ylabel("-Im(impedance)")
+            ax.set_title("Nyquist plots of original and simulated data")
+            ax.legend()
+            if saveto is not None:
+                fig.savefig("Nyquist_simulated.png", dpi=300)
 
         def model_i(
             values=value_i, func=function_i, true_data=eis_data, error=relative_error_accepted
@@ -1692,10 +1683,14 @@ def perform_bayesian_inference(
         models_descriptions.append(mcmc_i.print_summary)
 
         trace = az.convert_to_inference_data(mcmc_i)
-        trace.to_netcdf("MCMC_Results.nc")
         traces.append(trace)
-        # Calculate AIC
 
+        # Save MCMC results to disk
+        if saveto is not None:
+            fpath = os.path.join(saveto, "mcmc_circuit_{i}.nc")
+            trace.to_netcdf(fpath)
+
+        # Calculate AIC
         # FIXME: Remove next line once confirmed that `iloc` is correctly used.
         # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * len(name_i)
         AIC_value = az.waic(mcmc_i).iloc[0] * (-2) + 2 * len(name_i)
@@ -1709,17 +1704,15 @@ def perform_bayesian_inference(
         # Prior distributions
         if plot:
             print(f"{circuit_name_i}: Prior distributions with trajectories")
-            az.plot_trace(prior_prediction, var_names=name_i)
-            if save:
-                plt.savefig("Prior distributions.png", dpi=300)
-            plt.show()
+            ax = az.plot_trace(prior_prediction, var_names=name_i)
+            if saveto is not None:
+                ax.figure.savefig("Prior distributions.png", dpi=300)
 
         # Prior predictions
         if plot:
-            print(f"{circuit_name_i}: Prior prediction")
-            _, ax = plt.subplots()
-
+            fig, ax = plt.subplots()
         prior_R2_list = []
+        # ?: Why 100?
         for j in range(100):
             vars = []
             for k in range(len(name_i)):
@@ -1737,9 +1730,8 @@ def perform_bayesian_inference(
             ax.set_xlabel("Real(impedance)")
             ax.set_ylabel("Im(impedance)")
             ax.set_title("Prior predictive checks")
-            if save:
-                plt.savefig("Prior predictions.png", dpi=300)
-            plt.show()
+            if saveto is not None:
+                fig.savefig("Prior predictions.png", dpi=300)
 
         # Posterior distributions
         if plot:
@@ -1750,38 +1742,32 @@ def perform_bayesian_inference(
                 if "n" not in name:
                     trace.posterior[name] = trace.posterior[name] * value
             posterior_HDI = az.plot_posterior(trace, var_names=name_i)
+            # ?: What's this for loop?
             #             for i in range(posterior_HDI.shape[0]):
             #                 for j in range(posterior_HDI.shape[1]):
             #                     rc_id = i*3 + j
             #                     if rc_id < len(value_i):
             #                         y_values = posterior_HDI[i][j].lines[0].get_ydata()
             #                         posterior_HDI[i][j].lines[0].set_data(np.multiply(posterior_HDI[i][j].lines[0].get_xydata()[:,0],value_i[rc_id]),y_values)
-            # #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
-            # #                         posterior_HDI[i][j].set_xlim(new_lim)
-            if save:
-                plt.savefig("Posterior predictions with HDI.png", dpi=300)
-            plt.show()
+            #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
+            #                         posterior_HDI[i][j].set_xlim(new_lim)
+            if saveto is not None:
+                posterior_HDI.figure.savefig("Posterior predictions with HDI.png", dpi=300)
 
         # Posterior trajectories
         posterior_dist = az.plot_trace(trace, var_names=name_i)
 
         if plot:
-            print("{circuit_name_i}: Posterior distributions with trajectories")
-            if save:
-                plt.savefig("Posterior distributions.png", dpi=300)
-            plt.show()
+            if saveto is not None:
+                posterior_dist.figure.savefig("Posterior distributions.png", dpi=300)
 
-        # Posterior predictions -- real part
+        # Posterior predictions, real part
         if plot:
-            print("{circuit_name_i}: Posterior predictions - real part")
-            _, ax = plt.subplots()
-
+            fig, ax = plt.subplots()
         samples = mcmc_i.get_samples()
         Posterior_predictions.append(samples)
-
         sep_mape_real_list = []
         sep_r2_real_list = []
-
         for j in range(100):
             vars = []
             for k in range(len(name_i)):
@@ -1801,8 +1787,7 @@ def perform_bayesian_inference(
 
         avg_mape_real = np.array(sep_mape_real_list).mean()
         avg_r2_real = np.array(sep_r2_real_list).mean()
-        if plot:
-            print(f"Posterior real part's fit: MAPE = {avg_mape_real}; R2 = {avg_r2_real}")
+        log.info(f"Posterior real part's fit: MAPE = {avg_mape_real}; R2 = {avg_r2_real}")
         Posterior_r2_real.append(avg_r2_real)
         Posterior_mape_real.append(avg_mape_real)
 
@@ -1812,19 +1797,16 @@ def perform_bayesian_inference(
             ax.set_xlabel("log(freq)")
             ax.set_ylabel("Real(impedance)")
             ax.set_title("Posterior predictive checks (Real)")
-            if save:
-                plt.savefig("Posterior predictions (Real).png", dpi=300)
-            plt.legend()
-            plt.show()
+            ax.legend()
+            if saveto is not None:
+                fig.savefig("Posterior predictions (Real).png", dpi=300)
 
-        # Posterior predictions -- imag part
+        # Posterior predictions, imaginary part
         if plot:
-            print(f"{circuit_name_i}: Im(Posterior predictions)")
-            _, ax = plt.subplots()
-
+            fig, ax = plt.subplots()
         sep_mape_imag_list = []
         sep_r2_imag_list = []
-
+        # ?: Why 100?
         for j in range(100):
             vars = []
             for k in range(len(name_i)):
@@ -1854,18 +1836,16 @@ def perform_bayesian_inference(
             ax.set_xlabel("log(freq) ")
             ax.set_ylabel("-Im(impedance)")
             ax.set_title("Posterior predictive checks (Im)")
-            if save:
-                plt.savefig("Posterior predictions (Im).png", dpi=300)
-            plt.legend()
-            plt.show()
+            ax.legend()
+            if saveto is not None:
+                fig.savefig("Posterior predictions (Im).png", dpi=300)
 
         # Posterior predictions
         if plot:
-            print(f"{circuit_name_i}: Posterior predictions")
-            _, ax = plt.subplots()
-
+            fig, ax = plt.subplots()
         sep_mape_list = []
         sep_r2_list = []
+        # ?: Why 100?
         for j in range(100):
             vars = []
             for k in range(len(name_i)):
@@ -1883,35 +1863,31 @@ def perform_bayesian_inference(
             sep_r2 = float(r2_calculator(Zreal + 1j * Zimag, BI_data))
             sep_r2_list.append(sep_r2)
 
+        # ?: Why commented out?
         # avg_mse = np.array(sep_mse_list).mean()
         avg_mape = np.array(sep_mape_list).mean()
         avg_r2 = np.array(sep_r2_list).mean()
-        if plot:
-            print(f"Posterior fit: MAPE = {avg_mape}; R2 = {avg_r2}")
+        log.info(f"Posterior fit: MAPE = {avg_mape}; R2 = {avg_r2}")
         Posterior_r2.append(avg_r2)
         Posterior_mape.append(avg_mape)
 
         if plot:
-            # ax.plot(BI_data.real, -BI_data.imag ,marker='.',ms=15,color='grey', alpha=0.5,label='predictive EIS')
-            # ax.plot(Zreal,-Zimag,'--',marker='o',c='b',alpha=0.9,ms=8,label = 'ground truth EIS')
             ax.plot(BI_data.real, -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictions")
             ax.plot(Zreal, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="grount truth")
             ax.set_xlabel("Real(impedance)")
             ax.set_ylabel("Im(impedance)")
             ax.set_title("Posterior predictive checks")
-            if save:
-                plt.savefig("Posterior predictions.png", dpi=300)
-            plt.legend(loc="upper left", fontsize=18)
-            plt.show()
+            ax.legend(loc="upper left", fontsize=18)
+            if saveto is not None:
+                fig.savefig("Posterior predictions.png", dpi=300)
 
-        #         Pair relationship
+        # Pair relationship
         if plot:
-            az.plot_pair(mcmc_i, var_names=name_i)
-            if save:
-                plt.savefig(f"Pair relationship plot ({circuit_name_i}).png", dpi=300)
-            plt.show()
+            ax = az.plot_pair(mcmc_i, var_names=name_i)
+            if saveto is not None:
+                ax.figure.savefig(f"Pair relationship plot ({circuit_name_i}).png", dpi=300)
 
-        #         estimate posterior distribution
+        # Estimate posterior distribution
         if any(len(result[0].lines[0].get_xydata().T[0]) == 2 for result in posterior_dist[:]):
             posterior_mark = "F"
         else:
@@ -1929,9 +1905,6 @@ def perform_bayesian_inference(
             )
         posterior_rhat = np.mean(r_hats)
         consistency.append(posterior_rhat)
-
-        for i in range(2):
-            os.chdir(os.path.abspath(os.path.dirname(os.getcwd())))
 
     ecms["ECM Data"] = ECMs_data
     ecms["R_square"] = R2_list
@@ -1956,17 +1929,10 @@ def perform_bayesian_inference(
 
     ecms = model_evaluation(ecms)
 
-    df_dict = ecms.to_dict()
-    os.chdir(current_path)
-    if save:
-        saveto = os.path.join(folder_name, "results.pkl")
-        with open(saveto, "wb") as handle:
-            dill.dump(df_dict, handle)
-        # with open(f'{data_path}_results.json','w') as file_obj:
-        #     json.dumbp(df_dict,file_obj)
-    # Load data
-    # with open('file.pkl', 'rb') as f:
-    #     input_dict = dill.load(f)
+    if saveto is not None:
+        _saveto = os.path.join(saveto, "results.pkl")
+        with open(_saveto, "wb") as f:
+            dill.dump(ecms.to_dict(), f)
 
     return ecms
 
