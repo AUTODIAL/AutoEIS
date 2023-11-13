@@ -10,6 +10,7 @@ Collection of functions for visualizing EIS data and results.
     plot_impedance
     plot_linKK_residuals
     set_plot_style
+    plot_nyquist
 
 """
 
@@ -27,11 +28,12 @@ __all__ = [
     "plot_impedance",
     "plot_linKK_residuals",
     "set_plot_style",
+    "plot_nyquist",
 ]
 
 
 def draw_circuit(circuit: str):
-    """Visualize circuit model using lcapy.
+    """Draws the circuit model using lcapy.
 
     Parameters
     ----------
@@ -66,8 +68,23 @@ def draw_circuit(circuit: str):
     return fig
 
 
-def plot_impedance(Z, freq, saveto=None, size=1.5):
-    """Plot EIS data in Nyquist and Bode plots."""
+def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", label=None, ax=None):
+    """Plots EIS data in Nyquist plot."""
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    Zreal = Z.real
+    Zimag = Z.imag
+    ax.plot(Zreal, -Zimag, fmt, c=color, markersize=size, label=label)
+    ax.set_xlabel("Re(Z)")
+    ax.set_ylabel("-Im(Z)")
+    ax.axis("equal")
+    ax.legend()
+
+    return ax.figure, ax
+
+def plot_impedance(Z, freq, saveto=None, size=10):
+    """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
     Im_Z = Z.imag
 
@@ -77,6 +94,7 @@ def plot_impedance(Z, freq, saveto=None, size=1.5):
     axes[0].scatter(Re_Z, -Im_Z, s=size)
     axes[0].set_xlabel(r"$Re(Z) / \Omega$")
     axes[0].set_ylabel(r"$-Im(Z) / \Omega$")
+    axes[0].axis("equal")
 
     # Bode plot (magnitude) <- Re(Z)
     ax1 = axes[1]
