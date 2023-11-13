@@ -1664,11 +1664,13 @@ def perform_bayesian_inference(
             error_term = numpyro.sample("err", dist.HalfNormal())
             numpyro.sample("obs", dist.HalfNormal(error_term), obs=abs(true_obs - mu))
 
+        # ?: Why 200?
         prior_predictive = Predictive(model_i, num_samples=200)
         prior_prediction = prior_predictive(rng_key)
         rng_key, rng_key_ = random.split(rng_key)
         Prior_predictions.append(prior_prediction)
 
+        # ?: Why 10,000?
         kernel = NUTS(model_i, target_accept_prob=0.8)
         num_samples = 10000
         mcmc_i = MCMC(kernel, num_warmup=1000, num_samples=num_samples, num_chains=1)
@@ -1711,6 +1713,7 @@ def perform_bayesian_inference(
         # Prior predictions
         if plot:
             fig, ax = plt.subplots()
+        # ?: Unused variable?
         prior_R2_list = []
         # ?: Why 100?
         for j in range(100):
@@ -1778,7 +1781,8 @@ def perform_bayesian_inference(
                     vars.append(var)
             BI_data = function_i(vars, freq)
             if plot:
-                ax.plot(np.log10(freq), BI_data.real, marker=".", color="grey", alpha=0.5)
+                ax.plot(freq, BI_data.real, marker=".", color="grey", alpha=0.5)
+                ax.set_xscale("log")
             sep_mape_real = float(MAPE_calculator(Zreal, BI_data.real))
             sep_mape_real_list.append(sep_mape_real)
             sep_r2_real = float(r2_calculator(Zreal, BI_data.real))
@@ -1786,16 +1790,17 @@ def perform_bayesian_inference(
 
         avg_mape_real = np.array(sep_mape_real_list).mean()
         avg_r2_real = np.array(sep_r2_real_list).mean()
-        log.info(f"Posterior real part's fit: MAPE = {avg_mape_real}; R² = {avg_r2_real}")
+        log.info(f"Posterior fit (real): MAPE = {avg_mape_real}, R² = {avg_r2_real}")
         Posterior_r2_real.append(avg_r2_real)
         Posterior_mape_real.append(avg_mape_real)
 
         if plot:
-            ax.plot(np.log10(freq), BI_data.real, marker=".", ms=15, color="grey", alpha=0.5, label="predictive EIS")
-            ax.plot(np.log10(freq), Zreal, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth EIS")
-            ax.set_xlabel("log(freq)")
-            ax.set_ylabel("Real(impedance)")
-            ax.set_title("Posterior predictive checks (Real)")
+            ax.plot(freq, BI_data.real, marker=".", ms=15, color="grey", alpha=0.5, label="predictive")
+            ax.plot(freq, Zreal, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth")
+            ax.set_xscale("log")
+            ax.set_xlabel("frequency")
+            ax.set_ylabel("Re(Z)")
+            ax.set_title("Posterior predictive checks (real)")
             ax.legend()
             if saveto is not None:
                 fig.savefig("posterior_predictions_real.png", dpi=300)
@@ -1817,7 +1822,8 @@ def perform_bayesian_inference(
                     vars.append(var)
             BI_data = function_i(vars, freq)
             if plot:
-                ax.plot(np.log10(freq), -BI_data.imag, marker=".", color="grey", alpha=0.5)
+                ax.plot(freq, -BI_data.imag, marker=".", color="grey", alpha=0.5)
+                ax.set_xscale("log")
             sep_mape_imag = float(MAPE_calculator(Zimag, BI_data.imag))
             sep_mape_imag_list.append(sep_mape_imag)
             sep_r2_imag = float(r2_calculator(Zimag, BI_data.imag))
@@ -1825,15 +1831,16 @@ def perform_bayesian_inference(
 
         avg_mape_imag = np.array(sep_mape_imag_list).mean()
         avg_r2_imag = np.array(sep_r2_imag_list).mean()
-        log.info(f"Posterior imag part's fit: MAPE = {avg_mape_imag}; R² = {avg_r2_imag}")
+        log.info(f"Posterior fit (imag): MAPE = {avg_mape_imag}, R² = {avg_r2_imag}")
         Posterior_r2_imag.append(avg_r2_imag)
         Posterior_mape_imag.append(avg_mape_imag)
         if plot:
-            ax.plot(np.log10(freq), -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictive EIS")
-            ax.plot(np.log10(freq), -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth EIS")
-            ax.set_xlabel("log(freq) ")
-            ax.set_ylabel("-Im(impedance)")
-            ax.set_title("Posterior predictive checks (Im)")
+            ax.plot(freq, -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictive")
+            ax.plot(freq, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth")
+            ax.set_xscale("log")
+            ax.set_xlabel("frequency")
+            ax.set_ylabel("-Im(Z)")
+            ax.set_title("Posterior predictive checks (imag)")
             ax.legend()
             if saveto is not None:
                 fig.savefig("posterior_predictions_imag.png", dpi=300)
@@ -1865,7 +1872,7 @@ def perform_bayesian_inference(
         # avg_mse = np.array(sep_mse_list).mean()
         avg_mape = np.array(sep_mape_list).mean()
         avg_r2 = np.array(sep_r2_list).mean()
-        log.info(f"Posterior fit: MAPE = {avg_mape}; R² = {avg_r2}")
+        log.info(f"Posterior fit: MAPE = {avg_mape}, R² = {avg_r2}")
         Posterior_r2.append(avg_r2)
         Posterior_mape.append(avg_mape)
 
@@ -1927,6 +1934,7 @@ def perform_bayesian_inference(
 
     ecms = model_evaluation(ecms)
 
+    # Export the results to pickle
     if saveto is not None:
         _saveto = os.path.join(saveto, "results.pkl")
         with open(_saveto, "wb") as f:
