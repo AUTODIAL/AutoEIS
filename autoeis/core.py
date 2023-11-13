@@ -1564,17 +1564,6 @@ def perform_bayesian_inference(
     Posterior_mape = []
     Posterior_mape_real = []
     Posterior_mape_imag = []
-
-    # Start from this source of randomness. We will split keys for subsequent operations.
-    rng_key = random.PRNGKey(0)
-    rng_key, rng_key_ = random.split(rng_key)
-
-    # BI parts:
-    values = ecms["Variables_values"]
-    names = ecms["Variables_names"]
-    expressions_strs = ecms["Mathematical expressions"]
-    circuit_names = ecms["Combined Circuits"]
-    num_of_values = ecms["Combined Values"]
     # Create lists to store BI results
     models = []
     models_descriptions = []
@@ -1582,11 +1571,21 @@ def perform_bayesian_inference(
     Prior_predictions = []
     Posterior_predictions = []
     AIC = []
-
     # Create a set of lists for model evaluation
     divergences = []
     posterior_shape = []
     consistency = []
+
+    # Start from this source of randomness. We will split keys for subsequent operations.
+    # FIXME: Figure out a more permanent solution for RNG
+    rng_key = random.PRNGKey(time.time_ns())
+    rng_key, rng_key_ = random.split(rng_key)
+
+    # BI parts
+    values = ecms["Variables_values"]
+    names = ecms["Variables_names"]
+    expressions_strs = ecms["Mathematical expressions"]
+    circuit_names = ecms["Combined Circuits"]
 
     for i in range(len(ecms["Combined Circuits"])):
         circuit_name_i = circuit_names[i]
@@ -1667,13 +1666,14 @@ def perform_bayesian_inference(
 
         prior_predictive = Predictive(model_i, num_samples=200)
         prior_prediction = prior_predictive(rng_key)
+        rng_key, rng_key_ = random.split(rng_key)
         Prior_predictions.append(prior_prediction)
 
         kernel = NUTS(model_i, target_accept_prob=0.8)
         num_samples = 10000
         mcmc_i = MCMC(kernel, num_warmup=1000, num_samples=num_samples, num_chains=1)
         mcmc_i.run(
-            rng_key_,
+            rng_key,
             values=value_i,
             func=function_i,
             true_data=eis_data,
