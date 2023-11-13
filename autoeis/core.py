@@ -1503,7 +1503,6 @@ def model_evaluation(results):
 def perform_bayesian_inference(
     eis_data: pd.DataFrame,
     ecms: pd.DataFrame,
-    data_path: str,
     saveto: str = None,
     plot: bool = False,
     draw_ecm=False,
@@ -1517,8 +1516,6 @@ def perform_bayesian_inference(
         real part, and imaginary part of the impedance data.
     ecms : pd.DataFrame
         DataFrame with filtered ECMs.
-    data_path : str
-        Path to the original EIS data for storage purposes.
     plot : bool, optional
         If True, plots the results (default is True).
     saveto : str, optional
@@ -1650,7 +1647,6 @@ def perform_bayesian_inference(
             for j in range(len(name_i)):
                 name = name_i[j]
                 value = value_i[j]
-
                 if "n" in name:
                     free_variable = numpyro.sample(f"{name}", dist.Uniform(0, 1))
                     variables_list.append(free_variable)
@@ -1744,7 +1740,7 @@ def perform_bayesian_inference(
                 if "n" not in name:
                     trace.posterior[name] = trace.posterior[name] * value
             posterior_HDI = az.plot_posterior(trace, var_names=name_i)
-            # ?: What's this for loop?
+            # ?: What's this for loop for?
             #             for i in range(posterior_HDI.shape[0]):
             #                 for j in range(posterior_HDI.shape[1]):
             #                     rc_id = i*3 + j
@@ -1770,6 +1766,7 @@ def perform_bayesian_inference(
         Posterior_predictions.append(samples)
         sep_mape_real_list = []
         sep_r2_real_list = []
+        # ?: Why 100?
         for j in range(100):
             vars = []
             for k in range(len(name_i)):
