@@ -117,7 +117,7 @@ def plot_linKK_residuals(frequencies, Re_res, Im_res, saveto=None):
 
 
 def set_plot_style(use_arviz=True) -> None:
-    """Modify the default arviz/matplotlib parameters for prettier plots."""
+    """Modifies the default arviz/matplotlib config for prettier plots."""
     # Arviz
     if use_arviz:
         arviz.style.use("arviz-darkgrid")
@@ -136,3 +136,9 @@ def set_plot_style(use_arviz=True) -> None:
     plt.rcParams["axes.labelsize"] = label_size
     plt.rcParams["axes.titlesize"] = title_size
     plt.rcParams["legend.fontsize"] = legend_size
+
+    try:
+        import IPython
+        IPython.display.set_matplotlib_formats('retina')    
+    except ImportError:
+        pass
