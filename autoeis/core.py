@@ -2025,22 +2025,3 @@ def perform_full_analysis(
     results = perform_bayesian_inference(eis_data, circuits, **kwargs)
 
     return results
-
-
-if __name__ == "__main__":
-    import numpy as np
-
-    import autoeis as ae
-
-    # Load EIS data
-    fname = "assets/test_data.txt"
-    df = ae.io.load_eis_data(fname)
-    # Fetch frequency and impedance data
-    freq = df["freq/Hz"].to_numpy()
-    Re_Z = df["Re(Z)/Ohm"].to_numpy()
-    Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
-
-    # Perform EIS analysis
-    Z = Re_Z + Im_Z * 1j
-    results = perform_full_analysis(impedance=Z, freq=freq, iters=100)
-    print(results)
