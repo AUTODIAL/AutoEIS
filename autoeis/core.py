@@ -1506,7 +1506,6 @@ def perform_bayesian_inference(
     data_path: str,
     saveto: str = None,
     plot: bool = False,
-    save: bool = True,
     draw_ecm=False,
 ) -> pd.DataFrame:
     """Perform Bayesian inference on the ECMs based on the EIS measurements.
@@ -1522,8 +1521,8 @@ def perform_bayesian_inference(
         Path to the original EIS data for storage purposes.
     plot : bool, optional
         If True, plots the results (default is True).
-    save : bool, optional
-        If True, saves the data (default is True).
+    saveto : str, optional
+        Path to the directory where the results will be saved (default is None).
     draw_ecm : bool, optional
         If True, draws the circuit model (default is False).
 
