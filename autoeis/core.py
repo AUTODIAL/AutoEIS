@@ -1630,14 +1630,11 @@ def perform_bayesian_inference(
 
         if plot:
             fig, ax = plt.subplots()
-            ax.scatter(ECM_data.real, -ECM_data.imag, c="r", s=12, label="simulated")
-            ax.scatter(Zreal, -Zimag, c="b", s=12, label="original")
-            ax.set_xlabel("Real(impedance)")
-            ax.set_ylabel("-Im(impedance)")
-            ax.set_title("Nyquist plots of original and simulated data")
-            ax.legend()
+            viz.plot_nyquist(Z=Zsim, fmt="o", color="r", label="simulated", ax=ax)
+            viz.plot_nyquist(Z=Z, fmt="-", color="b", label="experiment", ax=ax)
             if saveto is not None:
-                fig.savefig("Nyquist_simulated.png", dpi=300)
+                fpath = os.path.join(saveto, f"nyquist_simulated_{i}.png")
+                fig.savefig(fpath, dpi=300)
 
         def model_i(
             values=value_i, func=function_i, true_data=eis_data, error=relative_error_accepted
