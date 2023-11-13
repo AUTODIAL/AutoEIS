@@ -67,7 +67,7 @@ def load_eis_data(fname: str) -> pd.DataFrame:
 
 # TODO: We're not really providing any value here.
 def load_results_dataframe(fname: str) -> pd.DataFrame:
-    """Load AutoEIS results CSV file and convert it to a dataframe.
+    """Loads AutoEIS results CSV file and converts it to a dataframe.
 
     Parameters
     ----------
