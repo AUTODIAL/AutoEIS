@@ -1952,6 +1952,9 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
     """
     log.info("Filtering the circuits using heuristic rules.")
 
+    # Make a copy to avoid modifying the original dataframe
+    circuits = circuits.copy()
+
     if len(circuits) == 0:
         log.warning("Circuits' dataframe is empty!")
         return circuits
