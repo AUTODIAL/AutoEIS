@@ -8,11 +8,6 @@ Collection of utility functions used throughout the package.
 
     get_logger
     setup_rich_tracebacks
-    make_dir
-    get_dirname
-    get_filename
-    get_fileext
-    reset_storage
     suppress_output
 
 """
@@ -21,7 +16,6 @@ import logging
 import os
 import sys
 from functools import wraps
-from pathlib import Path
 
 import rich.traceback
 from rich.logging import RichHandler
@@ -35,7 +29,7 @@ def get_logger(name: str) -> logging.Logger:
         # If logger has handlers, do not add another to avoid duplicate logs
         return logger
     
-    logger.setLevel(logging.WARNING)  # Set the logging level to INFO for this logger.
+    logger.setLevel(logging.WARNING)
     handler = RichHandler(rich_tracebacks=True)
     handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
     logger.addHandler(handler)
