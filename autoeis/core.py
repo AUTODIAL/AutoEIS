@@ -33,6 +33,7 @@ from jax import random
 from mpire import WorkerPool
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
 from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
@@ -43,6 +44,7 @@ import autoeis.visualization as viz
 linKK = utils.suppress_output(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
+
 
 __all__ = [
     "perform_full_analysis",
@@ -169,7 +171,7 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK(
         freq, Z, c=0.5, max_M=100, fit_type="complex", add_cap=True
     )
-    rmse = RMSE_calculator(Z, Z_linKK)
+    rmse = mean_squared_error(Z, Z_linKK, squared=False)
 
     # Plot residuals of Lin-KK validation
     if plot:
@@ -1312,114 +1314,9 @@ def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     return df_circuits
 
 
-def temperate_filter(df: "pd.DataFrame") -> "pd.DataFrame":
-    """
-    TODO: This is just a temporary filtering rule to delete ECMs with 0.0
-    value after approximation with 4 digits.
-
-    Parameter:
-    ----------
-    df: pd.DataFrame
-        Dataframe containing filtered ECMs (7 columns)
-
-    Return:
-    -------
-    df: pd.DataFrame
-        Dataframe containing filtered ECMs (7 columns)
-    """
-    for i in range(len(df["Combined Circuits"])):
-        value_set = df["Variables_values"][i]
-        for j in range(len(value_set)):
-            if round(value_set[j], 12) == 0:
-                df = df.drop([i], axis=0)
-                break
-    df = df.reset_index()
-    df = df.drop(["index"], axis=1)
-    return df
-
-
-def r2_calculator(y_true, y_pred):
-    """Calculate of the coefficient of determintion, R^2.
-
-    Parameters
-    ----------
-    y_true: np.ndarray
-        Ndarray that stores the ground truth values
-    y_pred: np.ndarray
-        Ndarray that stores the predictive values
-
-    Returns
-    -------
-    r2: float
-        The coefficient of determintion
-    """
-    sse = (abs(y_pred - y_true) ** 2).sum()
-    sst = (abs(y_true - y_true.mean()) ** 2).sum()
-    r2 = 1 - sse / sst
-    return r2
-
-
-def MSE_calculator(y_true: np.ndarray, y_pred: np.ndarray):
-    """Calculate of the mean square error.
-
-    Parameters
-    ----------
-    y_true: np.ndarray
-        Array containing the ground truth values
-    y_pred: np.ndarray
-        Array containing the predictive values
-
-    Returns
-    -------
-    MSE: float
-        The mean square error
-    """
-    mse = np.array(((abs(y_true - y_pred)) ** 2)).mean()
-    return mse
-
-
-def RMSE_calculator(y_true: np.array, y_pred: np.array) -> float:
-    """Calculate of the root mean square error.
-
-    Parameters
-    ----------
-    y_true: np.ndarray
-        Array containing the ground truth values
-    y_pred: np.ndarray
-        Array containing the predictive values
-
-    Return:
-    -------
-    RMSE: float
-        The root mean square error
-    """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-    rmse = (
-        sum((y_pred.real - y_true.real) ** 2 + (y_pred.imag - y_true.imag) ** 2) / len(y_true)
-    ) ** (1 / 2)
-    return rmse
-
-
-def MAPE_calculator(y_true: np.array, y_pred: np.array) -> float:
-    """Calculate of the mean abosulte percentage error.
-
-    Parameters
-    ----------
-    y_true: np.ndarray
-        Array containing the ground truth values
-    y_pred: np.ndarray
-        Array containing the predictive values
-
-    Returns
-    -------
-    mean_absolute_error_percentage: float
-        The mean absolute percentage error
-    """
-    error_term = abs(y_true - y_pred)
-    absolute_error_percentage = error_term / abs(y_true)
-    mean_absolute_error_percentage = (100 / len(y_true)) * sum(absolute_error_percentage)
-    return mean_absolute_error_percentage
+def mape_score(y_true, y_pred):
+    """Scales the sklearn's MAPE score from [0-1] to [0-100]."""
+    return mean_absolute_percentage_error(y_true, y_pred) * 100
 
 
 def posterior_evaluation(posteriors):
@@ -1540,10 +1437,10 @@ def perform_bayesian_inference(
     Zimag = eis_data["Zimag"].to_numpy()
     Z = Zreal + 1j * Zimag
 
-    # ?: Do we need this?
-    amplifying_factor = abs(Zreal.max() - Zreal.min()) / abs(Zimag.max() - Zimag.min())
-    relative_error_accepted = (((Zreal**2) + (Zimag**2)) ** (1 / 2)).mean()
+    # TODO: We don't actually use this -> refactor out of the code
+    relative_error_accepted = (((Zreal**2) + (Zimag**2)) ** 0.5).mean()
 
+    # NOTE: R2, MSE, RMSE, and MAPE are calculated between GT and GEP, prior to BI
     # Create a list to store the R2 value of each ECM
     R2_list = []
     R2_real_list = []
@@ -1553,7 +1450,9 @@ def perform_bayesian_inference(
     RMSE_list = []
     MAPE_list = []
     # Create a list to store simulated ECM data
+    # NOTE: ...still prior to BI
     ECMs_data = []
+    # NOTE: Now, we're in the BI territory
     # Create a list to store mean r2 in posteior distribution
     Posterior_r2 = []
     Posterior_r2_real = []
@@ -1585,7 +1484,7 @@ def perform_bayesian_inference(
     expressions_strs = ecms["Mathematical expressions"]
     circuit_names = ecms["Combined Circuits"]
 
-    for i in tqdm(range(len(ecms["Combined Circuits"]))):
+    for i in tqdm(range(len(ecms["Combined Circuits"])), disable=True):
         circuit_name_i = circuit_names[i]
         value_i = values[i]
         name_i = names[i]
@@ -1603,26 +1502,26 @@ def perform_bayesian_inference(
 
         log.info("Julia circuit's fitting")
 
-        r2_value = float(r2_calculator(Zreal + 1j * Zimag, Zsim))
+        r2_value = float(r2_score(Zreal + 1j * Zimag, Zsim))
         log.info(f"R² = {r2_value}")
         R2_list.append(r2_value)
 
-        r2_real = r2_calculator(Zreal, Zsim.real)
+        r2_real = r2_score(Zreal, Zsim.real)
         log.info(f"R² (Re) = {r2_real}")
         R2_real_list.append(r2_real)
-        r2_imag = r2_calculator(Zimag, Zsim.imag)
+        r2_imag = r2_score(Zimag, Zsim.imag)
         log.info(f"R² (Im) = {r2_imag}")
         R2_imag_list.append(r2_imag)
 
-        MSE_value = float(MSE_calculator(Zreal + 1j * Zimag, Zsim))
+        MSE_value = float(mean_squared_error(Zreal + 1j * Zimag, Zsim))
         log.info(f"MSW:{MSE_value}")
         MSE_list.append(MSE_value)
 
-        RMSE_value = float(MSE_calculator(Zreal + 1j * Zimag, Zsim) ** (1 / 2))
+        RMSE_value = float(mean_squared_error(Zreal + 1j * Zimag, Zsim) ** 0.5)
         log.info(f"RMSE:{RMSE_value}")
         RMSE_list.append(RMSE_value)
 
-        MAPE_value = float(MAPE_calculator(Zreal + 1j * Zimag, Zsim) ** (1 / 2))
+        MAPE_value = float(mape_score(Zreal + 1j * Zimag, Zsim) ** 0.5)
         log.info(f"MAPE:{MAPE_value}")
         MAPE_list.append(MAPE_value)
 
@@ -1640,6 +1539,9 @@ def perform_bayesian_inference(
             true_data=eis_data,
             error=relative_error_accepted
         ):
+            # FIXME: use `values` instead of `value_i`
+            # FIXME: use `func` instead of `function_i`
+            # FIXME: remove unused `error` arg
             true_freq = np.asarray(true_data["freq"])
             true_Zreal = np.asarray(true_data["Zreal"])
             true_Zimag = np.asarray(true_data["Zimag"])
@@ -1661,13 +1563,14 @@ def perform_bayesian_inference(
             error_term = numpyro.sample("err", dist.HalfNormal())
             numpyro.sample("obs", dist.HalfNormal(error_term), obs=abs(true_obs - mu))
 
-        # ?: Why 200?
+        # ?: Why 200? These are just to plot the prior distributions
         prior_predictive = Predictive(model_i, num_samples=200)
         prior_prediction = prior_predictive(rng_key)
         rng_key, rng_key_ = random.split(rng_key)
         Prior_predictions.append(prior_prediction)
 
         # ?: Why 10,000?
+        # NOTE: use num_chains > 1 to enable parallel sampling
         kernel = NUTS(model_i, target_accept_prob=0.8)
         num_samples = 10000
         mcmc_i = MCMC(kernel, num_warmup=1000, num_samples=num_samples, num_chains=1)
@@ -1710,9 +1613,7 @@ def perform_bayesian_inference(
         # Prior predictions
         if plot:
             fig, ax = plt.subplots()
-        # ?: Unused variable?
-        prior_R2_list = []
-        # ?: Why 100?
+        # ?: Why 100? This has to do the with the number of samples done in prior_predictive
         for j in range(100):
             vars = []
             for k in range(len(name_i)):
@@ -1781,9 +1682,9 @@ def perform_bayesian_inference(
             if plot:
                 ax.plot(freq, BI_data.real, marker=".", color="grey", alpha=0.5)
                 ax.set_xscale("log")
-            sep_mape_real = float(MAPE_calculator(Zreal, BI_data.real))
+            sep_mape_real = float(mape_score(Zreal, BI_data.real))
             sep_mape_real_list.append(sep_mape_real)
-            sep_r2_real = float(r2_calculator(Zreal, BI_data.real))
+            sep_r2_real = float(r2_score(Zreal, BI_data.real))
             sep_r2_real_list.append(sep_r2_real)
 
         avg_mape_real = np.array(sep_mape_real_list).mean()
@@ -1822,9 +1723,9 @@ def perform_bayesian_inference(
             if plot:
                 ax.plot(freq, -BI_data.imag, marker=".", color="grey", alpha=0.5)
                 ax.set_xscale("log")
-            sep_mape_imag = float(MAPE_calculator(Zimag, BI_data.imag))
+            sep_mape_imag = float(mape_score(Zimag, BI_data.imag))
             sep_mape_imag_list.append(sep_mape_imag)
-            sep_r2_imag = float(r2_calculator(Zimag, BI_data.imag))
+            sep_r2_imag = float(r2_score(Zimag, BI_data.imag))
             sep_r2_imag_list.append(sep_r2_imag)
 
         avg_mape_imag = np.array(sep_mape_imag_list).mean()
@@ -1861,12 +1762,13 @@ def perform_bayesian_inference(
             BI_data = function_i(vars, freq)
             if plot:
                 ax.plot(BI_data.real, -BI_data.imag, color="grey", marker=".", alpha=0.5)
-            sep_mape = float(MAPE_calculator(Zreal + 1j * Zimag, BI_data))
+            sep_mape = float(mape_score(Zreal + 1j * Zimag, BI_data))
             sep_mape_list.append(sep_mape)
-            sep_r2 = float(r2_calculator(Zreal + 1j * Zimag, BI_data))
+            sep_r2 = float(r2_score(Zreal + 1j * Zimag, BI_data))
             sep_r2_list.append(sep_r2)
 
-        # ?: Why commented out?
+        # ?: Why commented out? because mse doesn't make much sense for complex values
+        # ?: What other metrics can we use to quantify error in complex values?
         # avg_mse = np.array(sep_mse_list).mean()
         avg_mape = np.array(sep_mape_list).mean()
         avg_r2 = np.array(sep_r2_list).mean()
@@ -1891,12 +1793,15 @@ def perform_bayesian_inference(
                 ax.figure.savefig(f"pair_relationship_plot_{i}.png", dpi=300)
 
         # Estimate posterior distribution
+        # NOTE: We're making sure the figure is not blank!
         if any(len(result[0].lines[0].get_xydata().T[0]) == 2 for result in posterior_dist[:]):
             posterior_mark = "F"
         else:
+            # NOTE: What other criteria can we use to evaluate the posterior distribution?
             posterior_mark = posterior_evaluation(posterior_dist)
         posterior_shape.append(posterior_mark)
 
+        # NOTE: Another metric to evaluate the posterior distribution (consistency)
         r_hats = []
         for i in range(len(name_i)):
             r_hats.append(
