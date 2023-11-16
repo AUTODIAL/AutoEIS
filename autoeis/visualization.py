@@ -83,6 +83,7 @@ def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", label=None, ax=Non
 
     return ax.figure, ax
 
+
 def plot_impedance(Z, freq, saveto=None, size=10):
     """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
