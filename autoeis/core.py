@@ -50,41 +50,42 @@ __all__ = [
 ]
 
 
-def find_ohmic_resistance(
-    reals: np.array, imags: np.array, saveto: str = None
-) -> float:
-    """Extracts the ohmic resistance of impedance data by performing 5th
-    order polynomial fit (with 5% tolerance as relative error).
+def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> float:
+    """Extracts the ohmic resistance of impedance data.
 
     Parameters
     ----------
-    reals: np.ndarray[float]
-        The real part of the impedance data
-    imags: np.ndarray[float]
-        The imag part of the impedance data
-    fname: str
-        The storage path
+    Z : np.ndarray[complex]
+        Impedance measurements.
+    freq : np.ndarray[float]
+        Frequencies corresponding to impedance measurements.        
 
     Returns
     -------
     ohmic_resistance: float
-        The ohmic resistance of impedance data
+        The ohmic resistance of impedance data.
+    
+    Raises
+    ------
+    ValueError
+        If the ohmic resistance cannot be reliably extracted.
     """
-    # TODO: The logic behind this function is not robust enough, need to be improved
-    # Select the high-frequency impedance data
-    high_f_real = reals[0:10]
-    high_f_imag = imags[0:10]
-    high_f_phase = np.arctan(high_f_imag / high_f_real)
-    # Find minimum phase value, note returns as a tuple
-    (index,) = np.where(abs(high_f_phase) == abs(high_f_phase).min())
-    # Extract the ohmic resistance
-    ohmic_resistance = high_f_real[index[0]]
+    from scipy.interpolate import interp1d
 
-    if saveto is not None:
-        fpath = os.path.join(saveto, "ohmic_resistance.txt")
-        np.savetxt(fpath, [ohmic_resistance])
-
-    return ohmic_resistance
+    # Sort impedance data by descending frequency
+    mask = np.argsort(freq)[::-1]
+    Z = Z[mask]
+    freq = freq[mask]
+    # Select region where Im(Z) vs Re(Z) is increasing (otherwise, cannot create interpolant)
+    # NOTE: idx -> first index where (-Z.imag)' switches sign
+    idx = np.where(~(np.diff(-Z.imag) > 0))[0][0]
+    Z = Z[:idx]
+    freq = freq[:idx]
+    fZreal = interp1d(Z.imag, Z.real, kind="linear", fill_value="extrapolate")
+    R = fZreal(0)
+    if R < 0:
+        raise ValueError("Cannot determine R0; more high frequency data is needed.")
+    return R
 
 
 def preprocess_impedance_data(
