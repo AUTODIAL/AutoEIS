@@ -32,17 +32,9 @@ def test_generate_mathematical_expression():
     np.testing.assert_allclose(Z_py, Z_jl)
 
 
-def impedancepy_circuit(circuit_string: str) -> str:
-    """Converts a circuit string the format used by impedance.py."""
-    circuit_string = circuit_string.replace("P", "CPE")
-    circuit_string = circuit_string.replace("[", "p(")
-    circuit_string = circuit_string.replace("]", ")")
-    return circuit_string
-
-
 def test_find_ohmic_resistance():
     circuit_string = "R1-[P2,P3-R4]"
-    circuit_string = impedancepy_circuit(circuit_string)
+    circuit_string = ae.utils.impedancepy_circuit(circuit_string)
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     circuit = CustomCircuit(circuit_string, initial_guess=parameters)
@@ -54,7 +46,7 @@ def test_find_ohmic_resistance():
 
 def test_find_ohmic_resistance_missing_high_freq():
     circuit_string = "R1-[P2,P3-R4]"
-    circuit_string = impedancepy_circuit(circuit_string)
+    circuit_string = ae.utils.impedancepy_circuit(circuit_string)
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     circuit = CustomCircuit(circuit_string, initial_guess=parameters)
