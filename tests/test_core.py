@@ -2,6 +2,8 @@ import re
 
 import numpy as np
 import pandas as pd
+import pytest
+from impedance.models.circuits import CustomCircuit
 
 import autoeis as ae
 
@@ -28,3 +30,35 @@ def test_generate_mathematical_expression():
     Z_jl = np.array([ec.get_target_impedance(circuit, p, f) for f in freq])
 
     np.testing.assert_allclose(Z_py, Z_jl)
+
+
+def impedancepy_circuit(circuit_string: str) -> str:
+    """Converts a circuit string the format used by impedance.py."""
+    circuit_string = circuit_string.replace("P", "CPE")
+    circuit_string = circuit_string.replace("[", "p(")
+    circuit_string = circuit_string.replace("]", ")")
+    return circuit_string
+
+
+def test_find_ohmic_resistance():
+    circuit_string = "R1-[P2,P3-R4]"
+    circuit_string = impedancepy_circuit(circuit_string)
+    R1 = 250
+    parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
+    circuit = CustomCircuit(circuit_string, initial_guess=parameters)
+    freq = np.logspace(-3, 3, 1000)
+    Z = circuit.predict(freq)
+    R = ae.core.find_ohmic_resistance(Z, freq)
+    assert np.isclose(R, R1, rtol=5e-2)
+
+
+def test_find_ohmic_resistance_missing_high_freq():
+    circuit_string = "R1-[P2,P3-R4]"
+    circuit_string = impedancepy_circuit(circuit_string)
+    R1 = 250
+    parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
+    circuit = CustomCircuit(circuit_string, initial_guess=parameters)
+    freq = np.logspace(-3, 1, 1000)
+    Z = circuit.predict(freq)
+    with pytest.raises(ValueError):
+        R = ae.core.find_ohmic_resistance(Z, freq)
