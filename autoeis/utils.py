@@ -21,7 +21,7 @@ from functools import wraps
 import rich.traceback
 from rich.logging import RichHandler
 
-# --- Logging utils --- # BEGIN
+# >>> Logging utils
 
 def get_logger(name: str) -> logging.Logger:
     """Get a logger with the given name."""
@@ -41,8 +41,10 @@ def setup_rich_tracebacks() -> None:
     """Set up rich traceback for nicer exception printing."""
     rich.traceback.install()
 
-# --- Logging utils --- # END
+# <<< Logging utils
 
+
+# >>> Filesystem utils
 
 def flatten(xs):
     """Returns a list of all elements in a nested iterable."""
@@ -76,6 +78,9 @@ def suppress_output(func):
         with _SuppressOutput():
             return func(*args, **kwargs)
     return wrapped
+
+# <<< Filesystem utils
+
 
 # >>> Circuit utils
 
