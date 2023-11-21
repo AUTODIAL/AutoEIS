@@ -7,7 +7,7 @@ Collection of functions for visualizing EIS data and results.
    :toctree: generated/
 
     draw_circuit
-    plot_impedance
+    plot_impedance_combo
     plot_linKK_residuals
     set_plot_style
     plot_nyquist
@@ -25,7 +25,7 @@ log = utils.get_logger(__name__)
 
 __all__ = [
     "draw_circuit",
-    "plot_impedance",
+    "plot_impedance_combo",
     "plot_linKK_residuals",
     "set_plot_style",
     "plot_nyquist",
@@ -84,7 +84,7 @@ def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", label=None, ax=Non
     return ax.figure, ax
 
 
-def plot_impedance(Z, freq, saveto=None, size=10):
+def plot_impedance_combo(Z, freq, saveto=None, size=10):
     """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
     Im_Z = Z.imag
@@ -103,13 +103,13 @@ def plot_impedance(Z, freq, saveto=None, size=10):
     ax1.set_xscale("log")
     ax1.set_xlabel("freq (Hz)")
     ax1.set_ylabel(r"$Re(Z) / \Omega$")
-    ax1.legend(loc='upper left')
+    ax1.yaxis.label.set_color("blue")
 
     # Bode plot (phase) <- Im(Z)
     ax2 = ax1.twinx()  # instantiate a second y-axis sharing the same x-axis
     ax2.scatter(freq, -Im_Z, s=size, color='red', label=r'$-Im(Z)$')
     ax2.set_ylabel(r"$-Im(Z) / \Omega$")
-    ax2.legend(loc='upper right')
+    ax2.yaxis.label.set_color("red")
 
     if saveto is not None:
         fig.savefig(saveto, dpi=300)
