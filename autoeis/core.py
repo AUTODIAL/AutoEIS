@@ -483,7 +483,7 @@ def find_series_elements(circuit: str) -> str:
 
 def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) -> pd.DataFrame:
     """Extracts the ohmic resistance of each circuit and filters those
-    that are not within 15% of the ohmic resistance of the EIS data.
+    that are not within 50% of the ohmic resistance of the EIS data.
 
     Parameters
     ----------
@@ -518,8 +518,8 @@ def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) 
             value_identify_list = []
             for m in range(len(R_values_list)):
                 if (
-                    float(R_values_list[m][0]) < ohmic_resistance * 0.85
-                    or float(R_values_list[m][0]) > ohmic_resistance * 1.15
+                    float(R_values_list[m][0]) < ohmic_resistance * 0.5
+                    or float(R_values_list[m][0]) > ohmic_resistance * 1.5
                 ):
                     value_identify_list.append(False)
                 else:
