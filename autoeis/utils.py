@@ -77,4 +77,75 @@ def suppress_output(func):
             return func(*args, **kwargs)
     return wrapped
 
-# --- Filesystem utils --- # END
+# >>> Circuit utils
+
+def _get_component_names(circuit_string: str, component_type: str) -> list[str]:
+    """Returns a list of labels for all components of a given type in a circuit string."""
+    return re.findall(rf"{component_type}\d+", circuit_string)
+
+
+def get_resistors(circuit_string: str) -> list[str]:
+    """Returns a list of labels for all resistors in a circuit string."""
+    return _get_component_names(circuit_string, "R")
+
+
+def get_capacitors(circuit_string: str) -> list[str]:
+    """Returns a list of labels for all capacitors in a circuit string."""
+    return _get_component_names(circuit_string, "C")
+
+
+def get_inductors(circuit_string: str) -> list[str]:
+    """Returns a list of labels for all inductors in a circuit string."""
+    return _get_component_names(circuit_string, "L")
+
+
+def get_cpes(circuit_string: str) -> list[str]:
+    """Returns a list of labels for all CPEs in a circuit string."""
+    if "CPE" in circuit_string:
+        return _get_component_names(circuit_string, "CPE")
+    return _get_component_names(circuit_string, "P")
+
+
+def get_component_labels(circuit_string: str, types="RLCP") -> list[str]:
+    """Returns a list of labels for all components in a circuit string."""
+    return re.findall(r'[A-Za-z]+[0-9]+', circuit_string)
+
+
+def get_parameter_labels(circuit_string: str, types="RLCP") -> list[str]:
+    """Returns a list of labels for all parameters in a circuit string."""
+    labels = get_component_labels(circuit_string, types=types)
+    param_labels = []
+    for label in labels:
+        # CPE elements have two parameters P{i}w and P{i}n
+        if label.startswith("P"):
+            param_labels.extend([f"{label}w", f"{label}n"])
+        else:
+            param_labels.append(label)
+    return param_labels
+
+
+def count_params(circuit_string: str) -> int:
+    """Returns the number of parameters that fully describe a circuit string."""
+    num_resistors = len(get_resistors(circuit_string))
+    num_capacitors = len(get_capacitors(circuit_string))
+    num_inductors = len(get_inductors(circuit_string))
+    num_cpes = len(get_cpes(circuit_string))
+    return num_resistors + num_capacitors + num_inductors + 2 * num_cpes
+
+
+def impedancepy_circuit(circuit_string: str) -> str:
+    """Converts a circuit string the format used by impedance.py."""
+    circuit_string = circuit_string.replace("P", "CPE")
+    circuit_string = circuit_string.replace("[", "p(")
+    circuit_string = circuit_string.replace("]", ")")
+    return circuit_string
+
+
+def format_parameters(params, labels):
+    """Formats a list of parameters and labels to be used in circuits dataframe."""
+    # Example: R1 = 1, C1 = 2 -> "(R1 = 1.0, C1 = 2.0)"
+    pairs = [f"{label} = {value:.10f}" for label, value in zip(labels, params)]
+    pairs = "(" + ", ".join(pairs) + ")"
+    return pairs
+
+# <<< Circuit utils
