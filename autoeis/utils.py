@@ -11,10 +11,11 @@ Collection of utility functions used throughout the package.
     suppress_output
 
 """
-
 import logging
 import os
+import re
 import sys
+from collections.abc import Iterable
 from functools import wraps
 
 import rich.traceback
@@ -43,7 +44,17 @@ def setup_rich_tracebacks() -> None:
 # --- Logging utils --- # END
 
 
-# --- Filesystem utils --- # BEGIN
+def flatten(xs):
+    """Returns a list of all elements in a nested iterable."""
+    def _flatten(xs):
+        """Returns a generator that flattens a nested iterable."""
+        for x in xs:
+            if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+                yield from flatten(x)
+            else:
+                yield x
+    return list(_flatten(xs))
+
 
 class _SuppressOutput:
     def __enter__(self):
