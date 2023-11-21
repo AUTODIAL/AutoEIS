@@ -73,9 +73,12 @@ def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", label=None, ax=Non
     if ax is None:
         fig, ax = plt.subplots()
 
-    Zreal = Z.real
-    Zimag = Z.imag
-    ax.plot(Zreal, -Zimag, fmt, c=color, markersize=size, label=label)
+    # Remove color from fmt if present
+    if fmt[0] in ["b", "g", "r", "c", "m", "y", "k", "w"]:
+        color = fmt[0]
+        fmt = fmt[1:]
+
+    ax.plot(Z.real, -Z.imag, fmt, c=color, markersize=size, label=label)
     ax.set_xlabel("Re(Z)")
     ax.set_ylabel("-Im(Z)")
     ax.axis("equal")
