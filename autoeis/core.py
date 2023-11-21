@@ -54,6 +54,7 @@ __all__ = [
 ]
 
 
+# TODO: Breaks when data is noisy -> use curve_fit to extrapolate R0
 def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> float:
     """Extracts the ohmic resistance of impedance data.
 
@@ -80,13 +81,17 @@ def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> fl
     mask = np.argsort(freq)[::-1]
     Z = Z[mask]
     freq = freq[mask]
-    # Select region where Im(Z) vs Re(Z) is increasing (otherwise, cannot create interpolant)
-    # NOTE: idx -> first index where (-Z.imag)' switches sign
-    idx = np.where(~(np.diff(-Z.imag) > 0))[0][0]
-    Z = Z[:idx]
-    freq = freq[:idx]
-    fZreal = interp1d(Z.imag, Z.real, kind="linear", fill_value="extrapolate")
-    R = fZreal(0)
+    try:
+        # Select region where Im(Z) vs Re(Z) is increasing (otherwise, cannot create interpolant)
+        # NOTE: idx -> first index where (-Z.imag)' switches sign
+        idx = np.where(~(np.diff(-Z.imag) > 0))[0][0]
+        Z = Z[:idx]
+        freq = freq[:idx]
+        fZreal = interp1d(Z.imag, Z.real, kind="linear", fill_value="extrapolate")
+        R = fZreal(0)
+    except IndexError:
+        # Fall back to returning Re(Z) @ highest frequency
+        R = Z.real[0]
     if R < 0:
         raise ValueError("Cannot determine R0; more high frequency data is needed.")
     return R
