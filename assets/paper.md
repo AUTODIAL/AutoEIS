@@ -28,20 +28,11 @@ bibliography: paper.bib
 ---
 # Summary
 
-AutoEIS is an innovative software tool designed to revolutionize the analysis of Electrochemical Impedance Spectroscopy (EIS) data, a key technique in electrochemical research. It leverages advanced computational methods, including evolutionary algorithms and Bayesian inference, to automate the process of constructing and evaluating equivalent circuit models (ECMs). This automation provides a significant advancement in the field, allowing for more objective, efficient, and accurate analysis of EIS data compared to traditional manual methods.
+AutoEIS is an innovative software tool designed to automate the analysis of Electrochemical Impedance Spectroscopy (EIS) data, a key technique in electrochemical materials research. AutoEIS leverages advanced computational methods, including evolutionary algorithms and Bayesian inference, to automate the process of constructing and evaluating equivalent circuit models (ECMs). This automation provides a significant advancement in the field, allowing for more objective, efficient, and accurate analysis of EIS data compared to traditional manual methods.
 
 In EIS, interpreting the impedance data to understand the underlying electrochemical processes is crucial. However, this interpretation often involves selecting an appropriate ECM, a task that can be complex and subjective. AutoEIS addresses this challenge by providing a systematic approach to ECM selection. It generates a wide array of potential ECMs, evaluates their fit to the EIS data, and ranks them based on statistical metrics. This process not only streamlines EIS data analysis but also introduces a level of precision and repeatability that manual methods struggle to achieve.
 
 AutoEIS's capabilities were demonstrated through several case studies, including the analysis of oxygen evolution reaction electrocatalysis, corrosion of multi-principal element alloys, and CO2 reduction in electrolyzer devices. These studies highlighted the tool's versatility in handling different electrochemical systems and its effectiveness in identifying ECMs that accurately reflect the electrochemical processes under study.
-
-How to write:
-
-- Equation (inline): $\tau$ or $D_{\text{eff}}$
-- Equation (block):
-
-\begin{equation}\label{eq:tort}
-D_{\text{eff}} = D\frac{\epsilon}{\tau}
-\end{equation}
 
 - Cite: [@cooper2016taufactor]
 - Figure: ![Caption with a \href{https://google.com}{link} and citation [@zhang2023].\label{example}](example.pdf)
@@ -50,11 +41,11 @@ D_{\text{eff}} = D\frac{\epsilon}{\tau}
 
 # Statement of need
 
-Electrochemical Impedance Spectroscopy (EIS) is a critical technique in various areas of electrochemistry, including battery research, fuel cell development, and corrosion studies. The interpretation of EIS data is pivotal for understanding the mechanisms of electrochemical reactions and material behaviors. However, this interpretation is often challenging due to the complexity of the data and the requirement of expert knowledge in constructing and evaluating ECMs. This complexity can lead to significant time investment and potential bias in EIS analysis.
+EIS is a critical technique in various areas of electrochemistry, including battery research, fuel cell development, and corrosion studies. The interpretation of EIS data is pivotal for understanding the mechanisms of electrochemical reactions and material behaviors. However, this interpretation is often challenging due to the complexity of the data and the requirement of expert knowledge in constructing and evaluating ECMs. This complexity can lead to significant time investment and potential bias in EIS analysis.
 
 AutoEIS addresses this gap by providing an automated, user-friendly platform for EIS analysis that does not require extensive prior knowledge of the underlying electrochemical processes. This makes EIS analysis more accessible to a broader range of researchers and professionals in the field. By automating the ECM construction and evaluation process, AutoEIS significantly reduces the time and effort required for EIS data analysis. It also minimizes the subjectivity inherent in manual ECM selection, leading to more reliable and reproducible results.
 
-The need for such a tool is evident in the growing complexity of electrochemical systems being studied today. As researchers explore new materials and reaction mechanisms, the ability to quickly and accurately analyze EIS data becomes increasingly important. AutoEIS meets this need by offering a high-throughput, versatile tool that can adapt to a wide range of electrochemical systems, making it an essential resource for advancing research and development in electrochemistry and related fields.
+There are many open-source tools for EIS data analysis, such as DearEIS [@deareis], pyDRTtools [@pydrttools], Elchemea Analytical [@elchemeaanalytical], impedance.py [@impedancepy], PyEIS [@pyeis], and pyimpspec [@pyimpspec], as well as commercial software like ZView and RelaxIS. However, these tools require the user to feed in an ECM, evaluate its fit to the data, and repeat this process until a satisfactory model is found. This process can be time-consuming and subjective, especially for complex EIS data. AutoEIS addresses this challenge by automating the ECM construction and evaluation process, providing a more objective and efficient approach to EIS data analysis. With the growing interest in developing self-driving laboratories, AutoEIS is a step towards automating the analysis of EIS data, a key technique in electrochemical materials research.
 
 # Software Description
 
