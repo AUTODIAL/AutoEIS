@@ -28,16 +28,11 @@ bibliography: paper.bib
 ---
 # Summary
 
-AutoEIS is an innovative software tool designed to automate the analysis of Electrochemical Impedance Spectroscopy (EIS) data, a key technique in electrochemical materials research. AutoEIS leverages advanced computational methods, including evolutionary algorithms and Bayesian inference, to automate the process of constructing and evaluating equivalent circuit models (ECMs). This automation provides a significant advancement in the field, allowing for more objective, efficient, and accurate analysis of EIS data compared to traditional manual methods.
+AutoEIS is an innovative software tool designed to automate the analysis of Electrochemical Impedance Spectroscopy (EIS) data, a key technique in electrochemical materials research. AutoEIS leverages advanced computational methods, including evolutionary algorithms and Bayesian inference, to automate the process of constructing and evaluating equivalent circuit models (ECM). This automation provides a significant advancement in the field, allowing for more objective, efficient, and accurate analysis of EIS data compared to traditional manual methods.
 
-In EIS, interpreting the impedance data to understand the underlying electrochemical processes is crucial. However, this interpretation often involves selecting an appropriate ECM, a task that can be complex and subjective. AutoEIS addresses this challenge by providing a systematic approach to ECM selection. It generates a wide array of potential ECMs, evaluates their fit to the EIS data, and ranks them based on statistical metrics. This process not only streamlines EIS data analysis but also introduces a level of precision and repeatability that manual methods struggle to achieve.
+In EIS, interpreting the impedance data to understand the underlying electrochemical processes is crucial. However, this interpretation involves selecting an appropriate ECM, a task that can be complex and subjective. AutoEIS addresses this challenge by providing a systematic approach to ECM selection. It generates a wide array of potential ECMs, evaluates their fit to the EIS data, and ranks them based on statistical metrics. This process not only streamlines EIS data analysis but also introduces a level of precision and repeatability that manual methods struggle to achieve.
 
-AutoEIS's capabilities were demonstrated through several case studies, including the analysis of oxygen evolution reaction electrocatalysis, corrosion of multi-principal element alloys, and CO2 reduction in electrolyzer devices. These studies highlighted the tool's versatility in handling different electrochemical systems and its effectiveness in identifying ECMs that accurately reflect the electrochemical processes under study.
-
-- Cite: [@cooper2016taufactor]
-- Figure: ![Caption with a \href{https://google.com}{link} and citation [@zhang2023].\label{example}](example.pdf)
-- Link: \href{https://uk.mathworks.com/matlabcentral/fileexchange/57956-taufactor}{here}
-- Cite a figure: \autoref{example}
+AutoEIS's capabilities have been demonstrated through several case studies, including the analysis of oxygen evolution reaction electrocatalysis, corrosion of multi-principal element alloys, and CO2 reduction in electrolyzer devices [@zhang2023]. These studies highlighted the tool's versatility in handling different electrochemical systems and its effectiveness in identifying ECMs that accurately reflect the electrochemical processes under study.
 
 # Statement of need
 
@@ -45,23 +40,23 @@ EIS is a critical technique in various areas of electrochemistry, including batt
 
 AutoEIS addresses this gap by providing an automated, user-friendly platform for EIS analysis that does not require extensive prior knowledge of the underlying electrochemical processes. This makes EIS analysis more accessible to a broader range of researchers and professionals in the field. By automating the ECM construction and evaluation process, AutoEIS significantly reduces the time and effort required for EIS data analysis. It also minimizes the subjectivity inherent in manual ECM selection, leading to more reliable and reproducible results.
 
-There are many open-source tools for EIS data analysis, such as DearEIS [@deareis], pyDRTtools [@pydrttools], Elchemea Analytical [@elchemeaanalytical], impedance.py [@impedancepy], PyEIS [@pyeis], and pyimpspec [@pyimpspec], as well as commercial software like ZView and RelaxIS. However, these tools require the user to feed in an ECM, evaluate its fit to the data, and repeat this process until a satisfactory model is found. This process can be time-consuming and subjective, especially for complex EIS data. AutoEIS addresses this challenge by automating the ECM construction and evaluation process, providing a more objective and efficient approach to EIS data analysis. With the growing interest in developing self-driving laboratories, AutoEIS is a step towards automating the analysis of EIS data, a key technique in electrochemical materials research.
+There are many open-source tools for EIS data analysis, such as DearEIS [@yrjana2022deareis], pyDRTtools [@pydrttools], Elchemea Analytical [@elchemea], impedance.py [@murbach2020impedance], PyEIS [@knudsen2019pyeis], and pyimpspec [@pyimpspec], as well as commercial software like ZView (AMETEK Scientific Instruments) and RelaxIS (rhd instruments). However, these tools require the user to feed in an ECM, evaluate its fit to the data, and repeat this process until a satisfactory model is found. This process can be time-consuming and subjective, especially for complex EIS data. AutoEIS addresses this challenge by automating the ECM construction and evaluation process, providing a more objective and efficient approach to EIS data analysis. With the growing interest in developing self-driving laboratories, AutoEIS is a step towards automating the analysis of EIS data, a key technique in electrochemical materials research.
 
 # Software Description
 
 AutoEIS comprises four main components:
 
-1. Data Pre-processing: It applies techniques like Kramer-Kronig transformations for initial data assessment, ensuring the reliability of EIS data for further analysis.
+1. **Data Preprocessing**: It applies techniques like Kramer-Kronig transformations for initial data assessment, ensuring the reliability of EIS data for further analysis.
 
-2. Evolutionary Algorithm-Based ECM Generation: AutoEIS generates a range of ECMs, exploring various configurations to fit the given EIS data.
+2. **ECM Generation via Evolutionary Algorithms**: AutoEIS generates a range of ECMs, exploring various configurations to fit the given EIS data. This part is done using the Julia package `EquivalentCircuits.jl` [@van2021practical] via a thin Python wrapper.
 
-3. Post-filtering of ECMs: It applies filters based on electrochemical theory to refine the ECM pool, focusing on models that are physically plausible.
+3. **Post-filtering of ECMs**: Once candidate ECMs are generated, AutoEIS applies filters based on electrochemical theory to refine the ECM pool, focusing on models that are physically plausible. For instance, models without a resitor element in the main branch are discarded, as they are not physically realistic.
 
-4. Bayesian Inference for Model Evaluation: This step involves statistical evaluation of ECMs against EIS data, determining the most probable models using metrics like the Mean Squared Error (MSE) and the Bayesian Information Criterion (BIC).
+4. **Bayesian Inference for Model Evaluation**: This step involves fitting the remaining candidate ECMs to the EIS data using Bayesian inference. The Bayesian approach provides a robust and objective method for evaluating the fit of the models to the data. It also allows for the quantification of uncertainty in the model parameters, providing a more comprehensive understanding of the model's performance.
 
 # Authorship Contributions
 
-RZ wrote the original AutoEIS software. MS did a major refactor of the entire code base according to best practices, also optimized performance-critical parts of the project leading to a ~10x speed-up compared to the base version, also added unit tests, documentation, and automated test and deployment workflows. The project was supervised by JH. All authors contributed to the writing and editing of the manuscript.
+The original AutoEIS software was developed by RZ. MS conducted a significant refactor of the code base, which improved performance, resulting in a tenfold speed increase compared to the original version. Additionally, MS implemented unit tests, added documentation, and established automated test and deployment workflows. Supervision of the project was provided by JH. All authors, including RZ, MS, and JH, contributed to the writing or editing of the manuscript.
 
 # Acknowledgements
 
