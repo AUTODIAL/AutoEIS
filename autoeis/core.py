@@ -1506,7 +1506,8 @@ def perform_bayesian_inference(
 
         log.info("Julia circuit's fitting")
 
-        r2_value = float(r2_score(Zreal + 1j * Zimag, Zsim))
+        # FIXME: R2 for complex numbers is not well defined
+        r2_value = np.nan  # float(r2_score(Z, Zsim))
         log.info(f"R² = {r2_value}")
         R2_list.append(r2_value)
 
@@ -1517,16 +1518,19 @@ def perform_bayesian_inference(
         log.info(f"R² (Im) = {r2_imag}")
         R2_imag_list.append(r2_imag)
 
-        MSE_value = float(mean_squared_error(Zreal + 1j * Zimag, Zsim))
-        log.info(f"MSW:{MSE_value}")
+        # FIXME: MSE for complex numbers is not well defined
+        MSE_value = np.nan  # float(mean_squared_error(Z, Zsim))
+        log.info(f"MSE = {MSE_value}")
         MSE_list.append(MSE_value)
 
-        RMSE_value = float(mean_squared_error(Zreal + 1j * Zimag, Zsim) ** 0.5)
-        log.info(f"RMSE:{RMSE_value}")
+        # FIXME: RMSE for complex numbers is not well defined
+        RMSE_value = np.nan  # float(mean_squared_error(Z, Zsim) ** 0.5)
+        log.info(f"RMSE = {RMSE_value}")
         RMSE_list.append(RMSE_value)
 
-        MAPE_value = float(mape_score(Zreal + 1j * Zimag, Zsim) ** 0.5)
-        log.info(f"MAPE:{MAPE_value}")
+        # FIXME: MAPE for complex numbers is not well defined
+        MAPE_value = np.nan  # float(mape_score(Z, Zsim) ** 0.5)
+        log.info(f"MAPE = {MAPE_value}")
         MAPE_list.append(MAPE_value)
 
         if plot:
@@ -1766,9 +1770,11 @@ def perform_bayesian_inference(
             BI_data = function_i(vars, freq)
             if plot:
                 ax.plot(BI_data.real, -BI_data.imag, color="grey", marker=".", alpha=0.5)
-            sep_mape = float(mape_score(Zreal + 1j * Zimag, BI_data))
+            # FIXME: MAPE for complex numbers is not well defined
+            sep_mape = np.nan  # float(mape_score(Z, BI_data))
             sep_mape_list.append(sep_mape)
-            sep_r2 = float(r2_score(Zreal + 1j * Zimag, BI_data))
+            # FIXME: R2 for complex numbers is not well defined
+            sep_r2 = np.nan  # float(r2_score(Z, BI_data))
             sep_r2_list.append(sep_r2)
 
         # ?: Why commented out? because mse doesn't make much sense for complex values
