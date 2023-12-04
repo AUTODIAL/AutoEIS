@@ -1871,7 +1871,7 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
     if len(circuits) == 0:
         log.warning("Circuits' dataframe is empty!")
         return circuits
-    
+
     circuits = split_components(circuits)
     circuits = capacitance_filter(circuits)
     circuits = series_filter(circuits)
