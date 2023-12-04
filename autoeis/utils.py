@@ -21,7 +21,10 @@ from functools import wraps
 import numpy as np
 import pandas as pd
 import rich.traceback
+from impedance.models.circuits import CustomCircuit
 from rich.logging import RichHandler
+
+import autoeis as ae
 
 # >>> Logging utils
 
@@ -163,6 +166,26 @@ def parse_circuit_dataframe(circuit: pd.DataFrame):
     params_dict = dict(re.findall(pattern, circuit["Parameters"].item()))
     params_dict = {k: float(v) for k, v in params_dict.items()}
     return circuit_string, params_dict
+
+
+def fit_circuit_parameters(
+    circuit: str,
+    Z: np.ndarray[complex],
+    freq: np.ndarray[float],
+    p0: np.ndarray[float] = None,
+) -> dict[str, float]:
+    """Fits a circuit to impedance data and returns the parameters."""
+    num_params = count_params(circuit)
+    labels = get_parameter_labels(circuit)
+    # Use initial guess if provided, otherwise use random values
+    p0 = np.random.rand(num_params) if p0 is None else p0
+    circuit = CustomCircuit(
+        circuit=impedancepy_circuit(circuit),
+        initial_guess=p0
+    )
+    circuit.fit(freq, Z)
+    params = circuit.parameters_
+    return dict(zip(labels, params))
 
 # <<< Circuit utils
 
