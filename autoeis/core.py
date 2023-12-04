@@ -1490,7 +1490,10 @@ def perform_bayesian_inference(
 
     for i in tqdm(range(len(ecms["Combined Circuits"])), disable=True):
         circuit_name_i = circuit_names[i]
-        value_i = values[i]
+        try:
+            value_i = list(map(float, values[i]))
+        except ValueError:
+            value_i = eval(values[i])
         name_i = names[i]
         expression_str_i = expressions_strs[i].replace("np.", "jnp.")
         # function_i = eval(f"lambda X,F:{expression_str_i}")
