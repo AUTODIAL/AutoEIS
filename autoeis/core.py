@@ -33,7 +33,6 @@ from jax import random
 from mpire import WorkerPool
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
-from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
 from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
@@ -177,7 +176,7 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK(
         freq, Z, c=0.5, max_M=100, fit_type="complex", add_cap=True
     )
-    rmse = mean_squared_error(Z, Z_linKK, squared=False)
+    rmse = utils.rmse_score(Z, Z_linKK)
 
     # Plot residuals of Lin-KK validation
     if plot:
@@ -1332,12 +1331,7 @@ def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     df_circuits.drop(["index"], axis=1, inplace=True)
 
     return df_circuits
-
-
-def mape_score(y_true, y_pred):
-    """Scales the sklearn's MAPE score from [0-1] to [0-100]."""
-    return mean_absolute_percentage_error(y_true, y_pred) * 100
-
+    
 
 def posterior_evaluation(posteriors):
     """Evaluate the posterior distributions according to their shapes.
@@ -1525,30 +1519,26 @@ def perform_bayesian_inference(
 
         log.info("Julia circuit's fitting")
 
-        # FIXME: R2 for complex numbers is not well defined
-        r2_value = np.nan  # float(r2_score(Z, Zsim))
+        r2_value = utils.r2_score(Z, Zsim)
         log.info(f"R² = {r2_value}")
         R2_list.append(r2_value)
 
-        r2_real = r2_score(Zreal, Zsim.real)
+        r2_real = utils.r2_score(Zreal, Zsim.real)
         log.info(f"R² (Re) = {r2_real}")
         R2_real_list.append(r2_real)
-        r2_imag = r2_score(Zimag, Zsim.imag)
+        r2_imag = utils.r2_score(Zimag, Zsim.imag)
         log.info(f"R² (Im) = {r2_imag}")
         R2_imag_list.append(r2_imag)
 
-        # FIXME: MSE for complex numbers is not well defined
-        MSE_value = np.nan  # float(mean_squared_error(Z, Zsim))
+        MSE_value = utils.mse_score(Z, Zsim)
         log.info(f"MSE = {MSE_value}")
         MSE_list.append(MSE_value)
 
-        # FIXME: RMSE for complex numbers is not well defined
-        RMSE_value = np.nan  # float(mean_squared_error(Z, Zsim) ** 0.5)
+        RMSE_value = utils.rmse_score(Z, Zsim)
         log.info(f"RMSE = {RMSE_value}")
         RMSE_list.append(RMSE_value)
 
-        # FIXME: MAPE for complex numbers is not well defined
-        MAPE_value = np.nan  # float(mape_score(Z, Zsim) ** 0.5)
+        MAPE_value = utils.mape_score(Z, Zsim)
         log.info(f"MAPE = {MAPE_value}")
         MAPE_list.append(MAPE_value)
 
@@ -1695,9 +1685,9 @@ def perform_bayesian_inference(
             if plot:
                 ax.plot(freq, BI_data.real, marker=".", color="grey", alpha=0.5)
                 ax.set_xscale("log")
-            sep_mape_real = float(mape_score(Zreal, BI_data.real))
+            sep_mape_real = utils.mape_score(Zreal, BI_data.real)
             sep_mape_real_list.append(sep_mape_real)
-            sep_r2_real = float(r2_score(Zreal, BI_data.real))
+            sep_r2_real = utils.r2_score(Zreal, BI_data.real)
             sep_r2_real_list.append(sep_r2_real)
 
         avg_mape_real = np.array(sep_mape_real_list).mean()
@@ -1736,9 +1726,9 @@ def perform_bayesian_inference(
             if plot:
                 ax.plot(freq, -BI_data.imag, marker=".", color="grey", alpha=0.5)
                 ax.set_xscale("log")
-            sep_mape_imag = float(mape_score(Zimag, BI_data.imag))
+            sep_mape_imag = utils.mape_score(Zimag, BI_data.imag)
             sep_mape_imag_list.append(sep_mape_imag)
-            sep_r2_imag = float(r2_score(Zimag, BI_data.imag))
+            sep_r2_imag = utils.r2_score(Zimag, BI_data.imag)
             sep_r2_imag_list.append(sep_r2_imag)
 
         avg_mape_imag = np.array(sep_mape_imag_list).mean()
@@ -1775,11 +1765,9 @@ def perform_bayesian_inference(
             BI_data = function_i(vars, freq)
             if plot:
                 ax.plot(BI_data.real, -BI_data.imag, color="grey", marker=".", alpha=0.5)
-            # FIXME: MAPE for complex numbers is not well defined
-            sep_mape = np.nan  # float(mape_score(Z, BI_data))
+            sep_mape = utils.mape_score(Z, BI_data)
             sep_mape_list.append(sep_mape)
-            # FIXME: R2 for complex numbers is not well defined
-            sep_r2 = np.nan  # float(r2_score(Z, BI_data))
+            sep_r2 = utils.r2_score(Z, BI_data)
             sep_r2_list.append(sep_r2)
 
         # ?: Why commented out? because mse doesn't make much sense for complex values
