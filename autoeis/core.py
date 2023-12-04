@@ -1410,7 +1410,8 @@ def perform_bayesian_inference(
     ecms: pd.DataFrame,
     saveto: str = None,
     plot: bool = False,
-    draw_ecm=False,
+    draw_ecm = False,
+    seed: int = None,
 ) -> pd.DataFrame:
     """Perform Bayesian inference on the ECMs based on the EIS measurements.
 
@@ -1477,10 +1478,10 @@ def perform_bayesian_inference(
     posterior_shape = []
     consistency = []
 
-    # Start from this source of randomness. We will split keys for subsequent operations.
-    # FIXME: Figure out a more permanent solution for RNG
-    rng_key = random.PRNGKey(time.time_ns())
-    rng_key, rng_key_ = random.split(rng_key)
+    # Set the seed for reproducibility (if not set, use current time in nanoseconds)
+    seed = seed or time.time_ns()
+    rng_key = random.PRNGKey(seed)
+    rng_key, rng_subkey = random.split(rng_key)
 
     # BI parts
     values = ecms["Variables_values"]
