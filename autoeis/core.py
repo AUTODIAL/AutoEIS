@@ -379,7 +379,7 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
     runtime_error = False
     
     # Set a different seed for each process
-    seed = [seed] * iters
+    seed = [seed + i for i in range(iters)]
 
     with WorkerPool(n_jobs=nproc) as pool:
         try:
