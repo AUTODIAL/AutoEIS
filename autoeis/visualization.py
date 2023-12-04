@@ -9,8 +9,9 @@ Collection of functions for visualizing EIS data and results.
     draw_circuit
     plot_impedance_combo
     plot_linKK_residuals
-    set_plot_style
     plot_nyquist
+    set_plot_style
+    show_nticks
 
 """
 
@@ -18,6 +19,7 @@ import re
 
 import arviz
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import autoeis.utils as utils
 
@@ -27,8 +29,9 @@ __all__ = [
     "draw_circuit",
     "plot_impedance_combo",
     "plot_linKK_residuals",
-    "set_plot_style",
     "plot_nyquist",
+    "set_plot_style",
+    "show_nticks",
 ]
 
 
