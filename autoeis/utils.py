@@ -18,6 +18,7 @@ import sys
 from collections.abc import Iterable
 from functools import wraps
 
+import pandas as pd
 import rich.traceback
 from rich.logging import RichHandler
 
@@ -152,5 +153,14 @@ def format_parameters(params, labels):
     pairs = [f"{label} = {value:.10f}" for label, value in zip(labels, params)]
     pairs = "(" + ", ".join(pairs) + ")"
     return pairs
+
+
+def parse_circuit_dataframe(circuit: pd.DataFrame):
+    """Parses a circuit dataframe into a circuit string and parameter dictionary."""
+    circuit_string = circuit["circuitstring"].item()
+    pattern = r"(\b\w+\b)\s*=\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)"
+    params_dict = dict(re.findall(pattern, circuit["Parameters"].item()))
+    params_dict = {k: float(v) for k, v in params_dict.items()}
+    return circuit_string, params_dict
 
 # <<< Circuit utils
