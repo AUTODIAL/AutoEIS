@@ -1493,7 +1493,8 @@ def perform_bayesian_inference(
         value_i = values[i]
         name_i = names[i]
         expression_str_i = expressions_strs[i].replace("np.", "jnp.")
-        function_i = eval(f"lambda X,F:{expression_str_i}")
+        # function_i = eval(f"lambda X,F:{expression_str_i}")
+        function_i = lambda X, F: eval(expression_str_i)
 
         log.info(f"Circuit {i}: {circuit_name_i}")
         log.info(f"Elements: ({name_i})\nValues: ({value_i})")
