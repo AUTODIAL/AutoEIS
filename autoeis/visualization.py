@@ -164,3 +164,15 @@ def set_plot_style(use_arviz=True) -> None:
         IPython.display.set_matplotlib_formats('retina')    
     except ImportError:
         pass
+
+
+def show_nticks(ax, x=True, y=False, n=10):
+    """In-place modifies Matplotlib axes to show only n ticks."""
+    if x:
+        xticks = ax.xaxis.get_major_ticks()
+        if len(xticks) > n:
+            ax.xaxis.set_major_locator(plt.MaxNLocator(n))
+    if y:
+        yticks = ax.yaxis.get_major_ticks()
+        if len(yticks) > n:
+            ax.yaxis.set_major_locator(plt.MaxNLocator(n))
