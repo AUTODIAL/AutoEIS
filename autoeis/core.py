@@ -1479,7 +1479,7 @@ def perform_bayesian_inference(
     consistency = []
 
     # Set the seed for reproducibility (if not set, use current time in nanoseconds)
-    seed = seed or time.time_ns()
+    seed = seed or time.time_ns() % 2**32
     rng_key = random.PRNGKey(seed)
     rng_key, rng_subkey = random.split(rng_key)
 
