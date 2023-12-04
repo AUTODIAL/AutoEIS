@@ -12,7 +12,6 @@ Core functions including finding the best fit and Bayesian analysis.
     preprocess_impedance_data 
 
 """
-
 import itertools
 import os
 import re
@@ -33,6 +32,8 @@ from jax import random
 from mpire import WorkerPool
 from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, Predictive
+from scipy.interpolate import interp1d
+from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
@@ -74,23 +75,33 @@ def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> fl
     ValueError
         If the ohmic resistance cannot be reliably extracted.
     """
-    from scipy.interpolate import interp1d
-
     # Sort impedance data by descending frequency
     mask = np.argsort(freq)[::-1]
     Z = Z[mask]
     freq = freq[mask]
-    try:
-        # Select region where Im(Z) vs Re(Z) is increasing (otherwise, cannot create interpolant)
-        # NOTE: idx -> first index where (-Z.imag)' switches sign
-        idx = np.where(~(np.diff(-Z.imag) > 0))[0][0]
-        Z = Z[:idx]
-        freq = freq[:idx]
-        fZreal = interp1d(Z.imag, Z.real, kind="linear", fill_value="extrapolate")
-        R = fZreal(0)
-    except IndexError:
-        # Fall back to returning Re(Z) @ highest frequency
-        R = Z.real[0]
+
+    # # Method 1: interpolate Re(Z) @ Im(Z) = 0
+    # try:
+    #     # Select region where Im(Z) vs Re(Z) is increasing (otherwise, cannot create interpolant)
+    #     # NOTE: idx -> first index where (-Z.imag)' switches sign
+    #     idx = np.where(~(np.diff(-Z.imag) > 0))[0][0]
+    #     Z_subset = Z[:idx]
+    #     freq_subset = freq[:idx]
+    #     fZreal = interp1d(Z_subset.imag, Z_subset.real, kind="linear", fill_value="extrapolate")
+    #     R = fZreal(0)
+    # except (IndexError, ValueError):
+    #     # Fall back to returning Re(Z) @ highest frequency
+    #     R = Z.real[0]
+
+    # Method 2: curve fit to a decaying exponential; R = 1 / func(freq=inf)
+    x = freq[:]
+    y = 1/Z.real[:]
+    def func(x, a, b, c):
+        return a*np.exp(-b*x) + c
+    bounds = ([-np.inf, 0, -np.inf], np.inf)
+    popt, pcov = curve_fit(func, x, y, bounds=bounds)
+    R = 1 / popt[-1]
+
     if R < 0:
         raise ValueError("Cannot determine R0; more high frequency data is needed.")
     return R
