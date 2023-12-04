@@ -138,11 +138,15 @@ def plot_linKK_residuals(frequencies, Re_res, Im_res, saveto=None):
     return fig, ax
 
 
-def set_plot_style(use_arviz=True) -> None:
+def set_plot_style(use_arviz=True, use_seaborn=True) -> None:
     """Modifies the default arviz/matplotlib config for prettier plots."""
     # Arviz
     if use_arviz:
-        arviz.style.use("arviz-darkgrid")
+        arviz.style.use("arviz-bluish")
+
+    # Seaborn
+    if use_seaborn:
+        sns.set_style("ticks")
 
     # Matplotlib
     label_size = 11
