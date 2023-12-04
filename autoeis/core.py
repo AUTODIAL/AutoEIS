@@ -248,15 +248,16 @@ def preprocess_impedance_data(
 
 
 def generate_equivalent_circuits(
-        impedance: np.ndarray[complex],
-        freq: np.ndarray[float],
-        iters: int = 100,
-        complexity: int = 12,
-        tol: float = 5e-4,
-        saveto: str = None,
-        parallel: bool = True,
-        generations: int = 30,
-        population_size: int = 100,
+    impedance: np.ndarray[complex],
+    freq: np.ndarray[float],
+    iters: int = 100,
+    complexity: int = 12,
+    tol: float = 5e-4,
+    saveto: str = None,
+    parallel: bool = True,
+    generations: int = 30,
+    population_size: int = 100,
+    seed: int = None,
 ) -> pd.DataFrame:
     """Generate potential ECMs using evolutionary algorithms.
 
@@ -280,6 +281,8 @@ def generate_equivalent_circuits(
         Number of generations for the ECM search (default is 30).
     population_size : int, optional
         Number of ECMs to generate per generation (default is 100).
+    seed : int, optional
+        Random seed for reproducibility (default is None).
 
     Returns
     -------
@@ -288,6 +291,9 @@ def generate_equivalent_circuits(
     """
     log.info("Generating equivalent circuits via evolutionary algorithms.")
 
+    # Set the seed for reproducibility (if not set, use current time in nanoseconds)
+    seed = seed or time.time_ns() % 2**32
+        
     ec_kwargs = {
         "head": complexity,
         "terminals": "RLP",
@@ -297,7 +303,7 @@ def generate_equivalent_circuits(
     }
 
     ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
-    circuits = ecm_generator(impedance, freq, iters, ec_kwargs)
+    circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     if not len(circuits):
         log.warning("No plausible circuits found. Try increasing `iters`.")
@@ -309,13 +315,17 @@ def generate_equivalent_circuits(
     return circuits
 
 
-def _generate_ecm_serial(impedance, freq, iters, ec_kwargs):
+def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     """Generate potential ECMs using EquivalentCircuits.jl in serial."""
     Main = julia_helpers.init_julia()
     # Suppress Julia warnings (coming from Optim.jl)
     Main.redirect_stderr()
     ec = julia_helpers.import_backend(Main)
 
+    # Set random seed for reproducibility (Python and Julia)
+    np.random.seed(seed)
+    Main.eval(f"import Random; Random.seed!({seed})")            
+    
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
         try:
@@ -333,15 +343,15 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs):
     return df
 
 
-def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
+def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
     """Generate potential ECMs using EquivalentCircuits.jl in parallel."""
 
-    def circuit_evolution(proc_id: int):
+    def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
         Main = julia_helpers.init_julia()
-        # Set a different random seed for each process (Python and Julia)
-        np.random.seed(proc_id * time.time_ns() % 2**32)
-        Main.eval(f"import Random; Random.seed!({proc_id}*time_ns())")
+        # Set random seed for reproducibility (Python and Julia)
+        np.random.seed(seed)
+        Main.eval(f"import Random; Random.seed!({seed})")
         # Suppress Julia warnings (coming from Optim.jl)
         Main.redirect_stderr()
         # Suppress Julia output (coming from EquivalentCircuits.jl) until
@@ -368,10 +378,13 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs):
 
     # Julia cannot be initialized in the main process -> guard against this
     runtime_error = False
+    
+    # Set a different seed for each process
+    seed = [seed] * iters
 
     with WorkerPool(n_jobs=nproc) as pool:
         try:
-            circuits = pool.map(circuit_evolution, range(iters), **mpire_kwargs)
+            circuits = pool.map(circuit_evolution, seed, **mpire_kwargs)
         except RuntimeError:
             runtime_error = True
 
