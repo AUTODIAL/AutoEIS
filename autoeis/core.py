@@ -1921,21 +1921,20 @@ def perform_full_analysis(
     if saveto is not None:
         Path(saveto).mkdir(parents=True, exist_ok=True)
 
-    # Preprocessing + store preprocessed data
-    kwargs = {"threshold": 0.05, "saveto": saveto, "plot": plot}
-    eis_data, ohmic_resistance, rmse = preprocess_impedance_data(impedance, freq, **kwargs)
-    Z_clean = eis_data["Zreal"].to_numpy() + 1j * eis_data["Zimag"].to_numpy()
-    freq_clean = eis_data["freq"].to_numpy()
+    # Filter out bad impedance data
+    Z, freq, rmse = preprocess_impedance_data(impedance, freq, threshold=0.05, plot=plot)
     
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": 1e-1, "saveto": saveto, "parallel": parallel}
-    circuits_unfiltered = generate_equivalent_circuits(Z_clean, freq_clean, **kwargs)
+    circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
+    ohmic_resistance = find_ohmic_resistance(Z, freq)
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
 
     # Perform Bayesian inference on the filtered ECMs
-    kwargs = {"data_path": saveto, "plot": plot, "draw_ecm": draw_ecm}
+    eis_data = pd.DataFrame({"freq": freq, "Zreal": Z.real, "Zimag": Z.imag})
+    kwargs = {"saveto": saveto, "plot": plot, "draw_ecm": draw_ecm}
     results = perform_bayesian_inference(eis_data, circuits, **kwargs)
 
     return results
