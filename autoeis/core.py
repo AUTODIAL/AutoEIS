@@ -1299,32 +1299,21 @@ def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     df_circuits: pd.DataFrame
         Dataframe containing filtered ECMs with mathematical expressions (7 columns)
     """
-    # Create some lists to store the names and values for BI
-    variables_names = []
-    variables_values = []
+    # Create regex pattern to catch "name = value" pairs
+    pattern = r"(\b\w+\b)\s*=\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)"
 
-    # Create some RE pattern to split the values and names
-    digit_p = re.compile(r"\-?[0-9]+\.[0-9]+e*-*[0-9]*")
-    name_p = re.compile(r"[A-Z][0-9]+[a-z]?")
+    name_value_pairs = []
 
     for i in range(len(df_circuits["Combined Values"])):
-        variables_name = []
-        variables_value = []
-        if len(df_circuits["Combined Values"][i]) == 1:
-            for k in range(len(df_circuits["Combined Values"][i][0])):
-                variable = df_circuits["Combined Values"][i][0][k]
-                variables_name.append(name_p.findall(variable)[0])
-                variables_value.append(float(digit_p.findall(variable)[0]))
-        elif len(df_circuits["Combined Values"][i]) != 1:
-            for k in range(len(df_circuits["Combined Values"][i][0])):
-                variable = df_circuits["Combined Values"][i][0][k]
-                variables_name.append(name_p.findall(variable)[0])
-                variables_value.append(float(digit_p.findall(variable)[0]))
-        variables_names.append(variables_name)
-        variables_values.append(variables_value)
+        test_string = utils.flatten(df_circuits["Combined Values"][i])
+        test_string = ", ".join(test_string)
+        name_value_pairs.append(re.findall(pattern, test_string))
 
-    df_circuits["Variables_names"] = variables_names
-    df_circuits["Variables_values"] = variables_values
+    names = [[name for name, _ in row] for row in name_value_pairs]
+    values = [[value for _, value in row] for row in name_value_pairs]
+
+    df_circuits["Variables_names"] = names
+    df_circuits["Variables_values"] = values
 
     df_circuits = df_circuits.reset_index()
     df_circuits.drop(["index"], axis=1, inplace=True)
