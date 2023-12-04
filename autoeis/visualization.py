@@ -68,7 +68,7 @@ def draw_circuit(circuit: str):
     return fig
 
 
-def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", label=None, ax=None):
+def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", alpha=1, label=None, ax=None):
     """Plots EIS data in Nyquist plot."""
     if ax is None:
         fig, ax = plt.subplots()
@@ -78,11 +78,13 @@ def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", label=None, ax=Non
         color = fmt[0]
         fmt = fmt[1:]
 
-    ax.plot(Z.real, -Z.imag, fmt, c=color, markersize=size, label=label)
+    ax.plot(Z.real, -Z.imag, fmt, c=color, markersize=size, label=label, alpha=alpha)
     ax.set_xlabel("Re(Z)")
     ax.set_ylabel("-Im(Z)")
     ax.axis("equal")
-    ax.legend()
+
+    if label is not None:
+        ax.legend()
 
     return ax.figure, ax
 
