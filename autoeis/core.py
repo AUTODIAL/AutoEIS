@@ -111,9 +111,8 @@ def preprocess_impedance_data(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
     threshold: float,
-    saveto: str = None,
-    plot: bool = False
-) -> tuple[pd.DataFrame, float, float]:
+    plot: bool = False,
+) -> tuple[np.ndarray[complex], np.ndarray[float], float]:
     """Preprocess impedance data, filtering out data with a positive
     imaginary part in high frequencies and applying KK validation.
 
@@ -125,31 +124,21 @@ def preprocess_impedance_data(
         Frequencies corresponding to impedance measurements.
     threshold : float
         Controls the filtering effect during KK validation.
-    saveto : str
-        Path to the directory where the results will be saved.
     plot : bool, optional
         If True, a plot of the processed data will be generated. Default is False.
 
     Returns
     -------
     tuple
-        - Zdf_mask (pd.DataFrame): Preprocessed impedance data.
-        - ohmic_resistance (float): Ohmic resistance extracted from impedance data.
-        - rmse (float): Root mean square error of KK validated data vs. measurements.
+        - Z: Filtered impedance data.
+        - freq: Frequencies corresponding to the filtered measurements.
+        - rmse: Root mean square error of KK validated data vs. measurements.
     """
     log.info("Pre-processing impedance data using KK filter.")
-
-    # Make a new folder to store the results
-    if saveto is not None:
-        Path(saveto).mkdir(parents=True, exist_ok=True)
 
     # Fetch the real and imaginary part of the impedance data
     Re_Z = impedance.real
     Im_Z = impedance.imag
-
-    if plot:
-        fpath = os.path.join(saveto, "nyquist_and_bode_raw.png")
-        viz.plot_impedance(impedance, freq, saveto=fpath)
 
     # Filter 1 - High Frequency Region
     # Find index where phase_Zwe == minimum, remove all high frequency imag values below zero
@@ -191,8 +180,7 @@ def preprocess_impedance_data(
 
     # Plot residuals of Lin-KK validation
     if plot:
-        fpath = os.path.join(saveto, "linkk_residuals.png")
-        viz.plot_linKK_residuals(freq, res_real, res_imag, saveto=fpath)
+        viz.plot_linKK_residuals(freq, res_real, res_imag)
 
     # Need to set a threshold limit for when to filter out the noisy data
     # of the residuals threshold = 0.05 !!! USER DEFINED !!!
@@ -234,9 +222,11 @@ def preprocess_impedance_data(
 
         # Find the ohmic resistance
         try:
-            ohmic_resistance = find_ohmic_resistance(Re_Z_mask, Im_Z_mask, saveto=saveto)
+            ohmic_resistance = find_ohmic_resistance(Z_mask, freq_mask)
+            ohmic_resistance_found = True
         except ValueError:
             log.error("Ohmic resistance not found. Check data or increase KK threshold.")
+            ohmic_resistance_found = False
 
         # Convert the data to a dataframe for easier manipulation
         values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
@@ -244,17 +234,16 @@ def preprocess_impedance_data(
         Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
         threshold += step
 
-    log.info(f"Ohmic resistance = {ohmic_resistance}")
-
-    # Plot the filtered Nyquist and Bode plots
-    if plot:
-        saveto = os.path.join(saveto, "nyquist_and_bode_filtered.png")
-        viz.plot_impedance(Z_mask, freq_mask, saveto=saveto)
+    if ohmic_resistance_found:
+        log.info(f"Ohmic resistance = {ohmic_resistance}")
 
     if not np.isclose(threshold - step, threshold_init):
         log.warning(f"Default threshold ({threshold_init}) dropped too many points.")
 
-    return Zdf_mask, ohmic_resistance, rmse
+    Z = Zdf_mask["Zreal"].to_numpy() + 1j * Zdf_mask["Zimag"].to_numpy()
+    freq = Zdf_mask["freq"].to_numpy()
+
+    return Z, freq, rmse
 
 
 def generate_equivalent_circuits(
