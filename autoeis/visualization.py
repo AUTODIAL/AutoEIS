@@ -92,21 +92,23 @@ def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", alpha=1, label=Non
     return ax.figure, ax
 
 
-def plot_impedance_combo(Z, freq, saveto=None, size=10):
+def plot_impedance_combo(Z, freq, saveto=None, size=10, ax=None):
     """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
     Im_Z = Z.imag
 
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3))
+    if ax is None:
+        fig, ax = plt.subplots(ncols=2)
+    ax[0].figure.set_size_inches(8, 3)
 
     # Nyquist plot
-    axes[0].scatter(Re_Z, -Im_Z, s=size)
-    axes[0].set_xlabel(r"$Re(Z) / \Omega$")
-    axes[0].set_ylabel(r"$-Im(Z) / \Omega$")
-    axes[0].axis("equal")
+    ax[0].scatter(Re_Z, -Im_Z, s=size)
+    ax[0].set_xlabel(r"$Re(Z) / \Omega$")
+    ax[0].set_ylabel(r"$-Im(Z) / \Omega$")
+    ax[0].axis("equal")
 
     # Bode plot (magnitude) <- Re(Z)
-    ax1 = axes[1]
+    ax1 = ax[1]
     ax1.scatter(freq, Re_Z, s=size, color='blue', label=r'$Re(Z)$')
     ax1.set_xscale("log")
     ax1.set_xlabel("freq (Hz)")
@@ -122,7 +124,7 @@ def plot_impedance_combo(Z, freq, saveto=None, size=10):
     if saveto is not None:
         fig.savefig(saveto, dpi=300)
     
-    return fig, axes
+    return ax[0].figure, ax
 
 
 def plot_linKK_residuals(freq, res_real, res_imag, saveto=None):
