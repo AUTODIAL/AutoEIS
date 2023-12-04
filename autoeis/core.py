@@ -1412,7 +1412,7 @@ def model_evaluation(results):
     return results_sorted
 
 
-def perform_bayesian_inference(
+def perform_bayesian_inference_legacy(
     eis_data: pd.DataFrame,
     ecms: pd.DataFrame,
     saveto: str = None,
