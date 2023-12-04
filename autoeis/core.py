@@ -555,6 +555,18 @@ def series_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
     return df_circuits
 
 
+def circuit_to_function(circuit: str, jax=True) -> callable:
+    """Converts a circuit string to a callable function."""
+    circuit_df = pd.DataFrame([circuit], columns=["circuitstring"])
+    eqn = generate_mathematical_expression(circuit_df)["Mathematical expressions"][0]
+    if jax:
+        eqn = eqn.replace("np", "jnp")
+    def _fn(X, F):
+        assert utils.count_params(circuit) == len(X), "Invalid number of parameters."
+        return eval(eqn)
+    return _fn
+
+
 def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
     """
     Generates the mathematical expression of each circuit.
