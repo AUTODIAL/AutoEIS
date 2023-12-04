@@ -1444,9 +1444,6 @@ def perform_bayesian_inference(
     Zimag = eis_data["Zimag"].to_numpy()
     Z = Zreal + 1j * Zimag
 
-    # TODO: We don't actually use this -> refactor out of the code
-    relative_error_accepted = (((Zreal**2) + (Zimag**2)) ** 0.5).mean()
-
     # NOTE: R2, MSE, RMSE, and MAPE are calculated between GT and GEP, prior to BI
     # Create a list to store the R2 value of each ECM
     R2_list = []
