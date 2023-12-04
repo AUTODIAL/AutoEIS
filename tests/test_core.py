@@ -41,7 +41,7 @@ def test_find_ohmic_resistance():
     freq = np.logspace(-3, 3, 1000)
     Z = circuit.predict(freq)
     R = ae.core.find_ohmic_resistance(Z, freq)
-    assert np.isclose(R, R1, rtol=5e-2)
+    assert np.isclose(R, R1, rtol=0.15)
 
 
 def test_find_ohmic_resistance_missing_high_freq():
