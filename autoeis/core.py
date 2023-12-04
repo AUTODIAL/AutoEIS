@@ -1541,23 +1541,15 @@ def perform_bayesian_inference(
                 fpath = os.path.join(saveto, f"nyquist_simulated_{i}.png")
                 fig.savefig(fpath, dpi=300)
 
-        def model_i(
-            values=value_i,
-            func=function_i,
-            true_data=eis_data,
-            error=relative_error_accepted
-        ):
-            # FIXME: use `values` instead of `value_i`
-            # FIXME: use `func` instead of `function_i`
-            # FIXME: remove unused `error` arg
+        def model_i(values=value_i, func=function_i, true_data=eis_data):
             true_freq = np.asarray(true_data["freq"])
             true_Zreal = np.asarray(true_data["Zreal"])
             true_Zimag = np.asarray(true_data["Zimag"])
-
+            # Define sampling variables
             variables_list = []
             for j in range(len(name_i)):
                 name = name_i[j]
-                value = value_i[j]
+                value = values[j]
                 if "n" in name:
                     free_variable = numpyro.sample(f"{name}", dist.Uniform(0, 1))
                     variables_list.append(free_variable)
@@ -1565,30 +1557,24 @@ def perform_bayesian_inference(
                     free_variable = numpyro.sample(f"{name}", dist.LogNormal(2.5, 1.7))
                     real_variable = value * free_variable
                     variables_list.append(real_variable)
-
+            # Define error term
             true_obs = true_Zreal + true_Zimag * 1j
-            mu = function_i(variables_list, true_freq)
+            mu = func(variables_list, true_freq)
             error_term = numpyro.sample("err", dist.HalfNormal())
             numpyro.sample("obs", dist.HalfNormal(error_term), obs=abs(true_obs - mu))
 
         # ?: Why 200? These are just to plot the prior distributions
         prior_predictive = Predictive(model_i, num_samples=200)
-        prior_prediction = prior_predictive(rng_key)
-        rng_key, rng_key_ = random.split(rng_key)
+        prior_prediction = prior_predictive(rng_subkey)
+        rng_key, rng_subkey = random.split(rng_key)
         Prior_predictions.append(prior_prediction)
-
+        
         # ?: Why 10,000?
         # NOTE: use num_chains > 1 to enable parallel sampling
         kernel = NUTS(model_i, target_accept_prob=0.8)
         num_samples = 10000
         mcmc_i = MCMC(kernel, num_warmup=1000, num_samples=num_samples, num_chains=1)
-        mcmc_i.run(
-            rng_key,
-            values=value_i,
-            func=function_i,
-            true_data=eis_data,
-            error=relative_error_accepted,
-        )
+        mcmc_i.run(rng_subkey, values=value_i, func=function_i, true_data=eis_data)
 
         # Results
         models.append(mcmc_i)
