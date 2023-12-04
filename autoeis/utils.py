@@ -18,6 +18,7 @@ import sys
 from collections.abc import Iterable
 from functools import wraps
 
+import numpy as np
 import pandas as pd
 import rich.traceback
 from rich.logging import RichHandler
@@ -164,3 +165,29 @@ def parse_circuit_dataframe(circuit: pd.DataFrame):
     return circuit_string, params_dict
 
 # <<< Circuit utils
+
+
+# >>> Metrics utils
+
+def mape_score(y_true, y_pred):
+    """Generalized MAPE score that can handle complex numbers."""
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+
+def mse_score(y_true, y_pred):
+    """Generalized MSE score that can handle complex numbers."""
+    return np.mean(np.abs(y_true - y_pred) ** 2)
+
+
+def rmse_score(y_true, y_pred):
+    """Generalized RMSE score that can handle complex numbers."""
+    return np.sqrt(mse_score(y_true, y_pred))
+
+
+def r2_score(y_true, y_pred):
+    """Generalized R2 score that can handle complex numbers."""
+    ssr = np.sum(np.abs(y_true - y_pred) ** 2)
+    sst = np.sum(np.abs(y_true - np.mean(y_true)) ** 2)
+    return 1 - ssr / sst
+
+# <<< Metrics utils
