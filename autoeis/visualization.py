@@ -125,11 +125,11 @@ def plot_impedance_combo(Z, freq, saveto=None, size=10):
     return fig, axes
 
 
-def plot_linKK_residuals(frequencies, Re_res, Im_res, saveto=None):
+def plot_linKK_residuals(freq, res_real, res_imag, saveto=None):
     """Plots the residuals of the linear Kramers-Kronig validation."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    ax.plot(frequencies, Im_res, label="delta Im")
-    ax.plot(frequencies, Re_res, label="delta Re")
+    ax.plot(freq, res_real, label="delta Re")
+    ax.plot(freq, res_imag, label="delta Im")
     ax.set_xlabel("freq (Hz)")
     ax.set_ylabel("delta %")
     ax.set_xscale("log")
