@@ -38,6 +38,7 @@ def test_find_ohmic_resistance():
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     circuit = CustomCircuit(circuit_string, initial_guess=parameters)
+    circuit.parameters_ = parameters
     freq = np.logspace(-3, 3, 1000)
     Z = circuit.predict(freq)
     R = ae.core.find_ohmic_resistance(Z, freq)
@@ -51,6 +52,7 @@ def test_find_ohmic_resistance_missing_high_freq():
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     circuit = CustomCircuit(circuit_string, initial_guess=parameters)
+    circuit.parameters_ = parameters
     freq = np.logspace(-3, 1, 1000)
     Z = circuit.predict(freq)
     # with pytest.raises(ValueError):

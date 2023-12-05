@@ -80,30 +80,22 @@ def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> fl
     Z = Z[mask]
     freq = freq[mask]
 
-    # # Method 1: interpolate Re(Z) @ Im(Z) = 0
-    # try:
-    #     # Select region where Im(Z) vs Re(Z) is increasing (otherwise, cannot create interpolant)
-    #     # NOTE: idx -> first index where (-Z.imag)' switches sign
-    #     idx = np.where(~(np.diff(-Z.imag) > 0))[0][0]
-    #     Z_subset = Z[:idx]
-    #     freq_subset = freq[:idx]
-    #     fZreal = interp1d(Z_subset.imag, Z_subset.real, kind="linear", fill_value="extrapolate")
-    #     R = fZreal(0)
-    # except (IndexError, ValueError):
-    #     # Fall back to returning Re(Z) @ highest frequency
-    #     R = Z.real[0]
-
-    # Method 2: curve fit to a decaying exponential; R = 1 / func(freq=inf)
+    # Curve fit to a saturating function: (ax + b) / (x + c)
+    # NOTE: x -> inf, f(x) -> a === 1/R0 => set a > 0 as lower bound
+    # NOTE: To put more weight on high frequency data, use 1/Z.real as y
     x = freq[:]
-    y = 1/Z.real[:]
+    y = 1 / Z.real[:]
     def func(x, a, b, c):
-        return a*np.exp(-b*x) + c
-    bounds = ([-np.inf, 0, -np.inf], np.inf)
-    popt, pcov = curve_fit(func, x, y, bounds=bounds)
-    R = 1 / popt[-1]
+        return (a*x + b) / (x + c)
+    bounds = ([0, -np.inf, -np.inf], np.inf)
+    try:
+        (a, b, c), pcov = curve_fit(func, x, y, bounds=bounds)
+        R = 1 / a
+    except RuntimeError:
+        # Fall back to returning Re(Z) @ highest frequency
+        R = Z.real[0]
+        log.warning("Failed to fit ohmic resistance, falling back to Re(Z) @ highest frequency.")
 
-    if R < 0:
-        raise ValueError("Cannot determine R0; more high frequency data is needed.")
     return R
 
 
