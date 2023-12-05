@@ -13,12 +13,13 @@ y2 = x2 + np.zeros(10) * 1j
 
 # Simulated EIS data
 circuit_string = "R1-[P2,R3]"
-parameters = np.array([250, 1e-3, 0.5, 10])
+p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10}
+p0_vals = list(p0_dict.values())
 circuit = CustomCircuit(
     utils.impedancepy_circuit(circuit_string),
-    initial_guess=parameters
+    initial_guess=p0_vals,
 )
-circuit.parameters_ = parameters
+circuit.parameters_ = p0_vals
 freq = np.logspace(-3, 3, 1000)
 Z = circuit.predict(freq)
 
@@ -72,13 +73,14 @@ def test_r2_score_complex():
     
 
 def test_fit_circuit_parameters_no_initial_guess():
-    params_dict = utils.fit_circuit_parameters(circuit_string, Z, freq)
-    parameters_fit = np.array(list(params_dict.values()))
-    assert np.allclose(parameters_fit, parameters, rtol=0.01)
+    p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq)
+    p_fit = list(p_dict.values())
+    assert np.allclose(p_fit, p0_vals, rtol=0.01)
 
 
 def test_fit_circuit_parameters_with_initial_guess():
-    p0 = parameters + np.random.rand(len(parameters)) * parameters * 0.5
-    params_dict = utils.fit_circuit_parameters(circuit_string, Z, freq, p0)
-    parameters_fit = np.array(list(params_dict.values()))
-    assert np.allclose(parameters_fit, parameters, rtol=0.01)
+    # Add some noise to the initial guess to test robustness
+    p0 = p0_vals + np.random.rand(len(p0_vals)) * p0_vals * 0.5
+    p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq, p0)
+    p_fit = list(p_dict.values())
+    assert np.allclose(p_fit, p0_vals, rtol=0.01)

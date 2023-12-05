@@ -17,6 +17,7 @@ import re
 import sys
 from collections.abc import Iterable
 from functools import wraps
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -172,13 +173,16 @@ def fit_circuit_parameters(
     circuit: str,
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
-    p0: np.ndarray[float] = None,
+    p0: Union[np.ndarray[float], dict[str, float]] = None,
 ) -> dict[str, float]:
     """Fits a circuit to impedance data and returns the parameters."""
     num_params = count_params(circuit)
-    labels = get_parameter_labels(circuit)
-    # Use initial guess if provided, otherwise use random values
+    # Deal with initial guess
     p0 = np.random.rand(num_params) if p0 is None else p0
+    p0 = list(p0.values()) if isinstance(p0, dict) else p0
+    assert len(p0) == num_params, "Wrong number of parameters in initial guess."
+    # Use initial guess if provided, otherwise use random values
+    labels = get_parameter_labels(circuit)
     circuit = CustomCircuit(
         circuit=impedancepy_circuit(circuit),
         initial_guess=p0
