@@ -18,8 +18,11 @@ Collection of functions for visualizing EIS data and results.
 import re
 
 import arviz
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import rich
 import seaborn as sns
+from rich.console import Console
 
 import autoeis.utils as utils
 
@@ -32,7 +35,22 @@ __all__ = [
     "plot_nyquist",
     "set_plot_style",
     "show_nticks",
+    "print",
 ]
+
+
+# Override print() with rich's print()
+def rich_print(*args, **kwargs):
+    """Overrides the built-in print() function with rich's print() function."""
+    try:
+        import IPython
+
+        # HACK: prevent rich from creating a new <div> for every print()
+        # NOTE: works for notebooks, but breaks for interactive sessions
+        console = Console(force_jupyter=False)
+        console.print(*args, **kwargs)
+    except ImportError:
+        rich.print(*args, **kwargs)
 
 
 def draw_circuit(circuit: str):
@@ -71,7 +89,7 @@ def draw_circuit(circuit: str):
     return fig
 
 
-def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color="k", alpha=1, label=None, ax=None):
+def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color=None, alpha=1, label=None, ax=None):
     """Plots EIS data in Nyquist plot."""
     if ax is None:
         fig, ax = plt.subplots()
@@ -145,11 +163,55 @@ def plot_linKK_residuals(freq, res_real, res_imag, saveto=None):
     return fig, ax
 
 
-def set_plot_style(use_arviz=True, use_seaborn=True) -> None:
+def override_mpl_colors(override_named_colors=True):
+    """Override matplotlib's default colors with Flexoki colors."""
+    # Define the Flexoki-Light color scheme based on the provided table
+    # Original sequence: red, orange, yellow, green, cyan, blue, purple, magenta
+    flexoki_light_colors = {
+        "red": "#D14D41",
+        "blue": "#4385BE",
+        "green": "#879A39",
+        "orange": "#DA702C",
+        "purple": "#8B7EC8",
+        "yellow": "#D0A215",
+        "cyan": "#3AA99F",
+        "magenta": "#CE5D97"
+    }
+
+    # Override default named colors
+    if override_named_colors:
+        mpl.colors._colors_full_map.update(flexoki_light_colors)
+
+    # Define the Flexoki-Light style
+    flexoki_light_style = {
+        "axes.prop_cycle": mpl.cycler(color=list(flexoki_light_colors.values())),
+        "axes.facecolor": "white",
+        "axes.edgecolor": "black",
+        "axes.grid": True,
+        "axes.axisbelow": True,
+        "axes.labelcolor": "black",
+        "figure.facecolor": "white",
+        "grid.color": "whitesmoke",
+        "text.color": "black",
+        "xtick.color": "black",
+        "ytick.color": "black",
+        "xtick.direction": "out",
+        "ytick.direction": "out",
+        "lines.color": flexoki_light_colors["blue"],
+        "patch.edgecolor": "black",
+        # "axes.spines.top": False,
+        # "axes.spines.right": False
+    }
+
+    # Apply the Flexoki-Light style
+    plt.style.use(flexoki_light_style)
+
+
+def set_plot_style(use_arviz=True, use_seaborn=True, use_flexoki=True) -> None:
     """Modifies the default arviz/matplotlib config for prettier plots."""
     # Arviz
     if use_arviz:
-        arviz.style.use("arviz-bluish")
+        arviz.style.use("arviz-viridish")
 
     # Seaborn
     if use_seaborn:
@@ -170,9 +232,14 @@ def set_plot_style(use_arviz=True, use_seaborn=True) -> None:
     plt.rcParams["axes.titlesize"] = title_size
     plt.rcParams["legend.fontsize"] = legend_size
 
+    # Flexoki colors
+    if use_flexoki:
+        override_mpl_colors()
+
+    # Set up Jupyter notebook
     try:
         import IPython
-        IPython.display.set_matplotlib_formats('retina')    
+        IPython.display.set_matplotlib_formats('retina')
     except ImportError:
         pass
 
@@ -182,8 +249,8 @@ def show_nticks(ax, x=True, y=False, n=10):
     if x:
         xticks = ax.xaxis.get_major_ticks()
         if len(xticks) > n:
-            ax.xaxis.set_major_locator(plt.MaxNLocator(n))
+            ax.xaxis.set_major_locator(plt.MaxNLocator(n, steps=[1, 2, 5, 10]))
     if y:
         yticks = ax.yaxis.get_major_ticks()
         if len(yticks) > n:
-            ax.yaxis.set_major_locator(plt.MaxNLocator(n))
+            ax.yaxis.set_major_locator(plt.MaxNLocator(n, steps=[1, 2, 5, 10]))
