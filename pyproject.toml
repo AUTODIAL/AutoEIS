@@ -45,6 +45,7 @@ dependencies = [
     "pandas",
     "rich",
     "scikit-learn",
+    "seaborn",
     "tqdm",
 ]
 

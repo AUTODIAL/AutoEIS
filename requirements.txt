@@ -15,4 +15,5 @@ pandas
 pytest
 rich
 scikit-learn
+seaborn
 tqdm
