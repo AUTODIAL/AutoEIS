@@ -19,13 +19,14 @@ from collections.abc import Iterable
 from functools import wraps
 from typing import Union
 
+import jax.numpy as jnp
 import numpy as np
+import numpyro.distributions as dist
 import pandas as pd
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
 from rich.logging import RichHandler
-
-import autoeis as ae
+from scipy.stats import lognorm, norm
 
 # >>> Logging utils
 
