@@ -191,6 +191,20 @@ def fit_circuit_parameters(
     params = circuit.parameters_
     return dict(zip(labels, params))
 
+
+def circuit_to_function_impy(circuit: str):
+    """Converts a circuit string to a function using impedance.py."""
+    num_params = count_params(circuit)
+    # Convert circuit string to impedance.py format
+    circuit = impedancepy_circuit(circuit)
+    # Convert circuit string to function
+    p0 = np.full(num_params, np.nan)
+    circuit = CustomCircuit(circuit, initial_guess=p0)
+    def func(params, freq):
+        circuit.parameters_ = params
+        return circuit.predict(freq)
+    return func
+
 # <<< Circuit utils
 
 
