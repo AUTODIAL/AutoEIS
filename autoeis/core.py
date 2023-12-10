@@ -18,9 +18,11 @@ import re
 import time
 import warnings
 from pathlib import Path
+from typing import Union
 
 import arviz as az
 import dill
+import jax
 import jax.numpy as jnp  # noqa: F401
 import matplotlib.pyplot as plt
 import numpy as np
@@ -102,7 +104,7 @@ def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> fl
 def preprocess_impedance_data(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
-    threshold: float,
+    threshold: float = 5e-2,
     plot: bool = False,
 ) -> tuple[np.ndarray[complex], np.ndarray[float], float]:
     """Preprocess impedance data, filtering out data with a positive
@@ -559,16 +561,16 @@ def series_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
     return df_circuits
 
 
-def circuit_to_function(circuit: str, jax=True) -> callable:
+def circuit_to_function(circuit: str, use_jax=True) -> callable:
     """Converts a circuit string to a callable function."""
     circuit_df = pd.DataFrame([circuit], columns=["circuitstring"])
     eqn = generate_mathematical_expression(circuit_df)["Mathematical expressions"][0]
-    if jax:
+    if use_jax:
         eqn = eqn.replace("np", "jnp")
     def _fn(X, F):
         assert utils.count_params(circuit) == len(X), "Invalid number of parameters."
         return eval(eqn)
-    return _fn
+    return jax.jit(_fn) if use_jax else _fn
 
 
 def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
@@ -1316,8 +1318,8 @@ def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
     names = [[name for name, _ in row] for row in name_value_pairs]
     values = [[value for _, value in row] for row in name_value_pairs]
 
-    df_circuits["Variables_names"] = names
-    df_circuits["Variables_values"] = values
+    df_circuits["Variables names"] = names
+    df_circuits["Variables values"] = values
 
     df_circuits = df_circuits.reset_index()
     df_circuits.drop(["index"], axis=1, inplace=True)
@@ -1839,6 +1841,99 @@ def perform_bayesian_inference_legacy(
             dill.dump(ecms.to_dict(), f)
 
     return ecms
+
+
+def perform_bayesian_inference(
+    circuit: str,
+    Z: np.ndarray[complex],
+    freq: np.ndarray[float],
+    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    seed: int = None,
+) -> numpyro.infer.mcmc.MCMC:
+    """Performs Bayesian inference on the circuit based on EIS measurements.
+
+    Parameters
+    ----------
+    circuit : str
+        Circuit string.
+    Z : np.ndarray[complex]
+        Complex impedance data.
+    freq: np.ndarray[float]
+        Frequency data.
+    p0 : Union[np.ndarray[float], dict[str, float]], optional
+        Initial guess for the circuit parameters (default is None).
+    seed : int, optional
+        Random seed for reproducibility (default is None).
+        
+    Returns
+    -------
+    mcmc : numpyro.infer.mcmc.MCMC
+        MCMC object.
+    """
+    log.info("Performing Bayesian inference on the circuit {circuit}.")
+
+    # Set the seed for reproducibility (if not set, use current time in nanoseconds)
+    seed = seed or time.time_ns() % 2**32
+    np.random.seed(seed)
+    rng_key = random.PRNGKey(seed)
+
+    # Deal with initial values for the circuit parameters
+    if p0 is None:
+        p0 = utils.fit_circuit_parameters(circuit, Z, freq)
+    assert isinstance(p0, dict), "p0 must be a dictionary"
+    p0_vals = np.array(list(p0.values()))
+
+    Zfunc = circuit_to_function(circuit, use_jax=True)
+    Zsim = Zfunc(p0_vals, freq)
+
+    # Compute R2, MSE, RMSE, and MAPE using the initial guess
+    r2_init = utils.r2_score(Z, Zsim)
+    r2_real_init = utils.r2_score(Z.real, Zsim.real)
+    r2_imag_init = utils.r2_score(Z.imag, Zsim.imag)
+    mse_init = utils.mse_score(Z, Zsim)
+    rmse_init = utils.rmse_score(Z, Zsim)
+    mape_init = utils.mape_score(Z, Zsim)
+
+    log.info(f"R² = {r2_init:.3f} (initial)")
+    log.info(f"R² (Re) = {r2_real_init:.3f} (initial)")
+    log.info(f"R² (Im) = {r2_imag_init:.3f} (initial)")
+    log.info(f"MSE = {mse_init:.3e} (initial)")
+    log.info(f"RMSE = {rmse_init:.3e} (initial)")
+    log.info(f"MAPE = {mape_init:.3f}% (initial)")
+
+    def model(F, Z_true, priors: dict, circuit_func: callable):
+        # Sample each element of X separately
+        X = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
+        # Predict Z using the model
+        Z_pred = circuit_func(X, F)
+        # Define observation model for real and imaginary parts of Z
+        sigma_real = numpyro.sample("sigma_real", dist.Exponential(rate=1.0))
+        numpyro.sample("obs_real", dist.Normal(Z_pred.real, sigma_real), obs=Z_true.real)
+        sigma_imag = numpyro.sample("sigma_imag", dist.Exponential(rate=1.0))
+        numpyro.sample("obs_imag", dist.Normal(Z_pred.imag, sigma_imag), obs=Z_true.imag)
+
+    # Compute prior predictive distribution using the initial guess
+    prior_predictive = Predictive(model, num_samples=200)
+    priors = utils.initialize_priors(circuit, p0)
+    rng_key, rng_subkey = random.split(rng_key)
+    kwargs = {"F": freq, "Z_true": Z, "priors": priors, "circuit_func": Zfunc}
+    prior_prediction = prior_predictive(rng_subkey, **kwargs)
+    
+    # NOTE: use num_chains > 1 to enable parallel sampling
+    nuts_kernel = NUTS(model)
+    num_warmup = 1000
+    num_samples = 1000
+    mcmc = MCMC(nuts_kernel, num_samples=num_samples, num_warmup=num_warmup, num_chains=1)
+    rng_key, rng_subkey = jax.random.split(rng_key)
+    mcmc.run(rng_subkey, F=freq, Z_true=Z, priors=priors, circuit_func=Zfunc)
+
+    # Calculate AIC
+    # FIXME: Remove next line once confirmed that `iloc` is correctly used.
+    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * utils.count_params(circuit)
+    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * utils.count_params(circuit)
+    # log.info(f"AIC = {aic:.1f}")
+
+    return mcmc
 
 
 def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFrame:
