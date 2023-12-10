@@ -208,6 +208,46 @@ def circuit_to_function_impy(circuit: str):
 # <<< Circuit utils
 
 
+# >>> Statistics utils
+
+def initialize_priors(p0: dict[str, float], variables: list[str]) -> dict[str, dist.Distribution]:
+    """Initializes priors for a given circuit."""
+    priors = {}
+    for var in variables:
+        value = p0[var]
+        if "n" in var:
+            # TODO: use a more informative prior for n, eg truncated normal
+            # Exponent of CPE elements is bounded between 0 and 1
+            priors[var] = dist.Uniform(0, 1)
+        else:
+            # Search over a log-normal dist spanning [0.1*u0, 10*u0]
+            mean, std_dev = jnp.log(value), jnp.log(100)
+            priors[var] = dist.LogNormal(mean, std_dev)
+    return priors
+
+
+def initialize_priors_from_posteriors(posterior, variables):
+    """Creates new priors based on the posterior distributions."""
+    priors = {}
+    for var in variables:
+        sample = posterior[var]
+        # Fit data to a truncated normal distribution for exponents of CPE elements
+        # HACK: for better convergence (fewer parameters), fit a normal and truncate it
+        if "n" in var:
+            # Exponent of CPE elements is bounded between 0 and 1
+            loc, scale = norm.fit(sample)
+            priors[var] = dist.TruncatedNormal(loc=loc, scale=2*scale, low=0, high=1)
+        # Fit data to a log-normal distribution for all other parameters
+        else:
+            # NOTE: s and scale in scipy.stats -> scale and np.exp(loc) in numpyro
+            # NOTE: above conversion is only valid when loc = 0
+            s, loc, scale = lognorm.fit(sample, floc=0)
+            priors[var] = dist.LogNormal(loc=np.log(scale), scale=2*s)
+    return priors
+
+# <<< Statistics utils
+
+
 # >>> Metrics utils
 
 def mape_score(y_true, y_pred):
