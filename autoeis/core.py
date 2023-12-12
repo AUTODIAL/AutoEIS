@@ -432,12 +432,12 @@ def split_components(df_circuits: pd.DataFrame) -> pd.DataFrame:
     return df_circuits
 
 
-def capacitance_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
+def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Exclude ideal capacitors from the circuits dataframe.
 
     Parameters
     ----------
-    df_circuits: pd.DataFrame
+    circuits: pd.DataFrame
        Dataframe containing ECMs (6 columns)
 
     Returns
@@ -445,11 +445,12 @@ def capacitance_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
     df_circuits: pd.DataFrame
        Dataframe containing ECMs without ideal capacitors (6 columns)
     """
-    for i in range(len(df_circuits["Capacitors"])):
-        if df_circuits["Capacitors"][i] != []:
-            df_circuits.drop([i], inplace=True)
-    df_circuits.reset_index(drop=True, inplace=True)
-    return df_circuits
+    for row in circuits.itertuples():
+        variables = row.Parameters.keys()
+        contains_capacitor = any("C" in var for var in variables)
+        if contains_capacitor:
+            circuits.drop(row.Index, inplace=True)
+    circuits.reset_index(drop=True, inplace=True)
 
 
 def find_series_elements(circuit: str) -> str:
