@@ -1919,11 +1919,8 @@ def perform_bayesian_inference(
     kwargs = {"F": freq, "Z_true": Z, "priors": priors, "circuit_func": Zfunc}
     prior_prediction = prior_predictive(rng_subkey, **kwargs)
     
-    # NOTE: use num_chains > 1 to enable parallel sampling
     nuts_kernel = NUTS(model)
-    num_warmup = 1000
-    num_samples = 1000
-    mcmc = MCMC(nuts_kernel, num_samples=num_samples, num_warmup=num_warmup, num_chains=1)
+    mcmc = MCMC(nuts_kernel, num_samples=500, num_warmup=500, num_chains=1)
     rng_key, rng_subkey = jax.random.split(rng_key)
     mcmc.run(rng_subkey, F=freq, Z_true=Z, priors=priors, circuit_func=Zfunc)
 
