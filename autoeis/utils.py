@@ -221,7 +221,7 @@ def initialize_priors(p0: dict[str, float], variables: list[str]) -> dict[str, d
             # Exponent of CPE elements is bounded between 0 and 1
             priors[var] = dist.Uniform(0, 1)
         else:
-            # Search over a log-normal dist spanning [0.1*u0, 10*u0]
+            # Search over a log-normal dist spanning [0.01*u0, 100*u0]
             mean, std_dev = jnp.log(value), jnp.log(100)
             priors[var] = dist.LogNormal(mean, std_dev)
     return priors
