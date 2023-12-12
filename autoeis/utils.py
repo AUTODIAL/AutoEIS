@@ -118,6 +118,11 @@ def get_cpes(circuit_string: str) -> list[str]:
     return _get_component_names(circuit_string, "P")
 
 
+def get_fsws(circuit_string: str) -> list[str]:
+    """Returns a list of labels for all FSWs in a circuit string."""
+    return _get_component_names(circuit_string, "Wo")
+
+
 def get_component_labels(circuit_string: str, types="RLCP") -> list[str]:
     """Returns a list of labels for all components in a circuit string."""
     return re.findall(r'[A-Za-z]+[0-9]+', circuit_string)
@@ -142,7 +147,8 @@ def count_params(circuit_string: str) -> int:
     num_capacitors = len(get_capacitors(circuit_string))
     num_inductors = len(get_inductors(circuit_string))
     num_cpes = len(get_cpes(circuit_string))
-    return num_resistors + num_capacitors + num_inductors + 2 * num_cpes
+    num_fsws = len(get_fsws(circuit_string))
+    return num_resistors + num_capacitors + num_inductors + 2 * (num_cpes + num_fsws)
 
 
 def impedancepy_circuit(circuit_string: str) -> str:
