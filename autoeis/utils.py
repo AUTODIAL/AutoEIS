@@ -168,15 +168,6 @@ def format_parameters(params, labels):
     return pairs
 
 
-def parse_circuit_dataframe(circuit: pd.DataFrame):
-    """Parses a circuit dataframe into a circuit string and parameter dictionary."""
-    circuit_string = circuit["circuitstring"].item()
-    pattern = r"(\b\w+\b)\s*=\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)"
-    params_dict = dict(re.findall(pattern, circuit["Parameters"].item()))
-    params_dict = {k: float(v) for k, v in params_dict.items()}
-    return circuit_string, params_dict
-
-
 def parse_circuit_dataframe(circuits: pd.DataFrame) -> pd.DataFrame:
     """Replaces the Parameters column in EquivalentCircuits.jl from a
     stringified list to a proper dict[str, float]: "R1 = 1" -> {"R1": 1}.
