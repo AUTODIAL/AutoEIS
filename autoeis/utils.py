@@ -272,6 +272,57 @@ def validate_circuit_string(circuit: str) -> bool:
     assert len(params) == len(set(params)), "Duplicate elements found."
 
 
+def generate_mathematical_expr(circuit:str) -> str:
+    """Converts a circuit string to a mathematical expression.
+    
+    Each variable in the expression is the impedance of the
+    corresponding component.
+    """
+    replacements = {
+        "-": "+",
+        "[": "((",
+        ",": ")**(-1)+(",
+        "]": ")**(-1))**(-1)"
+    }
+    for j, k in replacements.items():
+        circuit = circuit.replace(j, k)
+    return circuit
+
+
+def count_component_parameters(component: str) -> int:
+    """Count the number of parameters in a component label."""
+    count = {"R": 1, "C": 1, "L": 1, "P": 2}
+    eltype = re.match(r"[A-Z]+", component).group()
+    return count[eltype]
+
+
+def update_expr(circuit_expr, component, idx, variable="X"):
+    """Updates the circuit expression with the impedance of a component."""
+    replacement = {
+        "R": f"{variable}[{idx}]",
+        "C": f"(1/(2*1j*np.pi*F*{variable}[{idx}]))",
+        "L": f"(2*1j*np.pi*F*{variable}[{idx}])",
+        "P": f"(1/({variable}[{idx}]*(2*1j*np.pi*F)**{variable}[{idx+1}]))"
+    }
+    # Get the alphabet part of the component label R1 -> R
+    eltype = re.match(r"[A-Z]+", component).group()
+    circuit_expr = circuit_expr.replace(component, replacement[eltype])
+    # Update the index
+    idx += count_component_parameters(component)
+    return circuit_expr, idx
+
+
+def generate_circuit_fn(circuit: str, use_jax=False) -> callable:
+    """Converts a circuit string to a function of (params, freq)"""
+    circuit_expr = generate_mathematical_expr(circuit)
+    components = get_component_labels(circuit)
+    idx = 0
+    for component in components:
+        circuit_expr, idx = update_expr(circuit_expr, component, idx)
+    if use_jax:
+        circuit_expr = circuit_expr.replace("np", "jnp")
+    return eval(f"lambda X, F: {circuit_expr}")
+
 # <<< Circuit utils
 
 
