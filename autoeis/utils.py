@@ -300,32 +300,41 @@ def count_component_parameters(component: str) -> int:
     return count[eltype]
 
 
-def update_expr(circuit_expr, component, idx, variable="X"):
+def embed_impedance_expr(circuit_expr):
     """Updates the circuit expression with the impedance of a component."""
-    replacement = {
-        "R": f"{variable}[{idx}]",
-        "C": f"(1/(2*1j*np.pi*F*{variable}[{idx}]))",
-        "L": f"(2*1j*np.pi*F*{variable}[{idx}])",
-        "P": f"(1/({variable}[{idx}]*(2*1j*np.pi*F)**{variable}[{idx+1}]))"
-    }
-    # Get the alphabet part of the component label R1 -> R
-    eltype = re.match(r"[A-Z]+", component).group()
-    circuit_expr = circuit_expr.replace(component, replacement[eltype])
-    # Update the index
-    idx += count_component_parameters(component)
-    return circuit_expr, idx
+    def replacement(var):
+        eltype = get_component_types(var)[0]
+        return {
+            "R": f"{var}",
+            "C": f"(1/(2*1j*pi*F*{var}))",
+            "L": f"(2*1j*pi*F*{var})",
+            "P": f"(1/({var}w*(2*1j*pi*F)**{var}n))"
+        }[eltype]
+    # Get component lables
+    components = get_component_labels(circuit_expr)
+    # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*np.pi*F*C1))
+    for c in components:
+        circuit_expr = circuit_expr.replace(c, replacement(c))
+    return circuit_expr
 
 
-def generate_circuit_fn(circuit: str, use_jax=False) -> callable:
+def generate_circuit_fn(
+    circuit: str,
+    return_str=False,
+    label="X"
+) -> Union[callable, str]:
     """Converts a circuit string to a function of (params, freq)"""
+    # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
     circuit_expr = generate_mathematical_expr(circuit)
-    components = get_component_labels(circuit)
-    idx = 0
-    for component in components:
-        circuit_expr, idx = update_expr(circuit_expr, component, idx)
-    if use_jax:
-        circuit_expr = circuit_expr.replace("np", "jnp")
-    return eval(f"lambda X, F: {circuit_expr}")
+    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*np.pi*F*C1))
+    circuit_expr = embed_impedance_expr(circuit_expr)
+    # Replace variables with array indexing, e.g., R1, P2w, P2n -> X[0], X[1], X[2]
+    variables = get_parameter_labels(circuit)
+    for i, var in enumerate(variables):
+        circuit_expr = circuit_expr.replace(var, f"{label}[{i}]", 1)
+    if return_str:
+        return circuit_expr
+    return lambda X, F: eval(circuit_expr)
 
 # <<< Circuit utils
 
