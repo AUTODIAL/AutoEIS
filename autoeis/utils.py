@@ -266,9 +266,15 @@ def find_ohmic_resistors(circuit: list) -> list[str]:
 def validate_circuit_string(circuit: str) -> bool:
     """Checks if a circuit string is valid."""
     # Check for duplicate elements
-    params = get_parameter_labels(circuit)
-    assert len(params) == len(set(params)), "Duplicate elements found."
-
+    params = get_component_labels(circuit)
+    duplicates = [e for e in params if params.count(e) > 1]
+    assert not duplicates, f"Duplicate elements found: {set(duplicates)}"
+    # Check for valid element names
+    valid_types = ["R", "C", "L", "P", "Wo"]
+    types = get_component_types(circuit)
+    for t in types:
+        assert t in valid_types, f"Invalid element type: {t}"
+    
 
 def generate_mathematical_expr(circuit:str) -> str:
     """Converts a circuit string to a mathematical expression.
