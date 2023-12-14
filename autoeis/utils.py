@@ -25,6 +25,7 @@ import numpyro.distributions as dist
 import pandas as pd
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
+from numpy import pi
 from pyparsing import nested_expr
 from rich.logging import RichHandler
 from scipy.stats import lognorm, norm
@@ -92,46 +93,52 @@ def suppress_output(func):
 
 # >>> Circuit utils
 
-def _get_component_names(circuit_string: str, component_type: str) -> list[str]:
+def _get_component_labels(circuit: str, component_type: str) -> list[str]:
     """Returns a list of labels for all components of a given type in a circuit string."""
-    return re.findall(rf"{component_type}\d+", circuit_string)
+    return re.findall(rf"{component_type}\d+", circuit)
 
 
-def get_resistors(circuit_string: str) -> list[str]:
+def get_resistors(circuit: str) -> list[str]:
     """Returns a list of labels for all resistors in a circuit string."""
-    return _get_component_names(circuit_string, "R")
+    return _get_component_labels(circuit, "R")
 
 
-def get_capacitors(circuit_string: str) -> list[str]:
+def get_capacitors(circuit: str) -> list[str]:
     """Returns a list of labels for all capacitors in a circuit string."""
-    return _get_component_names(circuit_string, "C")
+    return _get_component_labels(circuit, "C")
 
 
-def get_inductors(circuit_string: str) -> list[str]:
+def get_inductors(circuit: str) -> list[str]:
     """Returns a list of labels for all inductors in a circuit string."""
-    return _get_component_names(circuit_string, "L")
+    return _get_component_labels(circuit, "L")
 
 
-def get_cpes(circuit_string: str) -> list[str]:
+def get_cpes(circuit: str) -> list[str]:
     """Returns a list of labels for all CPEs in a circuit string."""
-    if "CPE" in circuit_string:
-        return _get_component_names(circuit_string, "CPE")
-    return _get_component_names(circuit_string, "P")
+    if "CPE" in circuit:
+        return _get_component_labels(circuit, "CPE")
+    return _get_component_labels(circuit, "P")
 
 
-def get_fsws(circuit_string: str) -> list[str]:
+def get_fsws(circuit: str) -> list[str]:
     """Returns a list of labels for all FSWs in a circuit string."""
-    return _get_component_names(circuit_string, "Wo")
+    return _get_component_labels(circuit, "Wo")
 
 
-def get_component_labels(circuit_string: str, types="RLCP") -> list[str]:
+def get_component_labels(circuit: str, types="all") -> list[str]:
     """Returns a list of labels for all components in a circuit string."""
-    return re.findall(r'[A-Za-z]+[0-9]+', circuit_string)
+    pattern = r"[A-Za-z]+[0-9]+" if types == "all" else rf"[{types}][0-9]+"
+    return re.findall(pattern, circuit)
 
 
-def get_parameter_labels(circuit_string: str, types="RLCP") -> list[str]:
+def get_component_types(circuit: str) -> list[str]:
+    """Returns a list of component types in a circuit string."""
+    return re.findall(r"[A-Za-z]+", circuit)
+
+
+def get_parameter_labels(circuit: str, types="RLCP") -> list[str]:
     """Returns a list of labels for all parameters in a circuit string."""
-    labels = get_component_labels(circuit_string, types=types)
+    labels = get_component_labels(circuit, types=types)
     param_labels = []
     for label in labels:
         # CPE elements have two parameters P{i}w and P{i}n
@@ -142,22 +149,22 @@ def get_parameter_labels(circuit_string: str, types="RLCP") -> list[str]:
     return param_labels
 
 
-def count_params(circuit_string: str) -> int:
+def count_params(circuit: str) -> int:
     """Returns the number of parameters that fully describe a circuit string."""
-    num_resistors = len(get_resistors(circuit_string))
-    num_capacitors = len(get_capacitors(circuit_string))
-    num_inductors = len(get_inductors(circuit_string))
-    num_cpes = len(get_cpes(circuit_string))
-    num_fsws = len(get_fsws(circuit_string))
+    num_resistors = len(get_resistors(circuit))
+    num_capacitors = len(get_capacitors(circuit))
+    num_inductors = len(get_inductors(circuit))
+    num_cpes = len(get_cpes(circuit))
+    num_fsws = len(get_fsws(circuit))
     return num_resistors + num_capacitors + num_inductors + 2 * (num_cpes + num_fsws)
 
 
-def impedancepy_circuit(circuit_string: str) -> str:
+def impedancepy_circuit(circuit: str) -> str:
     """Converts a circuit string the format used by impedance.py."""
-    circuit_string = circuit_string.replace("P", "CPE")
-    circuit_string = circuit_string.replace("[", "p(")
-    circuit_string = circuit_string.replace("]", ")")
-    return circuit_string
+    circuit = circuit.replace("P", "CPE")
+    circuit = circuit.replace("[", "p(")
+    circuit = circuit.replace("]", ")")
+    return circuit
 
 
 def format_parameters(params, labels):
