@@ -233,6 +233,38 @@ def circuit_to_function_impy(circuit: str):
         return circuit.predict(freq)
     return func
 
+
+def circuit_to_nested_expr(circuit: str) -> list:
+    """Parses a circuit string to a nested list[str]."""
+    # Add brackets to the circuit string to make it a valid nested expression
+    circuit = f"[{circuit}]"
+    parser = nested_expr(opener="[", closer="]")
+    parsed = parser.parse_string(circuit, parse_all=True).as_list()
+    # Remove leftover cruft from the parsed expression
+    parsed = cleanup_nested_expr(parsed)
+    return parsed[0]
+
+
+def cleanup_nested_expr(lst, chars="-,"):
+    """Removes leading/trailing characters ('-' ',') from a nested list[str]."""
+    result = []
+    for el in lst:
+        if isinstance(el, list):
+            result.append(cleanup_nested_expr(el))
+        else:
+            # Don't add empty strings
+            if el.strip(chars):
+                result.append(el.strip(chars))
+    return result
+
+
+def find_ohmic_resistors(circuit: list) -> list[str]:
+    """Finds all ohmic resistors in a nested circuit expression."""
+    parsed = circuit_to_nested_expr(circuit)
+    series_elements = [el for el in parsed if isinstance(el, str)]
+    return re.findall(r"R\d+", str(series_elements))
+
+
 # <<< Circuit utils
 
 
