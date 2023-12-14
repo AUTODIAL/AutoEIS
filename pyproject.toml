@@ -43,6 +43,7 @@ dependencies = [
     "numpy",
     "numpyro",
     "pandas",
+    "pyparsing",
     "rich",
     "scikit-learn",
     "seaborn",

@@ -25,6 +25,7 @@ import numpyro.distributions as dist
 import pandas as pd
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
+from pyparsing import nested_expr
 from rich.logging import RichHandler
 from scipy.stats import lognorm, norm
 
