@@ -265,6 +265,13 @@ def find_ohmic_resistors(circuit: list) -> list[str]:
     return re.findall(r"R\d+", str(series_elements))
 
 
+def validate_circuit_string(circuit: str) -> bool:
+    """Checks if a circuit string is valid."""
+    # Check for duplicate elements
+    params = get_parameter_labels(circuit)
+    assert len(params) == len(set(params)), "Duplicate elements found."
+
+
 # <<< Circuit utils
 
 
