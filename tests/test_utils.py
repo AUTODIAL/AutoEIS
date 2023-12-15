@@ -156,10 +156,17 @@ def test_validate_circuit_string():
 
 
 def test_find_ohmic_resistors():
+    # No ohmic resistors
+    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3"
+    ohmic_gt = []
+    ohmic = utils.find_ohmic_resistors(circuit)
+    assert ohmic == ohmic_gt
+    # Single ohmic resistor
     circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-R3"
     ohmic_gt = ["R3"]
     ohmic = utils.find_ohmic_resistors(circuit)
     assert ohmic == ohmic_gt
+    # Multiple ohmic resistors
     circuit = "[R1,R2-P12]-L2-R9-[R6,C7-[L8,R5],L9]-R8"
     ohmic_gt = ["R9", "R8"]
     ohmic = utils.find_ohmic_resistors(circuit)
