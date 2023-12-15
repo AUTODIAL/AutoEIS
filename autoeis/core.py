@@ -537,28 +537,31 @@ def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) 
     return df_circuits
 
 
-def series_filter(df_circuits: pd.DataFrame) -> pd.DataFrame:
+def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """
-    Filters the circuits by checking if any parallel route includes capacitors.
+    Filters the circuits with elements only connected in series (no parallel route).
 
     Parameters
     ----------
-    df_circuits: pd.DataFrame
-        Dataframe containing the generated ECMs (6 columns)
+    circuits: pd.DataFrame
+        Dataframe containing equivalent circuit models.
 
     Returns
     -------
-    df_circuits: pd.DataFrame
-        Dataframe containing the generated ECMs without parallel capacitors (6 columns)
+    circuits: pd.DataFrame
+        Dataframe containing equivalent circuit models after filtering.
 
     """
-    test_pattern = re.compile(r"\[")
-    for i in range(len(df_circuits["circuitstring"])):
-        test_circuit = df_circuits["circuitstring"][i]
-        if test_pattern.findall(test_circuit) is False:
-            df_circuits.drop([i], inplace=True)
-    df_circuits.reset_index(drop=True, inplace=True)
-    return df_circuits
+    circuits = circuits.copy()
+
+    for row in circuits.itertuples():
+        circuit = row.circuitstring
+        contains_parallel_route = "[" in circuit
+        if not contains_parallel_route:
+            circuits.drop(row.Index, inplace=True)
+    circuits.reset_index(drop=True, inplace=True)
+
+    return circuits
 
 
 def circuit_to_function(circuit: str, use_jax=True) -> callable:
