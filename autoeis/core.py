@@ -445,12 +445,16 @@ def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     df_circuits: pd.DataFrame
        Dataframe containing ECMs without ideal capacitors (6 columns)
     """
+    circuits = circuits.copy()
+
     for row in circuits.itertuples():
         variables = row.Parameters.keys()
         contains_capacitor = any("C" in var for var in variables)
         if contains_capacitor:
             circuits.drop(row.Index, inplace=True)
     circuits.reset_index(drop=True, inplace=True)
+
+    return circuits
 
 
 def find_series_elements(circuit: str) -> str:
