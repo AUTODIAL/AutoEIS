@@ -96,37 +96,10 @@ def suppress_output(func):
 def get_component_labels(circuit: str, types: list[str] = None) -> list[str]:
     """Returns a list of labels for all components in a circuit string."""
     types = [types] if isinstance(types, str) else types
-    types = ["R", "C", "L", "P", "Wo"] if types is None else types
+    types = ["R", "C", "L", "P"] if types is None else types
     assert isinstance(types, list), "types must be a list of strings."
     pattern = rf'\b(?:{"|".join(types)})\d+\b'
     return re.findall(pattern, circuit)
-
-
-def get_resistors(circuit: str) -> list[str]:
-    """Returns a list of labels for all resistors in a circuit string."""
-    return get_component_labels(circuit, "R")
-
-
-def get_capacitors(circuit: str) -> list[str]:
-    """Returns a list of labels for all capacitors in a circuit string."""
-    return get_component_labels(circuit, "C")
-
-
-def get_inductors(circuit: str) -> list[str]:
-    """Returns a list of labels for all inductors in a circuit string."""
-    return get_component_labels(circuit, "L")
-
-
-def get_cpes(circuit: str) -> list[str]:
-    """Returns a list of labels for all CPEs in a circuit string."""
-    if "CPE" in circuit:
-        return get_component_labels(circuit, "CPE")
-    return get_component_labels(circuit, "P")
-
-
-def get_fsws(circuit: str) -> list[str]:
-    """Returns a list of labels for all FSWs in a circuit string."""
-    return get_component_labels(circuit, "Wo")
 
 
 def get_component_types(circuit: str, unique=False) -> list[str]:
@@ -154,7 +127,7 @@ def get_parameter_types(circuit: str, unique=False) -> list[str]:
 def get_parameter_labels(circuit: str, types: list[str] = None) -> list[str]:
     """Returns a list of labels for all parameters in a circuit string."""
     types = [types] if isinstance(types, str) else types
-    types = ["R", "C", "L", "P", "Wo"] if types is None else types
+    types = ["R", "C", "L", "P"] if types is None else types
     assert isinstance(types, list), "types must be a list of strings."
     components = get_component_labels(circuit, types=types)
     parameters = []
@@ -179,12 +152,7 @@ def group_parameters_by_type(circuit: str) -> dict[str, list[str]]:
 
 def count_params(circuit: str) -> int:
     """Returns the number of parameters that fully describe a circuit string."""
-    num_resistors = len(get_resistors(circuit))
-    num_capacitors = len(get_capacitors(circuit))
-    num_inductors = len(get_inductors(circuit))
-    num_cpes = len(get_cpes(circuit))
-    num_fsws = len(get_fsws(circuit))
-    return num_resistors + num_capacitors + num_inductors + 2 * (num_cpes + num_fsws)
+    return len(get_parameter_labels(circuit))
 
 
 def impedancepy_circuit(circuit: str) -> str:
@@ -300,7 +268,7 @@ def validate_circuit_string(circuit: str) -> bool:
     # Test circuit is not empty
     assert len(circuit) > 0, "Circuit string is empty."
     # Check for valid element names
-    valid_types = ["R", "C", "L", "P", "Wo"]
+    valid_types = ["R", "C", "L", "P"]
     types = get_component_types(circuit)
     for t in types:
         assert t in valid_types, f"Invalid element type: {t}"
