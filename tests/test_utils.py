@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import sklearn.metrics as skmetrics
 from impedance.models.circuits import CustomCircuit
 
@@ -84,3 +85,74 @@ def test_fit_circuit_parameters_with_initial_guess():
     p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq, p0)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
+
+
+def test_get_component_labels():
+    circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
+    components_gt = ["R1", "R2", "P12", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    components = utils.get_component_labels(circuit)
+    assert components == components_gt
+
+
+def test_get_component_types():
+    circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
+    types_gt = ["R", "R", "P", "L", "R", "R", "C", "L", "R", "L", "R"]
+    types = utils.get_component_types(circuit)
+    assert types == types_gt
+
+
+def test_get_parameter_labels():
+    circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
+    variables_gt = ["R1", "R2", "P12w", "P12n", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    variables = utils.get_parameter_labels(circuit)
+    assert variables == variables_gt
+
+
+def test_count_params():
+    circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
+    num_params_gt = 12
+    num_params = utils.count_params(circuit)
+    assert num_params == num_params_gt
+    circuit = ""
+    num_params_gt = 0
+    num_params = utils.count_params(circuit)
+    assert num_params == num_params_gt
+    circuit = "[P1,P2]-P3-R4"
+    num_params_gt = 7
+    num_params = utils.count_params(circuit)
+    assert num_params == num_params_gt    
+
+
+def test_validate_circuit_string():
+    # Valid circuit
+    circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
+    utils.validate_circuit_string(circuit)
+    # Empty circuit
+    circuit = ""
+    with pytest.raises(AssertionError):
+        utils.validate_circuit_string(circuit)
+    # Duplicate component
+    circuit = "[R1,R2]-R1"
+    with pytest.raises(AssertionError):
+        utils.validate_circuit_string(circuit)
+
+
+def test_find_ohmic_resistors():
+    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-R3"
+    ohmic_gt = ["R3"]
+    ohmic = utils.find_ohmic_resistors(circuit)
+    assert ohmic == ohmic_gt
+    circuit = "[R1,R2-P12]-L2-R9-[R6,C7-[L8,R5],L9]-R8"
+    ohmic_gt = ["R9", "R8"]
+    ohmic = utils.find_ohmic_resistors(circuit)
+    assert ohmic == ohmic_gt
+
+
+def test_get_parameter_types():
+    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3"
+    types_gt = ["R", "R", "Pw", "Pn", "L", "R", "C", "L", "R", "L", "Pw", "Pn"]
+    types_gt_unique = list(set(types_gt))
+    types = utils.get_parameter_types(circuit, unique=False)
+    types_unique = utils.get_parameter_types(circuit, unique=True)
+    assert types == types_gt
+    assert types_unique == types_gt_unique
