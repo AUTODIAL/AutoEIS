@@ -89,8 +89,17 @@ def test_fit_circuit_parameters_with_initial_guess():
 
 def test_get_component_labels():
     circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
-    components_gt = ["R1", "R2", "P12", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    # Pass default types = None (all components)
     components = utils.get_component_labels(circuit)
+    components_gt = ["R1", "R2", "P12", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    assert components == components_gt
+    # Pass string as types
+    components = utils.get_component_labels(circuit, types="P")
+    components_gt = ["P12"]
+    assert components == components_gt
+    # Pass list as types
+    components = utils.get_component_labels(circuit, types=["L", "P"])
+    components_gt = ["P12", "L2", "L8", "L9"]
     assert components == components_gt
 
 
@@ -103,8 +112,17 @@ def test_get_component_types():
 
 def test_get_parameter_labels():
     circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
-    variables_gt = ["R1", "R2", "P12w", "P12n", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    # Use default types = None (all parameters)
     variables = utils.get_parameter_labels(circuit)
+    variables_gt = ["R1", "R2", "P12w", "P12n", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    assert variables == variables_gt
+    # Pass string as types
+    variables = utils.get_parameter_labels(circuit, types="R")
+    variables_gt = ["R1", "R2", "R22", "R6", "R5", "R3"]
+    assert variables == variables_gt
+    # Pass list as types
+    variables = utils.get_parameter_labels(circuit, types=["R", "P"])
+    variables_gt = ["R1", "R2", "P12w", "P12n", "R22", "R6", "R5", "R3"]
     assert variables == variables_gt
 
 
