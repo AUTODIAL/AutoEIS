@@ -93,60 +93,88 @@ def suppress_output(func):
 
 # >>> Circuit utils
 
-def _get_component_labels(circuit: str, component_type: str) -> list[str]:
-    """Returns a list of labels for all components of a given type in a circuit string."""
-    return re.findall(rf"{component_type}\d+", circuit)
+def get_component_labels(circuit: str, types: list[str] = None) -> list[str]:
+    """Returns a list of labels for all components in a circuit string."""
+    types = [types] if isinstance(types, str) else types
+    types = ["R", "C", "L", "P", "Wo"] if types is None else types
+    assert isinstance(types, list), "types must be a list of strings."
+    pattern = rf'\b(?:{"|".join(types)})\d+\b'
+    return re.findall(pattern, circuit)
 
 
 def get_resistors(circuit: str) -> list[str]:
     """Returns a list of labels for all resistors in a circuit string."""
-    return _get_component_labels(circuit, "R")
+    return get_component_labels(circuit, "R")
 
 
 def get_capacitors(circuit: str) -> list[str]:
     """Returns a list of labels for all capacitors in a circuit string."""
-    return _get_component_labels(circuit, "C")
+    return get_component_labels(circuit, "C")
 
 
 def get_inductors(circuit: str) -> list[str]:
     """Returns a list of labels for all inductors in a circuit string."""
-    return _get_component_labels(circuit, "L")
+    return get_component_labels(circuit, "L")
 
 
 def get_cpes(circuit: str) -> list[str]:
     """Returns a list of labels for all CPEs in a circuit string."""
     if "CPE" in circuit:
-        return _get_component_labels(circuit, "CPE")
-    return _get_component_labels(circuit, "P")
+        return get_component_labels(circuit, "CPE")
+    return get_component_labels(circuit, "P")
 
 
 def get_fsws(circuit: str) -> list[str]:
     """Returns a list of labels for all FSWs in a circuit string."""
-    return _get_component_labels(circuit, "Wo")
+    return get_component_labels(circuit, "Wo")
 
 
-def get_component_labels(circuit: str, types="all") -> list[str]:
-    """Returns a list of labels for all components in a circuit string."""
-    pattern = r"[A-Za-z]+[0-9]+" if types == "all" else rf"[{types}][0-9]+"
-    return re.findall(pattern, circuit)
-
-
-def get_component_types(circuit: str) -> list[str]:
+def get_component_types(circuit: str, unique=False) -> list[str]:
     """Returns a list of component types in a circuit string."""
-    return re.findall(r"[A-Za-z]+", circuit)
+    types = re.findall(r"[A-Za-z]+", circuit)
+    return list(set(types)) if unique else types
 
 
-def get_parameter_labels(circuit: str, types="RLCP") -> list[str]:
+def get_parameter_types(circuit: str, unique=False) -> list[str]:
+    """Returns a list of parameter types in a circuit string."""
+    def parse_parameter_type(p):
+        """Returns the type of a parameter label, e.g., P4n -> Pn, R4 -> R"""
+        if p.startswith(("R", "C", "L")):
+            return p[0]
+        elif p.startswith("P") and p.endswith("w"):
+            return "Pw"
+        elif p.startswith("P") and p.endswith("n"):
+            return "Pn"
+        raise ValueError(f"Invalid parameter label: {p}")
+        
+    ptypes = [parse_parameter_type(p) for p in get_parameter_labels(circuit)]
+    return list(set(ptypes)) if unique else ptypes
+
+
+def get_parameter_labels(circuit: str, types: list[str] = None) -> list[str]:
     """Returns a list of labels for all parameters in a circuit string."""
-    labels = get_component_labels(circuit, types=types)
-    param_labels = []
-    for label in labels:
+    types = [types] if isinstance(types, str) else types
+    types = ["R", "C", "L", "P", "Wo"] if types is None else types
+    assert isinstance(types, list), "types must be a list of strings."
+    components = get_component_labels(circuit, types=types)
+    parameters = []
+    for component in components:
         # CPE elements have two parameters P{i}w and P{i}n
-        if label.startswith("P"):
-            param_labels.extend([f"{label}w", f"{label}n"])
+        if component.startswith("P"):
+            parameters.extend([f"{component}w", f"{component}n"])
         else:
-            param_labels.append(label)
-    return param_labels
+            parameters.append(component)
+    return parameters
+
+
+def group_parameters_by_type(circuit: str) -> dict[str, list[str]]:
+    """Groups parameter labels by component type."""
+    params = get_parameter_labels(circuit)
+    ptypes = get_parameter_types(circuit)
+    groups = {ptype: [] for ptype in set(ptypes)}
+    for param, ptype in zip(params, ptypes):
+        groups[ptype].append(param)
+    return groups
 
 
 def count_params(circuit: str) -> int:
@@ -266,9 +294,11 @@ def find_ohmic_resistors(circuit: list) -> list[str]:
 def validate_circuit_string(circuit: str) -> bool:
     """Checks if a circuit string is valid."""
     # Check for duplicate elements
-    params = get_component_labels(circuit)
-    duplicates = [e for e in params if params.count(e) > 1]
+    components = get_component_labels(circuit)
+    duplicates = [e for e in components if components.count(e) > 1]
     assert not duplicates, f"Duplicate elements found: {set(duplicates)}"
+    # Test circuit is not empty
+    assert len(circuit) > 0, "Circuit string is empty."
     # Check for valid element names
     valid_types = ["R", "C", "L", "P", "Wo"]
     types = get_component_types(circuit)
