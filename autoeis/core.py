@@ -434,84 +434,18 @@ def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     return circuits
 
 
-def find_series_elements(circuit: str) -> str:
-    """
-    Extracts the series componenets from a circuit.
+def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
+    """Filters the circuits that don't have ohmic resistance in the main chain."""
+    circuits = circuits.copy()
 
-    Parameters
-    ----------
-    circuit: str
-        String that stores the configuration of the circuit
+    for row in circuits.itertuples():
+        circuit = row.circuitstring
+        resistors = utils.find_ohmic_resistors(circuit)
+        if not resistors:
+            circuits.drop(row.Index, inplace=True)
 
-    Returns
-    -------
-    series_circuit: str
-        String that stores the series components of the circuit
-
-    """
-    series_circuit = []
-    identifior = 0
-    for i in range(len(circuit)):
-        if circuit[i] == "[":
-            identifior += 1
-        if identifior == 0:
-            series_circuit.append(circuit[i])
-        if circuit[i] == "]":
-            identifior -= 1
-        # elif identifior != 0:
-        #    index_list.append([False])
-    series_circuit = "".join(series_circuit)
-    return series_circuit
-
-
-def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) -> pd.DataFrame:
-    """Extracts the ohmic resistance of each circuit and filters those
-    that are not within 50% of the ohmic resistance of the EIS data.
-
-    Parameters
-    ----------
-    df_circuits: pd.DataFrame
-       Dataframe containing ECMs (6 columns)
-    ohmic_resistance: float
-        The ohmic resistance of the given EIS data
-
-    Returns
-    -------
-    df_circuits: pd.DataFrame
-        Dataframe containing ECMs filtered based on ohmic resistance (6 columns)
-    """
-    for i in range(len(df_circuits["circuitstring"])):
-        # Find the series elements
-        series_circuit = find_series_elements(circuit=df_circuits["circuitstring"][i])
-        # Find the series resistors
-        find_R = re.compile(r"R[0-9]")
-        series_resistors = find_R.findall(series_circuit)
-        # Initiate a list to store series resistors' values for future comparison
-        R_values_list = []
-        for j in range(len(series_resistors)):
-            value_R_p = re.compile(f"{series_resistors[j]} = [0-9]*\.[0-9]*")
-            values_R_withid = value_R_p.findall("".join(df_circuits["Resistors"][i]))
-            value_R_p2 = re.compile(r"[0-9]*\.[0-9]*")
-            for k in range(len(values_R_withid)):
-                R_value = value_R_p2.findall(values_R_withid[k])
-                R_values_list.append(R_value)
-        if R_values_list == []:
-            df_circuits.drop([i], inplace=True)
-        else:
-            value_identify_list = []
-            for m in range(len(R_values_list)):
-                if (
-                    float(R_values_list[m][0]) < ohmic_resistance * 0.5
-                    or float(R_values_list[m][0]) > ohmic_resistance * 1.5
-                ):
-                    value_identify_list.append(False)
-                else:
-                    value_identify_list.append(True)
-            if True not in value_identify_list:
-                df_circuits.drop([i], inplace=True)
-
-    df_circuits.reset_index(drop=True, inplace=True)
-    return df_circuits
+    circuits.reset_index(drop=True, inplace=True)
+    return circuits
 
 
 def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
@@ -1464,7 +1398,7 @@ def perform_full_analysis(
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
-    ohmic_resistance = find_ohmic_resistance(Z, freq)
+    ohmic_resistance = compute_ohmic_resistance(Z, freq)
     circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
 
     # Perform Bayesian inference on the filtered ECMs
