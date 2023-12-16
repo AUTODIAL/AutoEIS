@@ -150,6 +150,17 @@ def group_parameters_by_type(circuit: str) -> dict[str, list[str]]:
     return groups
 
 
+def group_parameters_by_component(circuit: str) -> dict[str, list[str]]:
+    """Groups parameter labels by component label."""
+    ctypes = get_component_types(circuit)
+    params_by_component = {ctype: [] for ctype in ctypes}
+    params = get_parameter_labels(circuit)
+    for param in params:
+        ctype = parse_parameter_component(param)
+        params_by_component[ctype].append(param)
+    return params_by_component
+
+
 def count_params(circuit: str) -> int:
     """Returns the number of parameters that fully describe a circuit string."""
     return len(get_parameter_labels(circuit))
