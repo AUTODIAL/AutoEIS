@@ -93,6 +93,10 @@ def suppress_output(func):
 
 # >>> Circuit utils
 
+def parse_component(c:str) -> str:
+    """Returns the type of a component label, e.g., R1 -> R"""
+    return re.match(r"[A-Za-z]+", c).group()
+
 
 def parse_parameter(p:str, by: str = "type") -> str:
     """Returns the type/component of a parameter label, e.g., P4n -> Pn/P"""
