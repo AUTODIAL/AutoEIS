@@ -32,7 +32,7 @@ def test_generate_mathematical_expression():
     np.testing.assert_allclose(Z_py, Z_jl)
 
 
-def test_find_ohmic_resistance():
+def test_compute_ohmic_resistance():
     circuit_string = "R1-[P2,P3-R4]"
     circuit_string = ae.utils.impedancepy_circuit(circuit_string)
     R1 = 250
@@ -41,12 +41,12 @@ def test_find_ohmic_resistance():
     circuit.parameters_ = parameters
     freq = np.logspace(-3, 3, 1000)
     Z = circuit.predict(freq)
-    R = ae.core.find_ohmic_resistance(Z, freq)
+    R = ae.core.compute_ohmic_resistance(Z, freq)
     assert np.isclose(R, R1, rtol=0.15)
 
 
 # FIXME: We don't have a robust way to handle missing high frequency data
-def test_find_ohmic_resistance_missing_high_freq():
+def test_compute_ohmic_resistance_missing_high_freq():
     circuit_string = "R1-[P2,P3-R4]"
     circuit_string = ae.utils.impedancepy_circuit(circuit_string)
     R1 = 250
@@ -56,4 +56,4 @@ def test_find_ohmic_resistance_missing_high_freq():
     freq = np.logspace(-3, 1, 1000)
     Z = circuit.predict(freq)
     # with pytest.raises(ValueError):
-    #     R = ae.core.find_ohmic_resistance(Z, freq)
+    #     R = ae.core.compute_ohmic_resistance(Z, freq)

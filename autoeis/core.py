@@ -52,8 +52,8 @@ __all__ = [
 
 
 # TODO: Breaks when data is noisy -> use curve_fit to extrapolate R0
-def find_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> float:
-    """Extracts the ohmic resistance of impedance data.
+def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> float:
+    """Extracts the ohmic resistance from impedance data.
 
     Parameters
     ----------
