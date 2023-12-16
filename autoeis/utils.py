@@ -279,6 +279,7 @@ def find_series_elements(circuit: str) -> list[str]:
     """Extracts the series componenets from a circuit (in the main chain)."""
     parsed = circuit_to_nested_expr(circuit)
     series_elements = [el for el in parsed if isinstance(el, str)]
+    series_elements = re.findall(r"[A-Z]+\d+", str(series_elements))
     return series_elements
 
 
