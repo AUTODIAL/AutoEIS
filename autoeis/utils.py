@@ -93,6 +93,17 @@ def suppress_output(func):
 
 # >>> Circuit utils
 
+def validate_parameter_label(p: str) -> bool:
+    """Checks if a parameter label is valid."""
+    # Check if parameter label is a string
+    assert isinstance(p, str), "Parameter label must be a string."
+    # Check if parameter label is not empty
+    assert len(p) > 0, "Parameter label is empty."
+    # Check if parameter label is valid
+    pattern = r"(?:R\d+|C\d+|L\d+|P\d+[wn])"
+    assert re.fullmatch(pattern, p), f"Invalid parameter label: {p}"
+    
+
 def parse_component(c:str) -> str:
     """Returns the type of a component label, e.g., R1 -> R"""
     return re.match(r"[A-Za-z]+", c).group()
