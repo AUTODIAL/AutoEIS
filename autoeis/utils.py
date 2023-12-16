@@ -252,10 +252,16 @@ def cleanup_nested_expr(lst, chars="-,"):
     return result
 
 
-def find_ohmic_resistors(circuit: list) -> list[str]:
-    """Finds all ohmic resistors in a nested circuit expression."""
+def find_series_elements(circuit: str) -> list[str]:
+    """Extracts the series componenets from a circuit (in the main chain)."""
     parsed = circuit_to_nested_expr(circuit)
     series_elements = [el for el in parsed if isinstance(el, str)]
+    return series_elements
+
+
+def find_ohmic_resistors(circuit: list) -> list[str]:
+    """Finds all ohmic resistors in a nested circuit expression."""
+    series_elements = find_series_elements(circuit)
     return re.findall(r"R\d+", str(series_elements))
 
 
