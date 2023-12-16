@@ -515,20 +515,7 @@ def ohmic_resistance_filter(df_circuits: pd.DataFrame, ohmic_resistance: float) 
 
 
 def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
-    """
-    Filters the circuits with elements only connected in series (no parallel route).
-
-    Parameters
-    ----------
-    circuits: pd.DataFrame
-        Dataframe containing equivalent circuit models.
-
-    Returns
-    -------
-    circuits: pd.DataFrame
-        Dataframe containing equivalent circuit models after filtering.
-
-    """
+    """Filters out circuits without any components connected in parallel."""
     circuits = circuits.copy()
 
     for row in circuits.itertuples():
@@ -536,8 +523,8 @@ def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
         contains_parallel_route = "[" in circuit
         if not contains_parallel_route:
             circuits.drop(row.Index, inplace=True)
-    circuits.reset_index(drop=True, inplace=True)
 
+    circuits.reset_index(drop=True, inplace=True)
     return circuits
 
 
