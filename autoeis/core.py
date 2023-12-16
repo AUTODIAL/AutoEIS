@@ -211,7 +211,7 @@ def preprocess_impedance_data(
 
         # Find the ohmic resistance
         try:
-            ohmic_resistance = find_ohmic_resistance(Z_mask, freq_mask)
+            ohmic_resistance = compute_ohmic_resistance(Z_mask, freq_mask)
             ohmic_resistance_found = True
         except ValueError:
             log.error("Ohmic resistance not found. Check data or increase KK threshold.")
@@ -388,48 +388,25 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
     return df
 
 
-def split_components(df_circuits: pd.DataFrame) -> pd.DataFrame:
-    """Split circuit components and their values for each ECM in the dataframe.
+def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
+    """Adds an individual column for each component in the circuit with its value."""
+    # Initialize lists to populate the component columns later
+    components = {"R": [], "C": [], "L": [], "P": []}
+    labels = {"R": "Resistors", "C": "Capacitors", "L": "Inductors", "P": "CPEs"}
 
-    Parameters
-    ----------
-    df_circuits: pd.DataFrame
-        Dataframe containing ECMs (2 columns)
+    for row in circuits.itertuples():
+        circuit = row.circuitstring
+        # Find components of each kind
+        pgroups = utils.group_parameters_by_component(circuit)
+        for ctype in components.keys():
+            components[ctype].append(pgroups.get(ctype, []))
 
-    Returns
-    -------
-    df_circuits: pd.DataFrame
-        Dataframe containing ECMs (6 columns)
-    """
-    # Define some regular expression pattern to separate each kind of elements
-    resistor_p = re.compile(r"[R][0-9][a-z]? = [0-9]*\.[0-9]*")
-    capacitor_p = re.compile(r"[C][0-9][a-z]? = [0-9]*\.[0-9]*")
-    inductor_p = re.compile(r"[L][0-9][a-z]? = [0-9]*\.[0-9]*")
-    CPE_p = re.compile(r"[P][0-9][a-z]? = [0-9]*\.[0-9]*")
+    # Add component columns to the dataframe
+    for ctype, params in components.items():
+        column_label = labels[ctype]
+        circuits[column_label] = params
 
-    # Initialize some lists to store the values of each kind of elements
-    resistors_list = []
-    capacitors_list = []
-    inductors_list = []
-    CPEs_list = []
-
-    for i in range(len(df_circuits["Parameters"])):
-        resistors = resistor_p.findall(df_circuits["Parameters"][i])
-        capacitors = capacitor_p.findall(df_circuits["Parameters"][i])
-        inductors = inductor_p.findall(df_circuits["Parameters"][i])
-        CPEs = CPE_p.findall(df_circuits["Parameters"][i])
-
-        resistors_list.append(resistors)
-        capacitors_list.append(capacitors)
-        inductors_list.append(inductors)
-        CPEs_list.append(CPEs)
-
-    df_circuits["Resistors"] = resistors_list
-    df_circuits["Capacitors"] = capacitors_list
-    df_circuits["Inductors"] = inductors_list
-    df_circuits["CPEs"] = CPEs_list
-
-    return df_circuits
+    return circuits
 
 
 def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
