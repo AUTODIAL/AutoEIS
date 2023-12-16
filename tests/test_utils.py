@@ -173,6 +173,24 @@ def test_find_ohmic_resistors():
     assert ohmic == ohmic_gt
 
 
+def test_find_series_elements():
+    # Valid circuit with series elements
+    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3"
+    series_gt = ["L2", "P3"]
+    series = utils.find_series_elements(circuit)
+    assert series == series_gt
+    # Empty circuit
+    circuit = ""
+    series_gt = []
+    series = utils.find_series_elements(circuit)
+    assert series == series_gt
+    # No series elements
+    circuit = "[P1,P2]-[P3,P4]"
+    series_gt = []
+    series = utils.find_series_elements(circuit)
+    assert series == series_gt
+
+
 def test_get_parameter_types():
     circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3"
     types_gt = ["R", "R", "Pw", "Pn", "L", "R", "C", "L", "R", "L", "Pw", "Pn"]
