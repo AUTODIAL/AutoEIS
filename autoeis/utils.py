@@ -93,26 +93,18 @@ def suppress_output(func):
 
 # >>> Circuit utils
 
-def parse_parameter_type(p):
-        """Returns the type of a parameter label, e.g., P4n -> Pn, R4 -> R"""
-        if p.startswith(("R", "C", "L")):
-            return p[0]
-        elif p.startswith("P") and p.endswith("w"):
-            return "Pw"
-        elif p.startswith("P") and p.endswith("n"):
-            return "Pn"
-        raise ValueError(f"Invalid parameter label: {p}")
 
-
-def parse_parameter_component(p):
-    """Returns the component label of a parameter label, e.g., P4n -> P"""
-    suffix = re.search(r"\d+", p).group()
-    pid = p.replace(suffix, "")
-    if pid in ["R", "C", "L"]:
-        return pid
-    elif pid.startswith("P"):
-        return "P"
-    raise ValueError(f"Invalid parameter label: {p}")
+def parse_parameter(p:str, by: str = "type") -> str:
+    """Returns the type/component of a parameter label, e.g., P4n -> Pn/P"""
+    assert by in ["type", "component"], "by must be either 'type' or 'component'."
+    validate_parameter_label(p)
+    if p.startswith(("R", "C", "L")):
+        ptype, ctype = p[0], p[0]
+    elif p.startswith("P") and p.endswith("w"):
+        ptype, ctype = "Pw", "P"
+    elif p.startswith("P") and p.endswith("n"):
+        ptype, ctype = "Pn", "P"
+    return ptype if by == "type" else ctype
 
 
 def get_component_labels(circuit: str, types: list[str] = None) -> list[str]:
@@ -132,7 +124,7 @@ def get_component_types(circuit: str, unique=False) -> list[str]:
 
 def get_parameter_types(circuit: str, unique=False) -> list[str]:
     """Returns a list of parameter types in a circuit string."""        
-    ptypes = [parse_parameter_type(p) for p in get_parameter_labels(circuit)]
+    ptypes = [parse_parameter(p, by="type") for p in get_parameter_labels(circuit)]
     return list(set(ptypes)) if unique else ptypes
 
 
@@ -168,7 +160,7 @@ def group_parameters_by_component(circuit: str) -> dict[str, list[str]]:
     params_by_component = {ctype: [] for ctype in ctypes}
     params = get_parameter_labels(circuit)
     for param in params:
-        ctype = parse_parameter_component(param)
+        ctype = parse_parameter(param, by="component")
         params_by_component[ctype].append(param)
     return params_by_component
 
