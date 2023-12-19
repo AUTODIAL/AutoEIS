@@ -11,6 +11,7 @@ requires-python = ">=3.9"
 license = "MIT"
 authors = [
     { name = "Runze Zhang", email = "runzee.zhang@mail.utoronto.ca" },
+    { name = "Amin Sadeghi", email = "amin.sadeghi@live.com" },
     { name = "Robert Black", email = "robert.black@nrc-cnrc.gc.ca" },
     { name = "Jason Hattrick-Simpers", email = "jason.hattrick.simpers@utoronto.ca" },
 ]
@@ -42,7 +43,10 @@ dependencies = [
     "numpy",
     "numpyro",
     "pandas",
+    "pyparsing",
     "rich",
+    "scikit-learn",
+    "seaborn",
     "tqdm",
 ]
 

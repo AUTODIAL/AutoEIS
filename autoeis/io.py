@@ -1,70 +1,35 @@
-import json
-import pickle
-from pathlib import Path
+"""
+Collection of functions for importing and exporting EIS data/results.
 
-import pandas as pd
+.. currentmodule:: autoeis.io
 
+.. autosummary::
+   :toctree: generated/
+
+    get_assets_path
+    load_test_dataset
+
+"""
+import os
+
+import numpy as np
+
+import autoeis as ae
 import autoeis.utils as utils
 
 log = utils.get_logger(__name__)
 
 
-# TODO: We're not really providing any value here.
-def load_eis_data(fname: str) -> pd.DataFrame:
-    """Load EIS (Electrochemical Impedance Spectroscopy) data from a file.
-
-    Parameters
-    ----------
-    fname : str
-        Path to the EIS data file.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame containing impedance and frequency data.
-
-    Raises
-    ------
-    ValueError:
-        If the file format is not supported.
-    FileNotFoundError:
-        If the file does not exist.
-    """
-    path = Path(fname)
-
-    if not path.exists():
-        log.error(f"No such file or directory: {path}")
-        raise FileNotFoundError(f"No such file or directory: {path}")
-
-    loaders = {
-        ".json": lambda: pd.DataFrame(json.loads(path.read_text())),
-        ".csv": lambda: pd.read_csv(path),
-        ".txt": lambda: pd.read_csv(path, sep="\t"),
-        ".xlsx": lambda: pd.read_excel(path),
-        ".pkl": lambda: pd.DataFrame(pickle.loads(path.read_bytes()))
-    }
-
-    loader = loaders.get(path.suffix)
-    if loader:
-        return loader()
-    else:
-        log.error("Unsupported file format.")
-        raise ValueError("Unsupported file format.")
+def get_assets_path():
+    """Returns the path to the assets folder."""
+    return ae.__path__[0] + "/assets"
 
 
-# TODO: We're not really providing any value here.
-def load_results_dataframe(fname: str) -> pd.DataFrame:
-    """Load AutoEIS results CSV file and convert it to a dataframe.
-
-    Parameters
-    ----------
-    fname: str
-        Path of the CSV file containing AutoEIS results.
-
-    Returns:
-    --------
-    df_circuits: pd.DataFrame
-        Dataframe containing ECMs (2 columns)
-    """
-    df_circuits = pd.read_csv(fname)
-    return df_circuits
+def load_test_dataset():
+    """Loads a test dataset from package assets folder."""
+    PATH = get_assets_path()
+    fpath = os.path.join(PATH, "test_data.txt")
+    freq, Zreal, Zimag = np.loadtxt(fpath, skiprows=1, unpack=True, usecols=(0, 1, 2))
+    # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
+    Z = Zreal - 1j*Zimag
+    return Z, freq

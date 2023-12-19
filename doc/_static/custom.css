@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,800;1,600&display=swap');
+
+body {
+    font-family: 'Open Sans', sans-serif !important;
+}
+
+img.sidebar-logo {
+    width: 80%;
+}
+
+p.admonition-title, .admonition > p {
+    font-size: 0.9rem !important;
+}
+
+p.admonition-title {
+    font-weight: bold !important;
+}
+
+.admonition {
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+a.reference.internal {
+    /* truncate if more than one line */
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;    
+}

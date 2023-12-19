@@ -12,8 +12,10 @@ def test_import_julia_modules():
     Main = julia_helpers.init_julia()
 
     # Ensure installed modules can be imported
-    julia_helpers.import_package(Main, "EquivalentCircuits")
+    ec = julia_helpers.import_package("EquivalentCircuits", Main=Main)
+    # Test Main is not required
+    ec = julia_helpers.import_package("EquivalentCircuits")
 
     # Throw error for non-existent module
     with pytest.raises(Exception):
-        julia_helpers.import_package(Main, "NonExistentModule")
+        julia_helpers.import_package("NonExistentModule", Main)
