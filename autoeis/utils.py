@@ -409,6 +409,31 @@ def generate_circuit_fn(
         return circuit_expr
     return lambda X, F: eval(circuit_expr)
 
+
+def is_equivalent(circuit1: str, circuit2: str) -> bool:
+    """Checks if two circuit strings are equivalent."""
+    def x0(circuit:str) -> np.ndarray[float]:
+        """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
+        
+        The idea is that if two circuits are equivalent, then Z(x0) should be
+        the same for both circuits, given that x0 corresponds to the same
+        component values in both circuits. Since the order of the components
+        does not matter, we set the values of the components of the same type
+        to be the same.
+        """
+        values = {"R": 0.85, "C": 0.75, "L": 0.30, "Pw": 0.15, "Pn": 0.6}
+        labels = get_parameter_labels(circuit)
+        x0 = []
+        for label in labels:
+            ptype = parse_parameter(label, by="type")
+            x0.append(values[ptype])
+        return np.array(x0)
+
+    freq = np.logspace(-3, 3, 10)
+    Z1 = generate_circuit_fn(circuit1)(x0(circuit1), freq)
+    Z2 = generate_circuit_fn(circuit2)(x0(circuit2), freq)
+    return np.allclose(Z1, Z2)
+
 # <<< Circuit utils
 
 
