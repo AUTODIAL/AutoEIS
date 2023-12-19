@@ -204,3 +204,14 @@ def test_get_parameter_types():
     types_unique = utils.get_parameter_types(circuit, unique=True)
     assert types == types_gt
     assert types_unique == types_gt_unique
+
+
+def test_circuit_complexity():
+    circuit_complexity_dict = {
+        "R1-C2": [0, 0],
+        "R1-[C2,L3]": [0, 1, 1],
+        "[R1,R2-R3]-[C4,L5]-P6": [1, 1, 1, 1, 1, 0],
+        "R1-[R2,R3]-[[C4,L5]-P6]-[R7,[R8,[C9,L10]]]": [0, 1, 1, 2, 2, 1, 1, 2, 3, 3],
+    }
+    for cstr, cc in circuit_complexity_dict.items():
+        assert utils.circuit_complexity(cstr) == cc
