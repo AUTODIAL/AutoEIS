@@ -259,6 +259,7 @@ def parse_circuit_dataframe(circuits: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({"circuitstring": circuit_str, "Parameters": params_dict})
 
 
+@timeout(20)
 def fit_circuit_parameters(
     circuit: str,
     Z: np.ndarray[complex],
