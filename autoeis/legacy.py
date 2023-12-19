@@ -20,6 +20,80 @@ from autoeis import utils
 log = utils.get_logger(__name__)
 
 
+def ohmic_resistance_filter_legacy(
+    circuits: pd.DataFrame,
+    ohmic_resistance: float,
+    rtol=0.5
+) -> pd.DataFrame:
+    """Filters the circuits whose ohmic resistance doesn't match a desired value."""
+    for i in range(len(circuits["circuitstring"])):
+        # Find the series elements
+        series_circuit = find_series_elements(circuit=circuits["circuitstring"][i])
+        # Find the series resistors
+        find_R = re.compile(r"R[0-9]")
+        series_resistors = find_R.findall(series_circuit)
+        # Initiate a list to store series resistors' values for future comparison
+        R_values_list = []
+        for j in range(len(series_resistors)):
+            value_R_p = re.compile(f"{series_resistors[j]} = [0-9]*\.[0-9]*")
+            values_R_withid = value_R_p.findall("".join(circuits["Resistors"][i]))
+            value_R_p2 = re.compile(r"[0-9]*\.[0-9]*")
+            for k in range(len(values_R_withid)):
+                R_value = value_R_p2.findall(values_R_withid[k])
+                R_values_list.append(R_value)
+        if R_values_list == []:
+            circuits.drop([i], inplace=True)
+        else:
+            value_identify_list = []
+            for m in range(len(R_values_list)):
+                if (
+                    float(R_values_list[m][0]) < ohmic_resistance * 0.5
+                    or float(R_values_list[m][0]) > ohmic_resistance * 1.5
+                ):
+                    value_identify_list.append(False)
+                else:
+                    value_identify_list.append(True)
+            if True not in value_identify_list:
+                circuits.drop([i], inplace=True)
+
+    circuits.reset_index(drop=True, inplace=True)
+    return circuits
+
+
+def apply_heuristic_rules_legacy(circuits: pd.DataFrame, ohmic_resistance: float) -> pd.DataFrame:
+    """Apply heuristic rules to filter the generated ECMs.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame
+        DataFrame containing the generated ECMs.
+
+    Returns
+    -------
+    circuits : pd.DataFrame
+        DataFrame containing the filtered ECMs.
+    """
+    log.info("Filtering the circuits using heuristic rules.")
+
+    # Make a copy to avoid modifying the original dataframe
+    circuits = circuits.copy()
+
+    if len(circuits) == 0:
+        log.warning("Circuits' dataframe is empty!")
+        return circuits
+
+    circuits = split_components(circuits)
+    circuits = capacitance_filter(circuits)
+    circuits = series_filter(circuits)
+    circuits = ohmic_resistance_filter(circuits, ohmic_resistance)
+    circuits = generate_mathematical_expression(circuits)
+    circuits = combine_expression(circuits)
+    circuits = calculate_length(circuits)
+    circuits = split_variables(circuits)
+
+    return circuits
+
+
 def model_evaluation(results):
     # TODO: Relying on the column index is not a good idea, refactor.
     evaluation_results = results[results.columns[[0, 17, 18, 19, 20, 23, 25]]]
