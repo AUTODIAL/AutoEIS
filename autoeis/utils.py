@@ -14,6 +14,7 @@ Collection of utility functions used throughout the package.
 import logging
 import os
 import re
+import signal
 import sys
 from collections.abc import Iterable
 from functools import wraps
@@ -100,6 +101,30 @@ def suppress_output(func):
         with _SuppressOutput():
             return func(*args, **kwargs)
     return wrapped
+
+
+class TimeoutException(Exception):
+    pass
+
+def timeout(seconds):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutException("Didn't converge in time!")
+
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            except TimeoutException:
+                print("Didn't converge in time!")
+                result = None
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wrapper
+    return decorator
 
 # <<< Filesystem utils
 
