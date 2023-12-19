@@ -20,9 +20,12 @@ import re
 import arviz
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import numpyro
 import rich
 import seaborn as sns
 from rich.console import Console
+from rich.table import Table
 
 import autoeis.utils as utils
 
@@ -165,6 +168,39 @@ def plot_linKK_residuals(freq, res_real, res_imag, saveto=None):
     return fig, ax
 
 
+def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
+    """Prints summary statistics for the MCMC run."""
+    # Set up required Rich objects
+    console = Console()
+    num_div = mcmc.get_extra_fields()["diverging"].sum()
+    num_samples = mcmc.get_extra_fields()["diverging"].size
+    title = f"{circuit}, {num_div}/{num_samples} divergences"
+    table = Table(title=title, show_header=True, header_style="bold")
+
+    # Add columns to the table
+    columns = ["Parameter", "Mean", "Std", "Median", "5.0%", "95.0%"]
+    for column in columns:
+        table.add_column(column, justify="right")
+
+    # Fill the table with data
+    for label, values in mcmc.get_samples().items():
+        rows = [
+            label,
+            f"{np.mean(values):.2e}",
+            f"{np.std(values):.2e}",
+            f"{np.median(values):.2e}",
+            f"{np.percentile(values, 5):.2e}",
+            f"{np.percentile(values, 95):.2e}",
+        ]
+        # Highlight rows with high standard deviation
+        row_style = "on yellow" if np.std(values) > np.mean(values) else ""
+        # Add a row to the table
+        table.add_row(*rows, style=row_style)
+
+    # Print the table
+    console.print(table)
+
+
 def override_mpl_colors(override_named_colors=True):
     """Override matplotlib's default colors with Flexoki colors."""
     # Define the Flexoki-Light color scheme based on the provided table
@@ -233,6 +269,7 @@ def set_plot_style(use_arviz=True, use_seaborn=True, use_flexoki=True) -> None:
     plt.rcParams["axes.labelsize"] = label_size
     plt.rcParams["axes.titlesize"] = title_size
     plt.rcParams["legend.fontsize"] = legend_size
+    plt.rcParams["legend.frameon"] = False
 
     # Flexoki colors
     if use_flexoki:
