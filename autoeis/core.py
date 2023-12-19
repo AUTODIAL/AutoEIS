@@ -12,9 +12,7 @@ Core functions including finding the best fit and Bayesian analysis.
     preprocess_impedance_data 
 
 """
-import itertools
 import os
-import re
 import time
 import warnings
 from pathlib import Path
@@ -47,8 +45,8 @@ log = utils.get_logger(__name__)
 
 
 __all__ = [
-    "perform_full_analysis",
     "generate_equivalent_circuits",
+    "perform_full_analysis",
     "perform_bayesian_inference",
     "preprocess_impedance_data",
 ]
