@@ -244,7 +244,6 @@ def generate_equivalent_circuits(
     iters: int = 100,
     complexity: int = 12,
     tol: float = 5e-4,
-    saveto: str = None,
     parallel: bool = True,
     generations: int = 30,
     population_size: int = 100,
@@ -296,12 +295,11 @@ def generate_equivalent_circuits(
     ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
+    # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
+    circuits = utils.parse_circuit_dataframe(circuits)
+
     if not len(circuits):
         log.warning("No plausible circuits found. Try increasing `iters`.")
-
-    if saveto is not None:
-        fpath = os.path.join(saveto, "circuits_dataframe.csv")
-        circuits.to_csv(fpath, index=False)
 
     return circuits
 
