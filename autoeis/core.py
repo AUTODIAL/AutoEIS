@@ -85,17 +85,23 @@ def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) ->
     # NOTE: To put more weight on high frequency data, use 1/Z.real as y
     x = freq[:]
     y = 1 / Z.real[:]
+
     def func(x, a, b, c):
         return (a*x + b) / (x + c)
+    
+    fallback = False
     bounds = ([0, -np.inf, -np.inf], np.inf)
+
     try:
         (a, b, c), pcov = curve_fit(func, x, y, bounds=bounds)
         R = 1 / a
     except RuntimeError:
-        # Fall back to returning Re(Z) @ highest frequency
+        fallback = True
+    if R < 0 or R < 0.2*Z.real[0]:
+        fallback = True
+    if fallback:
         R = Z.real[0]
-        log.warning("Failed to fit ohmic resistance, falling back to Re(Z) @ highest frequency.")
-
+        log.warning("Failed to fit ohmic resistance, returning Re(Z) @ max(freq).")
     return R
 
 
