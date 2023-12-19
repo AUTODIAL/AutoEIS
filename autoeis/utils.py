@@ -258,7 +258,6 @@ def parse_circuit_dataframe(circuits: pd.DataFrame) -> pd.DataFrame:
     return circuits
 
 
-@timeout(20)
 def fit_circuit_parameters(
     circuit: str,
     Z: np.ndarray[complex],
@@ -280,6 +279,10 @@ def fit_circuit_parameters(
     circuit.fit(freq, Z)
     params = circuit.parameters_
     return dict(zip(labels, params))
+
+# FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
+if os.name != "nt":
+    fit_circuit_parameters = timeout(20)(fit_circuit_parameters)
 
 
 def circuit_to_function_impy(circuit: str):
