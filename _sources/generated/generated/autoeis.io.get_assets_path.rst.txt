@@ -1,0 +1,6 @@
+get\_assets\_path
+=================
+
+.. currentmodule:: autoeis.io
+
+.. autofunction:: get_assets_path

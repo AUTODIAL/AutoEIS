@@ -1,0 +1,6 @@
+show\_nticks
+============
+
+.. currentmodule:: autoeis.visualization
+
+.. autofunction:: show_nticks

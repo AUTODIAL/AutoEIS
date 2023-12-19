@@ -1,6 +1,0 @@
-reset\_storage
-==============
-
-.. currentmodule:: autoeis.utils
-
-.. autofunction:: reset_storage

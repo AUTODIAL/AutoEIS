@@ -1,6 +1,0 @@
-get\_fileext
-============
-
-.. currentmodule:: autoeis.utils
-
-.. autofunction:: get_fileext

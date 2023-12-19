@@ -1,6 +1,0 @@
-load\_eis\_data
-===============
-
-.. currentmodule:: autoeis.io
-
-.. autofunction:: load_eis_data

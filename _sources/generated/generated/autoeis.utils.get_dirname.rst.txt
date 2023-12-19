@@ -1,6 +1,0 @@
-get\_dirname
-============
-
-.. currentmodule:: autoeis.utils
-
-.. autofunction:: get_dirname

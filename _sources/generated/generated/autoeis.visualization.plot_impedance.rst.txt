@@ -1,6 +1,0 @@
-plot\_impedance
-===============
-
-.. currentmodule:: autoeis.visualization
-
-.. autofunction:: plot_impedance

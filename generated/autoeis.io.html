@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="load_eis_data" href="generated/autoeis.io.load_eis_data.html" /><link rel="prev" title="API Reference" href="../modules.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="get_assets_path" href="generated/autoeis.io.get_assets_path.html" /><link rel="prev" title="API Reference" href="../modules.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>io - AutoEIS 0.0.17 documentation</title>
@@ -164,8 +164,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../basic_usage.html">Basic usage</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../modules.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">io</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_eis_data.html">load_eis_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_results_dataframe.html">load_results_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -177,19 +177,16 @@
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_impedance.html">plot_impedance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_impedance_combo.html">plot_impedance_combo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_linKK_residuals.html">plot_linKK_residuals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.set_plot_style.html">set_plot_style</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.show_nticks.html">show_nticks</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.get_logger.html">get_logger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.make_dir.html">make_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.get_dirname.html">get_dirname</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.get_filename.html">get_filename</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.get_fileext.html">get_fileext</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.reset_storage.html">reset_storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.suppress_output.html">suppress_output</a></li>
 </ul>
 </li>
@@ -235,11 +232,11 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.load_eis_data.html#autoeis.io.load_eis_data" title="autoeis.io.load_eis_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_eis_data</span></code></a>(fname)</p></td>
-<td><p>Load EIS (Electrochemical Impedance Spectroscopy) data from a file.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.get_assets_path.html#autoeis.io.get_assets_path" title="autoeis.io.get_assets_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_assets_path</span></code></a>()</p></td>
+<td><p>Returns the path to the assets folder.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.load_results_dataframe.html#autoeis.io.load_results_dataframe" title="autoeis.io.load_results_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_results_dataframe</span></code></a>(fname)</p></td>
-<td><p>Load AutoEIS results CSV file and convert it to a dataframe.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html#autoeis.io.load_test_dataset" title="autoeis.io.load_test_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_dataset</span></code></a>()</p></td>
+<td><p>Loads a test dataset from package assets folder.</p></td>
 </tr>
 </tbody>
 </table>
@@ -251,12 +248,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="generated/autoeis.io.load_eis_data.html">
+          <a class="next-page" href="generated/autoeis.io.get_assets_path.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">load_eis_data</div>
+                <div class="title">get_assets_path</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

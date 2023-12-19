@@ -164,8 +164,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic_usage.html">Basic usage</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../modules.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_eis_data.html">load_eis_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_results_dataframe.html">load_results_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.get_assets_path.html">get_assets_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
 </ul>
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.core.html">core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
@@ -177,19 +177,16 @@
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_impedance.html">plot_impedance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_impedance_combo.html">plot_impedance_combo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_linKK_residuals.html">plot_linKK_residuals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.set_plot_style.html">set_plot_style</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.show_nticks.html">show_nticks</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_logger.html">get_logger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.make_dir.html">make_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_dirname.html">get_dirname</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_filename.html">get_filename</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_fileext.html">get_fileext</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.reset_storage.html">reset_storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.suppress_output.html">suppress_output</a></li>
 </ul>
 </li>
@@ -233,25 +230,23 @@
 <h1>perform_bayesian_inference<a class="headerlink" href="#perform-bayesian-inference" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="autoeis.core.perform_bayesian_inference">
-<span class="sig-prename descclassname"><span class="pre">autoeis.core.</span></span><span class="sig-name descname"><span class="pre">perform_bayesian_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eis_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ecms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_ecm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#autoeis.core.perform_bayesian_inference" title="Link to this definition">#</a></dt>
-<dd><p>Perform Bayesian inference on the ECMs based on the EIS measurements.</p>
+<span class="sig-prename descclassname"><span class="pre">autoeis.core.</span></span><span class="sig-name descname"><span class="pre">perform_bayesian_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_warmup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MCMC</span></span></span><a class="headerlink" href="#autoeis.core.perform_bayesian_inference" title="Link to this definition">#</a></dt>
+<dd><p>Performs Bayesian inference on the circuit based on EIS measurements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>eis_data</strong> (<em>pd.DataFrame</em>) – DataFrame with pre-processed data; expected columns are frequency,
-real part, and imaginary part of the impedance data.</p></li>
-<li><p><strong>ecms</strong> (<em>pd.DataFrame</em>) – DataFrame with filtered ECMs.</p></li>
-<li><p><strong>data_path</strong> (<em>str</em>) – Path to the original EIS data for storage purposes.</p></li>
-<li><p><strong>plot</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, plots the results (default is True).</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, saves the data (default is True).</p></li>
-<li><p><strong>draw_ecm</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, draws the circuit model (default is False).</p></li>
+<li><p><strong>circuit</strong> (<em>str</em>) – Circuit string.</p></li>
+<li><p><strong>Z</strong> (<em>np.ndarray</em><em>[</em><em>complex</em><em>]</em>) – Complex impedance data.</p></li>
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>float</em><em>]</em>) – Frequency data.</p></li>
+<li><p><strong>p0</strong> (<em>Union</em><em>[</em><em>np.ndarray</em><em>[</em><em>float</em><em>]</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Initial guess for the circuit parameters (default is None).</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed for reproducibility (default is None).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>df</strong> – Dataframe containing the ECMs with the Bayesian inference results (12 columns)</p>
+<dd class="field-even"><p><strong>mcmc</strong> – MCMC object.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
+<dd class="field-odd"><p>numpyro.infer.mcmc.MCMC</p>
 </dd>
 </dl>
 </dd></dl>

@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="suppress_output" href="autoeis.utils.suppress_output.html" /><link rel="prev" title="get_fileext" href="autoeis.utils.get_fileext.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="utils" href="../autoeis.utils.html" /><link rel="prev" title="set_plot_style" href="autoeis.visualization.set_plot_style.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>reset_storage - AutoEIS 0.0.17 documentation</title>
+        <title>show_nticks - AutoEIS 0.0.17 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -164,8 +164,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic_usage.html">Basic usage</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../modules.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_eis_data.html">load_eis_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_results_dataframe.html">load_results_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.get_assets_path.html">get_assets_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -175,21 +175,18 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.visualization.html">visualization</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_impedance.html">plot_impedance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_impedance_combo.html">plot_impedance_combo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_linKK_residuals.html">plot_linKK_residuals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.set_plot_style.html">set_plot_style</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">show_nticks</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_logger.html">get_logger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.make_dir.html">make_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_dirname.html">get_dirname</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_filename.html">get_filename</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.get_fileext.html">get_fileext</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">reset_storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.suppress_output.html">suppress_output</a></li>
 </ul>
 </li>
@@ -229,12 +226,12 @@
           </label>
         </div>
         <article role="main">
-          <section id="reset-storage">
-<h1>reset_storage<a class="headerlink" href="#reset-storage" title="Link to this heading">#</a></h1>
+          <section id="show-nticks">
+<h1>show_nticks<a class="headerlink" href="#show-nticks" title="Link to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="autoeis.utils.reset_storage">
-<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">reset_storage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#autoeis.utils.reset_storage" title="Link to this definition">#</a></dt>
-<dd><p>Reset the storage path to the current working directory.</p>
+<dt class="sig sig-object py" id="autoeis.visualization.show_nticks">
+<span class="sig-prename descclassname"><span class="pre">autoeis.visualization.</span></span><span class="sig-name descname"><span class="pre">show_nticks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#autoeis.visualization.show_nticks" title="Link to this definition">#</a></dt>
+<dd><p>In-place modifies Matplotlib axes to show only n ticks.</p>
 </dd></dl>
 
 </section>
@@ -244,23 +241,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="autoeis.utils.suppress_output.html">
+          <a class="next-page" href="../autoeis.utils.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">suppress_output</div>
+                <div class="title">utils</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="autoeis.utils.get_fileext.html">
+          <a class="prev-page" href="autoeis.visualization.set_plot_style.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">get_fileext</div>
+                <div class="title">set_plot_style</div>
                 
               </div>
             </a>
@@ -294,8 +291,8 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">reset_storage</a><ul>
-<li><a class="reference internal" href="#autoeis.utils.reset_storage"><code class="docutils literal notranslate"><span class="pre">reset_storage()</span></code></a></li>
+<li><a class="reference internal" href="#">show_nticks</a><ul>
+<li><a class="reference internal" href="#autoeis.visualization.show_nticks"><code class="docutils literal notranslate"><span class="pre">show_nticks()</span></code></a></li>
 </ul>
 </li>
 </ul>

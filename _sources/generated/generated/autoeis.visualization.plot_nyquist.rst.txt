@@ -1,0 +1,6 @@
+plot\_nyquist
+=============
+
+.. currentmodule:: autoeis.visualization
+
+.. autofunction:: plot_nyquist

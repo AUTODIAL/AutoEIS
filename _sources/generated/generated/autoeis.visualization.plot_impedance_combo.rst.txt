@@ -1,0 +1,6 @@
+plot\_impedance\_combo
+======================
+
+.. currentmodule:: autoeis.visualization
+
+.. autofunction:: plot_impedance_combo

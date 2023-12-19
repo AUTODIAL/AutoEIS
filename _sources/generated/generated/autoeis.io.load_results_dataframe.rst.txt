@@ -1,6 +1,0 @@
-load\_results\_dataframe
-========================
-
-.. currentmodule:: autoeis.io
-
-.. autofunction:: load_results_dataframe

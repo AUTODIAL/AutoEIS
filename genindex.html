@@ -162,8 +162,8 @@
 <li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Basic usage</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="modules.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.load_eis_data.html">load_eis_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.load_results_dataframe.html">load_results_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -175,19 +175,16 @@
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.plot_impedance.html">plot_impedance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.plot_impedance_combo.html">plot_impedance_combo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.plot_linKK_residuals.html">plot_linKK_residuals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.set_plot_style.html">set_plot_style</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.visualization.show_nticks.html">show_nticks</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.get_logger.html">get_logger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.make_dir.html">make_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.get_dirname.html">get_dirname</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.get_filename.html">get_filename</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.get_fileext.html">get_fileext</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.reset_storage.html">reset_storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.suppress_output.html">suppress_output</a></li>
 </ul>
 </li>
@@ -229,7 +226,7 @@
           
 <section class="genindex-section">
   <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a></div>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#S"><strong>S</strong></a></div>
 </section>
 <section id="A" class="genindex-section">
   <h2>A</h2>
@@ -292,13 +289,9 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="generated/generated/autoeis.core.generate_equivalent_circuits.html#autoeis.core.generate_equivalent_circuits">generate_equivalent_circuits() (in module autoeis.core)</a>
 </li>
-        <li><a href="generated/generated/autoeis.utils.get_dirname.html#autoeis.utils.get_dirname">get_dirname() (in module autoeis.utils)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.utils.get_fileext.html#autoeis.utils.get_fileext">get_fileext() (in module autoeis.utils)</a>
-</li>
-        <li><a href="generated/generated/autoeis.utils.get_filename.html#autoeis.utils.get_filename">get_filename() (in module autoeis.utils)</a>
+        <li><a href="generated/generated/autoeis.io.get_assets_path.html#autoeis.io.get_assets_path">get_assets_path() (in module autoeis.io)</a>
 </li>
         <li><a href="generated/generated/autoeis.utils.get_logger.html#autoeis.utils.get_logger">get_logger() (in module autoeis.utils)</a>
 </li>
@@ -310,11 +303,7 @@
   <h2>L</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.io.load_eis_data.html#autoeis.io.load_eis_data">load_eis_data() (in module autoeis.io)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.io.load_results_dataframe.html#autoeis.io.load_results_dataframe">load_results_dataframe() (in module autoeis.io)</a>
+        <li><a href="generated/generated/autoeis.io.load_test_dataset.html#autoeis.io.load_test_dataset">load_test_dataset() (in module autoeis.io)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -324,8 +313,6 @@
   <h2>M</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.utils.make_dir.html#autoeis.utils.make_dir">make_dir() (in module autoeis.utils)</a>
-</li>
         <li>
     module
 
@@ -353,23 +340,15 @@
 </li>
         <li><a href="generated/generated/autoeis.core.perform_full_analysis.html#autoeis.core.perform_full_analysis">perform_full_analysis() (in module autoeis.core)</a>
 </li>
+        <li><a href="generated/generated/autoeis.visualization.plot_impedance_combo.html#autoeis.visualization.plot_impedance_combo">plot_impedance_combo() (in module autoeis.visualization)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.visualization.plot_impedance.html#autoeis.visualization.plot_impedance">plot_impedance() (in module autoeis.visualization)</a>
-</li>
         <li><a href="generated/generated/autoeis.visualization.plot_linKK_residuals.html#autoeis.visualization.plot_linKK_residuals">plot_linKK_residuals() (in module autoeis.visualization)</a>
 </li>
-        <li><a href="generated/generated/autoeis.core.preprocess_impedance_data.html#autoeis.core.preprocess_impedance_data">preprocess_impedance_data() (in module autoeis.core)</a>
+        <li><a href="generated/generated/autoeis.visualization.plot_nyquist.html#autoeis.visualization.plot_nyquist">plot_nyquist() (in module autoeis.visualization)</a>
 </li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="R" class="genindex-section">
-  <h2>R</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.utils.reset_storage.html#autoeis.utils.reset_storage">reset_storage() (in module autoeis.utils)</a>
+        <li><a href="generated/generated/autoeis.core.preprocess_impedance_data.html#autoeis.core.preprocess_impedance_data">preprocess_impedance_data() (in module autoeis.core)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -381,9 +360,11 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="generated/generated/autoeis.visualization.set_plot_style.html#autoeis.visualization.set_plot_style">set_plot_style() (in module autoeis.visualization)</a>
 </li>
+        <li><a href="generated/generated/autoeis.utils.setup_rich_tracebacks.html#autoeis.utils.setup_rich_tracebacks">setup_rich_tracebacks() (in module autoeis.utils)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="generated/generated/autoeis.utils.setup_rich_tracebacks.html#autoeis.utils.setup_rich_tracebacks">setup_rich_tracebacks() (in module autoeis.utils)</a>
+        <li><a href="generated/generated/autoeis.visualization.show_nticks.html#autoeis.visualization.show_nticks">show_nticks() (in module autoeis.visualization)</a>
 </li>
         <li><a href="generated/generated/autoeis.utils.suppress_output.html#autoeis.utils.suppress_output">suppress_output() (in module autoeis.utils)</a>
 </li>
