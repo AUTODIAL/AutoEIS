@@ -1,20 +1,17 @@
 # Basic usage
 To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function.
 
-### Import required modules
+### Import AutoEIS
 
 ```python
-import numpy as np
 import autoeis as ae
 ```
 
 ### Load EIS measurements
 
 ```python
-path_data = "assets/test_data.txt"
-freq, Zreal, Zimag = np.loadtxt(path_data, skiprows=1, unpack=True, usecols=(0, 1, 2))
-# Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
-Z = Zreal - 1j*Zimag
+# Load test dataset shipped with AutoEIS
+Z, freq = ae.io.load_test_dataset()
 ```
 
 ### Automated EIS analysis
