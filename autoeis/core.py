@@ -582,7 +582,6 @@ def perform_bayesian_inference(
     return mcmc
 
 
-# TODO: Don't filter for ohmic resistance value, just ensure circuit contains it
 def apply_heuristic_rules(circuits: pd.DataFrame) -> pd.DataFrame:
     """Apply heuristic rules to filter the generated ECMs.
 
@@ -612,31 +611,22 @@ def apply_heuristic_rules(circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def perform_full_analysis(
-    impedance: np.ndarray[complex],
+    Z: np.ndarray[complex],
     freq: np.ndarray[float],
     iters: int = 100,
-    saveto: str = None,
-    plot: bool = False,
-    draw_ecm: bool = False,
     parallel: bool = True,
 ) -> pd.DataFrame:
-    """Perform automated EIS analysis by generating plausible ECMs
+    """Performs automated EIS analysis by generating plausible ECMs
     followed by Bayesian inference on component values.
 
     Parameters
     ----------
-    impedance : np.ndarray[complex]
+    Z : np.ndarray[complex]
         Impedance data.
     freq : np.ndarray[float]
         Frequencies corresponding to the impedance data.
     iters : int, optional
         Number of iterations for ECM generation. Default is 100.
-    saveto : str
-        Path to the directory where the results will be saved.
-    plot : bool, optional
-        If True, the results will be plotted. Default is False.
-    draw_ecm : bool, optional
-        If True, the ECM will be plotted. Default is False.
     parallel : bool, optional
         If True, the ECM generation will be done in parallel. Default is True.
 
@@ -645,24 +635,29 @@ def perform_full_analysis(
     results: pd.DataFrame
         Dataframe containing plausible ECMs with Bayesian inference results.
     """
-    # Make a new folder to store the results
-    if saveto is not None:
-        Path(saveto).mkdir(parents=True, exist_ok=True)
-
     # Filter out bad impedance data
-    Z, freq, rmse = preprocess_impedance_data(impedance, freq, threshold=0.05, plot=plot)
+    Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=0.05)
     
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-1, "saveto": saveto, "parallel": parallel}
+    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-4, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
-    ohmic_resistance = compute_ohmic_resistance(Z, freq)
-    circuits = apply_heuristic_rules(circuits_unfiltered, ohmic_resistance)
+    circuits = apply_heuristic_rules(circuits_unfiltered)
 
     # Perform Bayesian inference on the filtered ECMs
-    eis_data = pd.DataFrame({"freq": freq, "Zreal": Z.real, "Zimag": Z.imag})
-    kwargs = {"saveto": saveto, "plot": plot, "draw_ecm": draw_ecm}
-    results = perform_bayesian_inference(eis_data, circuits, **kwargs)
+    mcmc_list = []
 
-    return results
+    for row in tqdm(circuits.itertuples(), total=len(circuits), desc="Bayesian Inference"):
+        circuit = row.circuitstring
+        p0_dict = row.Parameters
+        # Get another set of initial guesses using impedance.py (not guaranteed to converge)
+        p0_fit = utils.fit_circuit_parameters(circuit, Z, freq, p0=p0_dict)
+        kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
+        mcmc = perform_bayesian_inference(circuit, Z, freq, p0_fit, **kwargs_mcmc)
+        mcmc_list.append(mcmc)
+
+    # Add the results to the circuits dataframe as a new column
+    circuits["MCMC"] = mcmc_list
+
+    return circuits
