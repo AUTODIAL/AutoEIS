@@ -559,6 +559,7 @@ def perform_bayesian_inference(
     priors = utils.initialize_priors(p0, variables=p0.keys())
     rng_key, rng_subkey = random.split(rng_key)
     kwargs = {"F": freq, "Z_true": Z, "priors": priors, "circuit_func": circuit_fn}
+    # TODO: somehow include prior predictive in the results
     prior_prediction = prior_predictive(rng_subkey, **kwargs)
     
     nuts_kernel = NUTS(model)
