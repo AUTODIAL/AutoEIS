@@ -37,6 +37,9 @@ import autoeis.julia_helpers as julia_helpers
 import autoeis.utils as utils
 import autoeis.visualization as viz
 
+# AutoEIS datasets are not small-enough that CPU is much faster than GPU
+numpyro.set_platform("cpu")
+
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
