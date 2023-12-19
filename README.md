@@ -75,11 +75,8 @@ To use AutoEIS, you can either perform the circuit generation and Bayesian infer
 import numpy as np
 import autoeis as ae
 
-# Load impedance measurements from a file
-path_data = "assets/test_data.txt"
-freq, Zreal, Zimag = np.loadtxt(path_data, skiprows=1, unpack=True, usecols=(0, 1, 2))
-# Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
-Z = Zreal - 1j*Zimag
+# Load test dataset shipped with AutoEIS
+Z, freq = ae.io.load_test_dataset()
 
 # Perform automated EIS analysis
 circuits = ae.perform_full_analysis(Z, freq, iters=100, parallel=True)
