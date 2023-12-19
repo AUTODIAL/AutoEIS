@@ -1076,159 +1076,19 @@ def component_values(input: "pd.Series") -> (list, list, list):
     return component_values_lists, values_lists, names_lists
 
 
-def combine_expression(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """Combines the identical circuits.
+def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
+    """Merges identical circuits (removes rows with equivalent circuits)."""
+    circuits = circuits.copy()
 
-    Parameters
-    ----------
-    df_circuits: pd.DataFrame
-        Dataframe containing filtered ECMs with mathematical expressions (7 columns)
+    for i, row_i in circuits.iterrows():
+        circuit_i = row_i.circuitstring
+        for j, row_j in circuits.loc[i+1:].iterrows():
+            if utils.is_equivalent(circuit_i, row_j.circuitstring):
+                circuits.drop(j, inplace=True)
 
-    Returns
-    -------
-    df_circuits: pd.DataFrame
-        Dataframe containing filtered ECMs with mathematical expressions (r columns)
-    """
-    combined_expressions = []
-    combined_values = []
-    mathematical_expressions = []
-    counts = []
-
-    similar_expression, similar_expression_index = circuit_expression_combine_lists(
-        df_circuits
-    )
-    component_values_lists, values_lists, names_lists = component_values(
-        input=df_circuits["Parameters"]
-    )
-
-    for i in range(len(similar_expression_index)):
-        combined_expressions.append(df_circuits["circuitstring"][similar_expression_index[i][0]])
-        combined_value = []
-        for j in range(len(similar_expression_index[i])):
-            if j == 0:
-                combined_value.append(component_values_lists[similar_expression_index[i][j]])
-            else:
-                if sorted(values_lists[similar_expression_index[i][j]]) != sorted(
-                    values_lists[similar_expression_index[i][j - 1]]
-                ):
-                    combined_value.append(
-                        component_values_lists[similar_expression_index[i][j]]
-                    )
-                    combined_expressions[i] = [
-                        df_circuits["circuitstring"][similar_expression_index[i][0]]
-                    ]
-                    combined_expressions[i].append(
-                        df_circuits["circuitstring"][similar_expression_index[i][j]]
-                    )
-                    # BUG: Correspond the combined circuit values with expressions
-
-        if len(combined_value) > 1:
-            # Calculate the statistical information about each component
-            combined_component_value_list = []
-            for k in range(len(combined_value)):
-                combined_value_copy = combined_value.copy()
-                combined_value_copy[k] = sorted(combined_value[k])
-                digit_p = re.compile(r"\-?[0-9]+\.[0-9]+e*-*[0-9]*")
-                combined_component_value = digit_p.findall(",".join(combined_value_copy[k]))
-                for m in range(len(combined_component_value)):
-                    combined_component_value[m] = float(combined_component_value[m])
-                combined_component_value_list.append(combined_component_value)
-            combined_component_value_array = np.array(combined_component_value_list)
-
-            name_p = re.compile(r"[A-Z][1-9][a-z]? = ")
-            combined_name = name_p.findall(",".join(df_circuits["Parameters"][1][0]))
-
-            statistical_info = {
-                "components_name": combined_name,
-                "mean": np.mean(combined_component_value_array, axis=0),
-                "std": np.std(combined_component_value_array, axis=0),
-                "var": np.var(combined_component_value_array, axis=0),
-                "max": np.max(combined_component_value_array, axis=0),
-                "min": np.min(combined_component_value_array, axis=0),
-            }
-            combined_value.append(statistical_info)
-        combined_values.append(combined_value)
-
-        mathematical_expression = df_circuits["Mathematical expressions"][
-            similar_expression_index[i][0]
-        ]
-        mathematical_expressions.append(mathematical_expression)
-
-        count = len(similar_expression_index[i])
-        counts.append(count)
-
-    df_list = {
-        "Combined Circuits": combined_expressions,
-        "Combined Values": combined_values,
-        "Mathematical expressions": mathematical_expressions,
-        "Counts": counts,
-    }
-    df_circuits = pd.DataFrame(df_list)
-    return df_circuits
-
-
-def calculate_length(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """Counts how many different value sets are in identical circuits.
-
-    Parameters
-    ----------
-    df_circuits: pd.DataFrame
-        Dataframe containing filtered ECMs with mathematical expressions (4 columns)
-
-    Returns
-    -------
-    df_circuits: pd.DataFrame
-        Dataframe containing filtered ECMs with mathematical expressions (5 columns)
-    """
-
-    counts = []
-    for i in range(len(df_circuits["Combined Values"])):
-        if len(df_circuits["Combined Values"][i]) > 1:
-            count = len(df_circuits["Combined Values"][i]) - 1
-            counts.append(count)
-        else:
-            count = 1
-            counts.append(count)
-
-    df_circuits["Different value sets"] = counts
-    return df_circuits
-
-
-def split_variables(df_circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """Separate the value and name of each component.
-
-    Parameters
-    ----------
-    df_circuits: pd.DataFrame
-        Dataframe containing filtered ECMs with mathematical expressions (5 columns)
-
-    Returns
-    -------
-    df_circuits: pd.DataFrame
-        Dataframe containing filtered ECMs with mathematical expressions (7 columns)
-    """
-    # Create regex pattern to catch "name = value" pairs
-    pattern = r"(\b\w+\b)\s*=\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)"
-
-    name_value_pairs = []
-
-    for i in range(len(df_circuits["Combined Values"])):
-        test_string = utils.flatten(df_circuits["Combined Values"][i])
-        test_string = ", ".join(test_string)
-        name_value_pairs.append(re.findall(pattern, test_string))
-
-    names = [[name for name, _ in row] for row in name_value_pairs]
-    values = [[value for _, value in row] for row in name_value_pairs]
-
-    df_circuits["Variables names"] = names
-    df_circuits["Variables values"] = values
-
-    df_circuits = df_circuits.reset_index()
-    df_circuits.drop(["index"], axis=1, inplace=True)
-
-    return df_circuits
-    
-
+    circuits.reset_index(drop=True, inplace=True)
+    return circuits
+ 
 def perform_bayesian_inference(
     circuit: str,
     Z: np.ndarray[complex],
