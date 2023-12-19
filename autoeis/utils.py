@@ -474,6 +474,32 @@ def initialize_priors_from_posteriors(posterior, variables):
             priors[var] = dist.LogNormal(loc=np.log(scale), scale=2*s)
     return priors
 
+
+def circuit_complexity(circuit: str) -> list[int]:
+    """Computes the component complexity of the circuit."""
+    def add_one(arr):
+        """Add one to each element in a nested list."""
+        return [add_one(e) if isinstance(e, list) else e+1 for e in arr]
+
+    def how_deep(arr):
+        """Compute the depth of each element in a nested list."""
+        return [add_one(how_deep(e)) if isinstance(e, list) else 0 for e in arr]
+
+    def split(arr):
+        """Recursively splits comma-separated elements in a nested list."""
+        out = []
+        for e in arr:
+            if isinstance(e, list):
+                out.append(split(e))
+            else:
+                out.extend(re.split(",|-", e))
+        return out
+
+    parsed = circuit_to_nested_expr(circuit)
+    parsed = split(parsed)
+    depth = how_deep(parsed)
+    return flatten(depth)
+
 # <<< Statistics utils
 
 
