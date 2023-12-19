@@ -208,6 +208,8 @@ def test_get_parameter_types():
 
 def test_circuit_complexity():
     circuit_complexity_dict = {
+        "R1": [0],
+        "[R1,R2]": [1, 1],
         "R1-C2": [0, 0],
         "R1-[C2,L3]": [0, 1, 1],
         "[R1,R2-R3]-[C4,L5]-P6": [1, 1, 1, 1, 1, 0],
