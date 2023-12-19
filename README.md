@@ -1,119 +1,105 @@
-# AutoEis.py
-------------
-AutoEis is a Python package to automatically propose statistical plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradations.
+![example workflow](https://github.com/AUTODIAL/AutoEIS/actions/workflows/nightly.yml/badge.svg)
 
-Please be aware that the current version is still under development and has not been formally realized. If you find any bug and any suggestions, please [file an issue](https://github.com/AUTODIAL/Auto_Eis/issues) or directly [pull requests](https://github.com/AUTODIAL/Auto_Eis/pulls). We would really appreciate any contributions from the commmunity. 
+# AutoEIS
+## What is AutoEIS?
+AutoEIS is a Python package that automatically proposes statistically plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradation.
+
+Please be aware that the current version is still under development and has not been formally released. If you find any bugs or have any suggestions, please file an [issue](https://github.com/AUTODIAL/AutoEIS/issues) or directly submit a [pull request](https://github.com/AUTODIAL/AutoEIS/pulls). We would greatly appreciate any contributions from the community.
 
 ## Installation
----------------
-The easiest way to install this package is using pip install from [pypi](https://pypi.org/project/AutoEis/)
+Follow the instructions below to install AutoEIS and its dependencies:
+
+### Install Julia
+The official way to install Julia is via [juliaup](https://github.com/JuliaLang/juliaup). [Juliaup](https://github.com/JuliaLang/juliaup) provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with [juliaup](https://github.com/JuliaLang/juliaup) is straightforward; Please follow the instructions on its GitHub [page](https://github.com/JuliaLang/juliaup).
+
+<details>
+  <summary>Julia manual setup (not recommended)</summary>
+  
+  **We strongly recommend that you install Julia using juliaup (see [Install Julia](#install-julia)). If you've already done so, skip this step and go the [next](#install-autoeis-using-pip)**. However, if for any reason, you insist on using your own Julia installation, you need to ensure that `julia` command can be found in your `PATH` environment variable. You can test this by running the command `julia` in a terminal (or command prompt on Windows). If an error message appears stating `julia is not recognized as an internal or external command`, you need to add the path to the Julia executable to your `PATH` environment variable. You can find instructions on how to do this [here](https://julialang.org/downloads/platform/#windows).
+
+</details>
+
+### Install AutoEIS using [pip](https://pypi.org/project/autoeis)
+Open a terminal (or command prompt on Windows) and run the following command:
+
 ```bash
-pip install AutoEis
+pip install -U autoeis
 ```
 
-## Dependencies
----------------
-The circuits generation is realized based on the julia package [equivalentcircuit.jl](https://github.com/MaximeVH/EquivalentCircuits.jl) designed by MaximeVH. It requires a installation of [julia programming language](https://julialang.org/)
+<details>
+  <summary>Install JAX (skip now, come back only if you encounter errors on Windows)</summary>
+  
+  If you're on Windows, you **might** need to manually install `jaxlib` (We recommend that you skip this step for now, and come back only if you encounter any errors while using AutoEIS). For CPU version, run the following command in a command prompt:
+  
+  ```shell
+  pip install "jax[cpu]===0.4.11" -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
+  ```
+  
+  For GPU support, use the following command instead:
+  
+  ```shell
+  pip install jax[cuda111] -f https://whls.blob.core.windows.net/unstable/index.html --use-deprecated legacy-resolver
+  ```
+  
+  If you encounter any problem running above commands, visit [jax-windows-builder](https://github.com/cloudhan/jax-windows-builder) repository to find and install a compatible version. You can find more detailed instructions there.
 
-AutoEis requires:
--   **Python programming language (>=3.7, <3.11)**
-- - NumPy (>=1.20)
-- - Matplotlib (>=3.3)
-- - Pandas (>=1.1)
-- - impedance (>=1.4)
-- - regex (>=2.2)
-- - arviz (>=2.2.1)
-- - numpyro (=0.10.1)
-- - dill (>=0.3.4)
-- - PyJulia (>=0.5.7)
-- - IPython (>=7.19.0)
-- - jax (>=0.3.9)
+</details>
 
-*Note: If you operating system is Windows, after install jax, it is required to install jaxlib as well. However, the installation of jaxlib on Windows is not pypi-supported. You may need to visit [this repository](https://github.com/cloudhan/jax-windows-builder) to find the version corresponding to your python version, and then install it using wheel.
+### Install Julia dependencies
+The circuit generation is done using the Julia package [EquivalentCircuits.jl](https://github.com/MaximeVH/EquivalentCircuits.jl). AutoEIS provides a helper function to automatically install the required Julia dependencies. Open a terminal (or command prompt on Windows) and run the following command:
 
--   **Julia programming language (>=1.7.0)**
-- - equivalentcircuit (>=0.1.3)
-- - CSV
-- - DataFrame
-- - Pandas
-- - PyCall
-- - DelimitedFiles
-- - StringEncodings
+```shell
+python -m autoeis install
+```
+
+**Note:** AutoEIS doesn't pollute your global Julia environment. Instead, it creates a new shared environment called `autoeis-VERSION_NUMBER` (`VERSION_NUMBER` is the AutoEIS version) and installs the required packages there. This way, you can safely use AutoEIS without worrying about breaking your existing Julia environment. Shared environments are stored in the `~/.julia/environments` directory on Unix-based systems and `%USERPROFILE%\.julia\environments` on Windows.
+
+### Verify the installation
+If all steps were completed successfully, you should now be able to use AutoEIS. To confirm that AutoEIS is installed correctly, running the following command in a terminal (or command prompt on Windows) should print the version number:
+
+```shell
+python -c "import autoeis; print(autoeis.__version__)"
+```
 
 ## Workflow
-------------
-The schematic workflow of AutoEis is shown below:
-![Workflow](https://github.com/AUTODIAL/Auto_Eis/blob/main/AutoEis_workflow.png)
-It contains: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference and model evaluation process. Through this workflow, AutoEis can prioritize the statistical optimal ECM and also retains suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be founded in the ![paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta)
+The schematic workflow of AutoEIS is shown below:
+
+![AutoEIS workflow](https://raw.githubusercontent.com/AUTODIAL/AutoEIS/develop/assets/workflow.png)
+
+It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesian inference, and the model evaluation process. Through this workflow, AutoEis can prioritize the statistically optimal ECM and also retain suboptimal models with lower priority for subsequent expert inspection. A detailed workflow can be found in the [paper](https://iopscience.iop.org/article/10.1149/1945-7111/aceab2/meta).
 
 ## Usage
--------------
-To enable the interaction between python and julia, please set the julia executable pathway at first. The common pathway of the Julia executable path depends on the operating system you are using. Here are the common default locations for each supported OS:
+To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function:
 
-- Windows: *C:\Users\<username>\AppData\Local\Julia-<version>\bin*
-- macOS: */Applications/Julia-<version>.app/Contents/Resources/julia/bin*
-- Linux: */usr/local/julia-<version>/bin*
+```python
+import numpy as np
+import autoeis as ae
 
-Please note that <version> refers to the specific version of Julia you have installed, and <username> is the name of the current user on Windows. To confirm the location of your Julia executable path, you can open a command prompt or terminal and enter the command which julia (for Unix-based systems) or where julia (for Windows). This will display the full path of the Julia executable file.
+# Load test dataset shipped with AutoEIS
+Z, freq = ae.io.load_test_dataset()
 
-```bash
-# import AutoEIS and its dependencies
-import AutoEis as ae
-
-# define the path of julia program
-j = ae.set_julia (r"D:\Julia-1.7.2\bin\julia.exe")
+# Perform automated EIS analysis
+circuits = ae.perform_full_analysis(Z, freq, iters=100, parallel=True)
+print(circuits)
 ```
-Then by calling the function `initialize_julia()`, AutoEis will automatically install julia's dependencies. *(This step is only required at your first time using AutoEis)*
-```bash
-# initialize the julia environment and download the dependencies
-ae.initialize_julia()
-```
-Now you are good to load your data and perform all analysis with one function
-```bash
-# set the parameter of plots
-ae.set_parameter()
 
-# Load the data
-data_path = "Test_data.txt"
-df = ae.load_data(data_path)
-frequencies = ...
-reals = ...
-imags = ...
-measurements = reals + 1j*imags
-
-# Perform automated ECM generation and evaluation
-ae.EIS_auto(impedance=measurements,freq=frequencies,data_path=data_path,iter_number=100,plot_ECM=False)
-```
-- `impedance` : the measured electrochemical impedance
-- `freq`: the measured frequencies
-- `data_path`: the pathway of loaded data (this path will be used for the results storage)
-- `iter_number`: the numbers of ECM generation to be performed (default = 100)
-- `plot_ECM`: to plot ECM or not (*Note: To enable this parameter, a [LaTex compiler](https://www.latex-project.org/get/) is required.*) 
+- `Z`: Electrochemical impedance measurements (complex array)
+- `freq`: Frequencies corresponding to the impedance measurements
+- `iters`: Numbers of equivalent circuit generation to be performed
+- `parallel`: Whether to use parallel processing to speed up the analysis
   
-An example that demonstrate how to use AutoEis is attached [here](https://github.com/AUTODIAL/Auto_Eis/blob/main/Example_AutoEIS.ipynb). 
+An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb).
 
-*The graphysical user interface for a more friendly interaction is under development. Please be patient :)
-
-*Also the codes is still a bit rough for the current moment, but it is under constant improvement. Any feedback/suggestions would be greatly appreciated!
+# Work in progress/known issues
+- [x] Refactor the code as it is still in the developmental stage and not yet production-ready.
+- [x] Speed up the code; Currently, it takes ~ 4 hours to generate 100 equivalent circuits (your mileage may vary).
+- [x] Add proper unit/integration tests.
+- [x] Add proper documentation (API, more examples, etc.).
+- [ ] Add a graphical user interface for a more user-friendly interaction.
 
 # Acknowledgement
-he authors extend their heartfelt gratitude to the following individuals for their invaluable guidance and support throughout the development of this work:
+The authors extend their heartfelt gratitude to the following individuals for their invaluable guidance and support throughout the development of this work: Prof. Jason Hattrick-Simpers, Dr. Robert Black, Dr. Debashish Sur, Dr. Parisa Karimi, Dr. Brian DeCost, Dr. Kangming Li, and Prof. John R. Scully.
 
-- Prof. Jason Hattrick-Simpers
-- Dr. Robert Black
-- Dr. Debashish Sur
-- Dr. Parisa Karimi
-- Dr. Brian DeCost
-- Dr. Kangming Li
-- Prof. John R. Scully
+The authors also wish to express their sincere appreciation to the following experts for engaging in technical discussions and providing valuable feedback: Dr. Shijing Sun, Prof. Keryn Lian, Dr. Alvin Virya, Dr. Austin McDannald, Dr. Fuzhan Rahmanian, and Prof. Helge Stein.
 
-The authors also wish to express their sincere appreciation to the following experts for engaging in technical discussions and providing valuable feedback:
-
-- Dr. Shijing Sun
-- Prof. Keryn Lian
-- Dr. Alvin Virya
-- Dr. Austin McDannald
-
-Special thanks go to Prof. John R. Scully and Dr. Debashish Sur for graciously allowing us to utilize their corrosion data as an illustrative example to showcase the functionality of AutoEIS.
-
-Their contributions have been immensely helpful in shaping this research, and their unwavering support is deeply appreciated.
+Special thanks go to Prof. John R. Scully and Dr. Debashish Sur for graciously allowing us to utilize their corrosion data as an illustrative example to showcase the functionality of AutoEIS. Their contributions have been immensely helpful in shaping this research, and their unwavering support is deeply appreciated.
