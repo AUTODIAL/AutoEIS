@@ -143,6 +143,7 @@ def plot_impedance_combo(Z, freq, saveto=None, size=10, ax=None):
     ax2.yaxis.label.set_color("red")
     # Don't show grid lines for the second y-axis (ax1 already has them)
     ax2.grid(False)
+    fig.tight_layout()
 
     if saveto is not None:
         fig.savefig(saveto, dpi=300)
