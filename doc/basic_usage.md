@@ -12,20 +12,16 @@ import autoeis as ae
 
 ```python
 path_data = "assets/test_data.txt"
-df = ae.io.load_eis_data(path_data)
-```
-
-### Fetch frequency and impedance
-
-```python
-freq = df["freq/Hz"].to_numpy()
-Re_Z = df["Re(Z)/Ohm"]).to_numpy()
-Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
-Z = Re_Z + Im_Z * 1j
+freq, Zreal, Zimag = np.loadtxt(path_data, skiprows=1, unpack=True, usecols=(0, 1, 2))
+# Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
+Z = Zreal - 1j*Zimag
 ```
 
 ### Automated EIS analysis
 
 ```python
-results = ae.perform_full_analysis(Z, freq, iters=100, saveto="results", draw_ecm=True)
+circuits = ae.perform_full_analysis(Z, freq, iters=100, parallel=True)
+print(circuits)
 ```
+
+An example notebook that demonstrates how to use AutoEIS in more details can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb).

@@ -12,6 +12,9 @@ mpire
 numpy
 numpyro
 pandas
+pyparsing
 pytest
 rich
+scikit-learn
+seaborn
 tqdm

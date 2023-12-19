@@ -77,32 +77,27 @@ import autoeis as ae
 
 # Load impedance measurements from a file
 path_data = "assets/test_data.txt"
-df = ae.io.load_eis_data(path_data)
-
-# Fetch frequency and impedance
-freq = df["freq/Hz"].to_numpy()
-Re_Z = df["Re(Z)/Ohm"]).to_numpy()
-Im_Z = -df["-Im(Z)/Ohm"].to_numpy()
-Z = Re_Z + Im_Z * 1j
+freq, Zreal, Zimag = np.loadtxt(path_data, skiprows=1, unpack=True, usecols=(0, 1, 2))
+# Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
+Z = Zreal - 1j*Zimag
 
 # Perform automated EIS analysis
-results = ae.perform_full_analysis(Z, freq, iters=100, saveto="results", draw_ecm=True)
-print(results)
+circuits = ae.perform_full_analysis(Z, freq, iters=100, parallel=True)
+print(circuits)
 ```
 
-- `impedance`: Electrochemical impedance measurements
+- `Z`: Electrochemical impedance measurements (complex array)
 - `freq`: Frequencies corresponding to the impedance measurements
-- `saveto`: Name of the folder to save the results
 - `iters`: Numbers of equivalent circuit generation to be performed
-- `draw_ecm`: Flag to plot equivalent circuits. (requires a [LaTeX compiler](https://www.latex-project.org/get/)) 
+- `parallel`: Whether to use parallel processing to speed up the analysis
   
-An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/demo_brief.ipynb).
+An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb).
 
 # Work in progress/known issues
-- [ ] Refactor the code as it is still in the developmental stage and not yet production-ready.
-- [ ] Speed up the code; Currently, it takes ~ 4 hours to generate 100 equivalent circuits (your mileage may vary).
-- [ ] Add proper unit/integration tests.
-- [ ] Add proper documentation (API, more examples, etc.).
+- [x] Refactor the code as it is still in the developmental stage and not yet production-ready.
+- [x] Speed up the code; Currently, it takes ~ 4 hours to generate 100 equivalent circuits (your mileage may vary).
+- [x] Add proper unit/integration tests.
+- [x] Add proper documentation (API, more examples, etc.).
 - [ ] Add a graphical user interface for a more user-friendly interaction.
 
 # Acknowledgement
