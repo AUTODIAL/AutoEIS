@@ -463,42 +463,6 @@ def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     return circuits
 
 
-def precise_rank_the_structure(circuit_array: np.array) -> np.array:
-    """Rank each component in given circuits according to its 'complexity'
-    defined by how many parallel structures it's nested in.
-
-    Parameters
-    ----------
-    circuit_array: np.array
-        the nparray that stores the circuit configurations
-
-    Returns
-    -------
-    ranks_array: np.array
-        the nparray that stores the level information of given circuits
-    """
-    ranks_array = np.zeros([1, len(circuit_array)])
-    ranker = 0
-    for i in range(len(circuit_array)):
-        if circuit_array[i] == 5:
-            ranker += 1
-            ranker = int(ranker)
-            # -1: [
-            ranks_array[0, i] = ranker
-        elif circuit_array[i] == 8:
-            ranker += 0.1
-            # -3: ,
-            ranks_array[0, i] = ranker
-        elif circuit_array[i] == 6:
-            ranker -= 1
-            ranker = int(ranker)
-            # -2 : ]
-            ranks_array[0, i] = ranker
-        else:
-            ranks_array[0, i] = ranker
-    return ranks_array[0]
-
-
 def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     """Merges identical circuits (removes rows with equivalent circuits)."""
     circuits = circuits.copy()
