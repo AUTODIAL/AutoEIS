@@ -240,23 +240,22 @@ def format_parameters(params, labels):
 
 
 def parse_circuit_dataframe(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Replaces the Parameters column in EquivalentCircuits.jl from a
+    """Replaces the Parameters column in EquivalentCircuits.jl output from a
     stringified list to a proper dict[str, float]: "R1 = 1" -> {"R1": 1}.
     """
-    circuit_str = []
-    params_dict = []
+    circuits = circuits.copy()
 
     for row in circuits.itertuples():
-        circuit_str.append(row.circuitstring)
         pstr = row.Parameters
         # Remove parentheses and spaces, then split by comma -> list[var=val, ...]
         pstr = pstr.strip("()").replace(" ", "")
         pstr = pstr.split(",")
         # Extract variable names and values into a dictionary
         pdict = {pair.split("=")[0]: float(pair.split("=")[1]) for pair in pstr}
-        params_dict.append(pdict)
+        # Replace the stringified list with a proper dict
+        circuits.at[row.Index, "Parameters"] = pdict
     
-    return pd.DataFrame({"circuitstring": circuit_str, "Parameters": params_dict})
+    return circuits
 
 
 @timeout(20)
