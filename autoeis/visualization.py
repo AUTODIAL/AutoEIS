@@ -42,17 +42,27 @@ __all__ = [
 ]
 
 
+def _is_ipython_notebook():  # pragma: no cover
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True     # Jupyter notebook or qtconsole
+        if shell == 'TerminalInteractiveShell':
+            return False    # Terminal running IPython
+        return False        # Other type (?)
+    except NameError:
+        return False        # Probably standard Python interpreter
+
+
 # Override print() with rich's print()
 def rich_print(*args, **kwargs):
     """Overrides the built-in print() function with rich's print() function."""
-    try:
-        import IPython
-
+    if _is_ipython_notebook():
         # HACK: prevent rich from creating a new <div> for every print()
         # NOTE: works for notebooks, but breaks for interactive sessions
         console = Console(force_jupyter=False)
         console.print(*args, **kwargs)
-    except ImportError:
+    else:
         rich.print(*args, **kwargs)
 
 
