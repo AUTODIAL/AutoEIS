@@ -179,6 +179,11 @@ def test_find_series_elements():
     series_gt = ["L2", "P3"]
     series = utils.find_series_elements(circuit)
     assert series == series_gt
+    # Valid circuit with N > 1 series elements in a row
+    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3-P4"
+    series_gt = ["L2", "P3", "P4"]
+    series = utils.find_series_elements(circuit)
+    assert series == series_gt
     # Empty circuit
     circuit = ""
     series_gt = []
