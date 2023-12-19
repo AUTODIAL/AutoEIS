@@ -1089,12 +1089,16 @@ def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     circuits.reset_index(drop=True, inplace=True)
     return circuits
  
+ 
 def perform_bayesian_inference(
     circuit: str,
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
+    num_warmup=500,
+    num_samples=500,
     seed: int = None,
+    progress_bar: bool = True,
 ) -> numpyro.infer.mcmc.MCMC:
     """Performs Bayesian inference on the circuit based on EIS measurements.
 
@@ -1127,18 +1131,19 @@ def perform_bayesian_inference(
     if p0 is None:
         p0 = utils.fit_circuit_parameters(circuit, Z, freq)
     assert isinstance(p0, dict), "p0 must be a dictionary"
-    p0_vals = np.array(list(p0.values()))
+    p0_values = np.array(list(p0.values()))
 
-    Zfunc = circuit_to_function(circuit, use_jax=True)
-    Zsim = Zfunc(p0_vals, freq)
+    # Zfunc = circuit_to_function(circuit, use_jax=True)
+    circuit_fn = utils.generate_circuit_fn(circuit)
+    Z_pred = circuit_fn(p0_values, freq)
 
     # Compute R2, MSE, RMSE, and MAPE using the initial guess
-    r2_init = utils.r2_score(Z, Zsim)
-    r2_real_init = utils.r2_score(Z.real, Zsim.real)
-    r2_imag_init = utils.r2_score(Z.imag, Zsim.imag)
-    mse_init = utils.mse_score(Z, Zsim)
-    rmse_init = utils.rmse_score(Z, Zsim)
-    mape_init = utils.mape_score(Z, Zsim)
+    r2_init = utils.r2_score(Z, Z_pred)
+    r2_real_init = utils.r2_score(Z.real, Z_pred.real)
+    r2_imag_init = utils.r2_score(Z.imag, Z_pred.imag)
+    mse_init = utils.mse_score(Z, Z_pred)
+    rmse_init = utils.rmse_score(Z, Z_pred)
+    mape_init = utils.mape_score(Z, Z_pred)
 
     log.info(f"R² = {r2_init:.3f} (initial)")
     log.info(f"R² (Re) = {r2_real_init:.3f} (initial)")
@@ -1160,15 +1165,21 @@ def perform_bayesian_inference(
 
     # Compute prior predictive distribution using the initial guess
     prior_predictive = Predictive(model, num_samples=200)
-    priors = utils.initialize_priors(circuit, p0)
+    priors = utils.initialize_priors(p0, variables=p0.keys())
     rng_key, rng_subkey = random.split(rng_key)
-    kwargs = {"F": freq, "Z_true": Z, "priors": priors, "circuit_func": Zfunc}
+    kwargs = {"F": freq, "Z_true": Z, "priors": priors, "circuit_func": circuit_fn}
     prior_prediction = prior_predictive(rng_subkey, **kwargs)
     
     nuts_kernel = NUTS(model)
-    mcmc = MCMC(nuts_kernel, num_samples=500, num_warmup=500, num_chains=1)
+    kwargs_mcmc = {
+        "num_samples": num_samples,
+        "num_warmup": num_warmup,
+        "num_chains": 1,
+        "progress_bar": progress_bar
+    }
+    mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
     rng_key, rng_subkey = jax.random.split(rng_key)
-    mcmc.run(rng_subkey, F=freq, Z_true=Z, priors=priors, circuit_func=Zfunc)
+    mcmc.run(rng_subkey, F=freq, Z_true=Z, priors=priors, circuit_func=circuit_fn)
 
     # Calculate AIC
     # FIXME: Remove next line once confirmed that `iloc` is correctly used.
