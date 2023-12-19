@@ -20,6 +20,83 @@ from autoeis import utils
 log = utils.get_logger(__name__)
 
 
+def circuit_to_function(circuit: str, use_jax=True) -> callable:
+    """Converts a circuit string to a callable function."""
+    circuit_df = pd.DataFrame([circuit], columns=["circuitstring"])
+    eqn = generate_mathematical_expression(circuit_df)["Mathematical expressions"][0]
+    if use_jax:
+        eqn = eqn.replace("np", "jnp")
+    def _fn(X, F):
+        assert utils.count_params(circuit) == len(X), "Invalid number of parameters."
+        return eval(eqn)
+    return jax.jit(_fn) if use_jax else _fn
+
+
+def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
+    """
+    Generates the mathematical expression of each circuit.
+
+    Parameters
+    ----------
+    df_circuits: pd.DataFrame
+        Dataframe containing the generated ECMs (6 columns)
+
+    Returns
+    -------
+    df_circuits: pd.DataFrame
+        Dataframe containing the generated ECMs with mathematical expressions (7 columns)
+
+    """
+    # Define two kinds of pattern to find all elements in the circuit
+    test_pattern = re.compile(r"([CLRP])([0-9]+)+")
+    test_pattern_2 = re.compile(r"[CLRP][0-9]+")
+
+    # Create a list to store the mathematical expressions
+    new_circuits = []
+
+    for i in range(len(df_circuits["circuitstring"])):
+        circuit = df_circuits["circuitstring"][i]
+        for j, k in zip(["-", "[", ",", "]"], ["+", "((", ")**(-1)+(", ")**(-1))**(-1)"]):
+            circuit = circuit.replace(j, k)
+        test_results = test_pattern.findall(circuit)
+        test_results_2 = test_pattern_2.findall(circuit)
+
+        test_results.reverse()
+        test_results_2.reverse()
+
+        for m in range(len(test_results)):
+            if test_results[m][0] == "R":
+                circuit = circuit.replace(test_results_2[m], "X")
+            elif test_results[m][0] == "C":
+                circuit = circuit.replace(test_results_2[m], "(1/(2*1j*np.pi*F*X))")
+            elif test_results[m][0] == "L":
+                circuit = circuit.replace(test_results_2[m], "(2*1j*np.pi*F*X)")
+            elif test_results[m][0] == "P":
+                circuit = circuit.replace(
+                    test_results_2[m],
+                    "(1/(X*(2*1j*np.pi*F)**(Y)))"
+                )
+
+        new_temp_circuit = []
+        counter = 0
+
+        for n in range(len(circuit)):
+            if circuit[n] == "X":
+                new_temp_circuit.append(f"X[{str(counter)}]")
+                counter += 1
+            elif circuit[n] == "Y":
+                new_temp_circuit.append(f"X[{str(counter)}]")
+                counter += 1
+            else:
+                new_temp_circuit.append(circuit[n])
+        new_circuit = "".join(new_temp_circuit)
+        new_circuits.append(new_circuit)
+
+    df_circuits["Mathematical expressions"] = new_circuits
+
+    return df_circuits
+
+
 def ohmic_resistance_filter_legacy(
     circuits: pd.DataFrame,
     ohmic_resistance: float,
