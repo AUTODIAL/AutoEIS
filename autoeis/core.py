@@ -1179,7 +1179,8 @@ def perform_bayesian_inference(
     return mcmc
 
 
-def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFrame:
+# TODO: Don't filter for ohmic resistance value, just ensure circuit contains it
+def apply_heuristic_rules(circuits: pd.DataFrame) -> pd.DataFrame:
     """Apply heuristic rules to filter the generated ECMs.
 
     Parameters
@@ -1194,9 +1195,6 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
     """
     log.info("Filtering the circuits using heuristic rules.")
 
-    # Make a copy to avoid modifying the original dataframe
-    circuits = circuits.copy()
-
     if len(circuits) == 0:
         log.warning("Circuits' dataframe is empty!")
         return circuits
@@ -1204,11 +1202,8 @@ def apply_heuristic_rules(circuits: pd.DataFrame, ohmic_resistance) -> pd.DataFr
     circuits = split_components(circuits)
     circuits = capacitance_filter(circuits)
     circuits = series_filter(circuits)
-    circuits = ohmic_resistance_filter(circuits, ohmic_resistance)
-    circuits = generate_mathematical_expression(circuits)
-    circuits = combine_expression(circuits)
-    circuits = calculate_length(circuits)
-    circuits = split_variables(circuits)
+    circuits = ohmic_resistance_filter(circuits)
+    circuits = merge_identical_circuits(circuits)
 
     return circuits
 
