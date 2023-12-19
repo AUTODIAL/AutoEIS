@@ -36,9 +36,10 @@ __all__ = [
     "plot_impedance_combo",
     "plot_linKK_residuals",
     "plot_nyquist",
+    "print_summary_statistics",
+    "rich_print",
     "set_plot_style",
     "show_nticks",
-    "print",
 ]
 
 
