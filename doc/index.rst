@@ -28,4 +28,5 @@ Contents
 
    installation.md
    basic_usage.md
+   circuit.md
    modules.rst
