@@ -15,7 +15,6 @@ Core functions including finding the best fit and Bayesian analysis.
 import os
 import time
 import warnings
-from pathlib import Path
 from typing import Union
 
 import jax
@@ -32,8 +31,8 @@ from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
-import autoeis.utils as utils
 import autoeis.visualization as viz
+from autoeis import metrics, utils
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
@@ -173,7 +172,7 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK(
         freq, Z, c=0.5, max_M=100, fit_type="complex", add_cap=True
     )
-    rmse = utils.rmse_score(Z, Z_linKK)
+    rmse = metrics.rmse_score(Z, Z_linKK)
 
     # Plot residuals of Lin-KK validation
     if plot:
@@ -530,12 +529,12 @@ def perform_bayesian_inference(
     Z_pred = circuit_fn(p0_values, freq)
 
     # Compute R2, MSE, RMSE, and MAPE using the initial guess
-    r2_init = utils.r2_score(Z, Z_pred)
-    r2_real_init = utils.r2_score(Z.real, Z_pred.real)
-    r2_imag_init = utils.r2_score(Z.imag, Z_pred.imag)
-    mse_init = utils.mse_score(Z, Z_pred)
-    rmse_init = utils.rmse_score(Z, Z_pred)
-    mape_init = utils.mape_score(Z, Z_pred)
+    r2_init = metrics.r2_score(Z, Z_pred)
+    r2_real_init = metrics.r2_score(Z.real, Z_pred.real)
+    r2_imag_init = metrics.r2_score(Z.imag, Z_pred.imag)
+    mse_init = metrics.mse_score(Z, Z_pred)
+    rmse_init = metrics.rmse_score(Z, Z_pred)
+    mape_init = metrics.mape_score(Z, Z_pred)
 
     log.info(f"R² = {r2_init:.3f} (initial)")
     log.info(f"R² (Re) = {r2_real_init:.3f} (initial)")

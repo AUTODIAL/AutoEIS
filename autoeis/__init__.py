@@ -1,6 +1,6 @@
 import builtins
 
-from . import core, io, utils, visualization  # noqa: F401
+from . import core, io, metrics, utils, visualization  # noqa: F401
 from .core import *
 from .version import __equivalent_circuits_jl_version__, __version__  # noqa: F401
 
