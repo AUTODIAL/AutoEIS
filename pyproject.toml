@@ -49,7 +49,18 @@ dependencies = [
     "seaborn",
     "tqdm",
 ]
-
+[project.optional-dependencies]
+test = [
+  "pytest",
+]
+doc = [
+    "furo",
+    "linkify-it-py",
+    "myst-parser",
+    "sphinx",
+    "sphinx-copybutton",
+    "sphinx-autodoc2",
+]
 [project.urls]
 "Homepage" = "https://github.com/AUTODIAL/AutoEIS"
 "Bug Tracker" = "https://github.com/AUTODIAL/AutoEIS/issues"
