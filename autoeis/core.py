@@ -45,10 +45,11 @@ log = utils.get_logger(__name__)
 
 
 __all__ = [
-    "generate_equivalent_circuits",
     "perform_full_analysis",
-    "perform_bayesian_inference",
     "preprocess_impedance_data",
+    "generate_equivalent_circuits",
+    "apply_heuristic_rules",
+    "perform_bayesian_inference",
 ]
 
 
@@ -575,8 +576,8 @@ def perform_bayesian_inference(
 
     # Calculate AIC
     # FIXME: Remove next line once confirmed that `iloc` is correctly used.
-    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * utils.count_params(circuit)
-    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * utils.count_params(circuit)
+    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * utils.count_parameters(circuit)
+    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * utils.count_parameters(circuit)
     # log.info(f"AIC = {aic:.1f}")
 
     return mcmc

@@ -6,9 +6,31 @@ Collection of utility functions used throughout the package.
 .. autosummary::
    :toctree: generated/
 
-    get_logger
-    setup_rich_tracebacks
-    suppress_output
+    parse_component
+    parse_parameter
+    count_parameters
+    circuit_complexity
+    impedancepy_circuit
+    validate_parameter_label
+    validate_circuit_string
+    get_component_labels
+    get_component_types
+    get_parameter_types
+    get_parameter_labels
+    group_parameters_by_type
+    group_parameters_by_component
+    find_series_elements
+    find_ohmic_resistors
+    generate_circuit_fn
+    generate_circuit_fn_impy
+    fit_circuit_parameters
+    is_equivalent
+    initialize_priors
+    initialize_priors_from_posteriors
+    mape_score
+    mse_score
+    rmse_score
+    r2_score
 
 """
 import logging
@@ -96,6 +118,7 @@ class _SuppressOutput:
 
 
 def suppress_output(func):
+    """Suppresses the output of a function."""
     @wraps(func)
     def wrapped(*args, **kwargs):
         with _SuppressOutput():
@@ -107,6 +130,7 @@ class TimeoutException(Exception):
     pass
 
 def timeout(seconds):
+    """Raises a TimeoutException if decorated function doesn't return in time."""
     def decorator(func):
         def _handle_timeout(signum, frame):
             raise TimeoutException("Didn't converge in time!")
@@ -218,7 +242,7 @@ def group_parameters_by_component(circuit: str) -> dict[str, list[str]]:
     return params_by_component
 
 
-def count_params(circuit: str) -> int:
+def count_parameters(circuit: str) -> int:
     """Returns the number of parameters that fully describe a circuit string."""
     return len(get_parameter_labels(circuit))
 
@@ -229,14 +253,6 @@ def impedancepy_circuit(circuit: str) -> str:
     circuit = circuit.replace("[", "p(")
     circuit = circuit.replace("]", ")")
     return circuit
-
-
-def format_parameters(params, labels):
-    """Formats a list of parameters and labels to be used in circuits dataframe."""
-    # Example: R1 = 1, C1 = 2 -> "(R1 = 1.0, C1 = 2.0)"
-    pairs = [f"{label} = {value:.10f}" for label, value in zip(labels, params)]
-    pairs = "(" + ", ".join(pairs) + ")"
-    return pairs
 
 
 def parse_circuit_dataframe(circuits: pd.DataFrame) -> pd.DataFrame:
@@ -265,7 +281,7 @@ def fit_circuit_parameters(
     p0: Union[np.ndarray[float], dict[str, float]] = None,
 ) -> dict[str, float]:
     """Fits a circuit to impedance data and returns the parameters."""
-    num_params = count_params(circuit)
+    num_params = count_parameters(circuit)
     # Deal with initial guess
     p0 = np.random.rand(num_params) if p0 is None else p0
     p0 = list(p0.values()) if isinstance(p0, dict) else p0
@@ -283,20 +299,6 @@ def fit_circuit_parameters(
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
 if os.name != "nt":
     fit_circuit_parameters = timeout(20)(fit_circuit_parameters)
-
-
-def circuit_to_function_impy(circuit: str):
-    """Converts a circuit string to a function using impedance.py."""
-    num_params = count_params(circuit)
-    # Convert circuit string to impedance.py format
-    circuit = impedancepy_circuit(circuit)
-    # Convert circuit string to function
-    p0 = np.full(num_params, np.nan)
-    circuit = CustomCircuit(circuit, initial_guess=p0)
-    def func(params, freq):
-        circuit.parameters_ = params
-        return circuit.predict(freq)
-    return func
 
 
 def circuit_to_nested_expr(circuit: str) -> list:
@@ -369,13 +371,6 @@ def generate_mathematical_expr(circuit:str) -> str:
     return circuit
 
 
-def count_component_parameters(component: str) -> int:
-    """Count the number of parameters in a component label."""
-    count = {"R": 1, "C": 1, "L": 1, "P": 2}
-    eltype = re.match(r"[A-Z]+", component).group()
-    return count[eltype]
-
-
 def embed_impedance_expr(circuit_expr):
     """Updates the circuit expression with the impedance of a component."""
     def replacement(var):
@@ -411,6 +406,20 @@ def generate_circuit_fn(
     if return_str:
         return circuit_expr
     return lambda X, F: eval(circuit_expr)
+
+
+def generate_circuit_fn_impy(circuit: str):
+    """Converts a circuit string to a function using impedance.py."""
+    num_params = count_parameters(circuit)
+    # Convert circuit string to impedance.py format
+    circuit = impedancepy_circuit(circuit)
+    # Convert circuit string to function
+    p0 = np.full(num_params, np.nan)
+    circuit = CustomCircuit(circuit, initial_guess=p0)
+    def func(params, freq):
+        circuit.parameters_ = params
+        return circuit.predict(freq)
+    return func
 
 
 def is_equivalent(circuit1: str, circuit2: str) -> bool:

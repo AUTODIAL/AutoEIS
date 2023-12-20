@@ -27,7 +27,7 @@ def circuit_to_function(circuit: str, use_jax=True) -> callable:
     if use_jax:
         eqn = eqn.replace("np", "jnp")
     def _fn(X, F):
-        assert utils.count_params(circuit) == len(X), "Invalid number of parameters."
+        assert utils.count_parameters(circuit) == len(X), "Invalid number of parameters."
         return eval(eqn)
     return jax.jit(_fn) if use_jax else _fn
 

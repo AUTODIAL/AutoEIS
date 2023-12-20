@@ -126,18 +126,18 @@ def test_get_parameter_labels():
     assert variables == variables_gt
 
 
-def test_count_params():
+def test_count_parameters():
     circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
     num_params_gt = 12
-    num_params = utils.count_params(circuit)
+    num_params = utils.count_parameters(circuit)
     assert num_params == num_params_gt
     circuit = ""
     num_params_gt = 0
-    num_params = utils.count_params(circuit)
+    num_params = utils.count_parameters(circuit)
     assert num_params == num_params_gt
     circuit = "[P1,P2]-P3-R4"
     num_params_gt = 7
-    num_params = utils.count_params(circuit)
+    num_params = utils.count_parameters(circuit)
     assert num_params == num_params_gt    
 
 
