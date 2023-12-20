@@ -69,7 +69,7 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-def setup_rich_tracebacks() -> None:
+def setup_rich_tracebacks():
     """Set up rich traceback for nicer exception printing."""
     rich.traceback.install()
 
@@ -78,7 +78,7 @@ def setup_rich_tracebacks() -> None:
 
 # >>> Filesystem utils
 
-def flatten(xs):
+def flatten(xs: list) -> list:
     """Returns a list of all elements in a nested iterable."""
     def _flatten(xs):
         """Returns a generator that flattens a nested iterable."""
@@ -90,7 +90,7 @@ def flatten(xs):
     return list(_flatten(xs))
 
 
-def find_identical_rows(a) -> list[list[int]]:
+def find_identical_rows(a: np.ndarray) -> list[list[int]]:
     """Finds identical rows in a 2D array."""
     a = np.asarray(a)
     idx = []
@@ -193,13 +193,13 @@ def get_component_labels(circuit: str, types: list[str] = None) -> list[str]:
     return re.findall(pattern, circuit)
 
 
-def get_component_types(circuit: str, unique=False) -> list[str]:
+def get_component_types(circuit: str, unique: bool = False) -> list[str]:
     """Returns a list of component types in a circuit string."""
     types = re.findall(r"[A-Za-z]+", circuit)
     return list(set(types)) if unique else types
 
 
-def get_parameter_types(circuit: str, unique=False) -> list[str]:
+def get_parameter_types(circuit: str, unique: bool = False) -> list[str]:
     """Returns a list of parameter types in a circuit string."""        
     ptypes = [parse_parameter(p, by="type") for p in get_parameter_labels(circuit)]
     return list(set(ptypes)) if unique else ptypes
@@ -312,7 +312,7 @@ def circuit_to_nested_expr(circuit: str) -> list:
     return parsed[0]
 
 
-def cleanup_nested_expr(lst, chars="-,"):
+def cleanup_nested_expr(lst: list, chars: str = "-,"):
     """Removes leading/trailing characters ('-' ',') from a nested list[str]."""
     result = []
     for el in lst:
@@ -371,7 +371,7 @@ def generate_mathematical_expr(circuit:str) -> str:
     return circuit
 
 
-def embed_impedance_expr(circuit_expr):
+def embed_impedance_expr(circuit_expr: str) -> str:
     """Updates the circuit expression with the impedance of a component."""
     def replacement(var):
         eltype = get_component_types(var)[0]
@@ -391,8 +391,8 @@ def embed_impedance_expr(circuit_expr):
 
 def generate_circuit_fn(
     circuit: str,
-    return_str=False,
-    label="X"
+    return_str: bool = False,
+    label: str = "X"
 ) -> Union[callable, str]:
     """Converts a circuit string to a function of (params, freq)"""
     # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
@@ -408,7 +408,7 @@ def generate_circuit_fn(
     return lambda X, F: eval(circuit_expr)
 
 
-def generate_circuit_fn_impy(circuit: str):
+def generate_circuit_fn_impy(circuit: str) -> callable:
     """Converts a circuit string to a function using impedance.py."""
     num_params = count_parameters(circuit)
     # Convert circuit string to impedance.py format
@@ -451,7 +451,10 @@ def is_equivalent(circuit1: str, circuit2: str) -> bool:
 
 # >>> Statistics utils
 
-def initialize_priors(p0: dict[str, float], variables: list[str]) -> dict[str, dist.Distribution]:
+def initialize_priors(
+    p0: dict[str, float],
+    variables: list[str]
+) -> dict[str, dist.Distribution]:
     """Initializes priors for a given circuit."""
     priors = {}
     for var in variables:
@@ -467,7 +470,10 @@ def initialize_priors(p0: dict[str, float], variables: list[str]) -> dict[str, d
     return priors
 
 
-def initialize_priors_from_posteriors(posterior, variables):
+def initialize_priors_from_posteriors(
+    posterior: dict[str, np.ndarray[float]],
+    variables: list[str]
+) -> dict[str, dist.Distribution]:
     """Creates new priors based on the posterior distributions."""
     priors = {}
     for var in variables:
@@ -517,22 +523,22 @@ def circuit_complexity(circuit: str) -> list[int]:
 
 # >>> Metrics utils
 
-def mape_score(y_true, y_pred):
+def mape_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Generalized MAPE score that can handle complex numbers."""
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
 
-def mse_score(y_true, y_pred):
+def mse_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Generalized MSE score that can handle complex numbers."""
     return np.mean(np.abs(y_true - y_pred) ** 2)
 
 
-def rmse_score(y_true, y_pred):
+def rmse_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Generalized RMSE score that can handle complex numbers."""
     return np.sqrt(mse_score(y_true, y_pred))
 
 
-def r2_score(y_true, y_pred):
+def r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Generalized R2 score that can handle complex numbers."""
     ssr = np.sum(np.abs(y_true - y_pred) ** 2)
     sst = np.sum(np.abs(y_true - np.mean(y_true)) ** 2)

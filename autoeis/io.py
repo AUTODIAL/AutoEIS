@@ -11,6 +11,7 @@ Collection of functions for importing and exporting EIS data/results.
 
 """
 import os
+from pathlib import Path
 
 import numpy as np
 
@@ -20,12 +21,13 @@ import autoeis.utils as utils
 log = utils.get_logger(__name__)
 
 
-def get_assets_path():
+def get_assets_path() -> Path:
     """Returns the path to the assets folder."""
-    return ae.__path__[0] + "/assets"
+    PATH = Path(ae.__file__).parent / "assets"
+    return PATH
 
 
-def load_test_dataset():
+def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
     """Loads a test dataset from package assets folder."""
     PATH = get_assets_path()
     fpath = os.path.join(PATH, "test_data.txt")
