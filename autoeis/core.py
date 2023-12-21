@@ -267,8 +267,6 @@ def generate_equivalent_circuits(
         Complexity of the ECM search space (default is 12).
     tol : float, optional
         Convergence threshold for the ECM search (default is 1e-2).
-    saveto : str, optional
-        Path to the directory where the results will be saved (default is None).
     parallel : bool, optional
         If True, the ECM search will be performed in parallel (default is True).
     generations : int, optional
