@@ -3,15 +3,15 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="setup_rich_tracebacks" href="autoeis.utils.setup_rich_tracebacks.html" /><link rel="prev" title="utils" href="../autoeis.utils.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="get_component_labels" href="autoeis.parser.get_component_labels.html" /><link rel="prev" title="parse_component" href="autoeis.parser.parse_component.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>get_logger - AutoEIS 0.0.18 documentation</title>
+        <title>parse_parameter - AutoEIS 0.0.18 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c83bd9f6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=3fe4a486" />
     
     
 
@@ -162,10 +162,12 @@
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic_usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../modules.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -184,10 +186,30 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.show_nticks.html">show_nticks</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">get_logger</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.suppress_output.html">suppress_output</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.initialize_priors.html">initialize_priors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.parser.html">parser</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.validate_circuit.html">validate_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.validate_parameter.html">validate_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.parse_component.html">parse_component</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">parse_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.get_component_labels.html">get_component_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.get_component_types.html">get_component_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.get_parameter_types.html">get_parameter_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.get_parameter_labels.html">get_parameter_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.group_parameters_by_type.html">group_parameters_by_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.group_parameters_by_component.html">group_parameters_by_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.count_parameters.html">count_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.convert_to_impedance_format.html">convert_to_impedance_format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.parser.find_ohmic_resistors.html">find_ohmic_resistors</a></li>
 </ul>
 </li>
 </ul>
@@ -226,12 +248,12 @@
           </label>
         </div>
         <article role="main">
-          <section id="get-logger">
-<h1>get_logger<a class="headerlink" href="#get-logger" title="Link to this heading">#</a></h1>
+          <section id="parse-parameter">
+<h1>parse_parameter<a class="headerlink" href="#parse-parameter" title="Link to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="autoeis.utils.get_logger">
-<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="headerlink" href="#autoeis.utils.get_logger" title="Link to this definition">#</a></dt>
-<dd><p>Get a logger with the given name.</p>
+<dt class="sig sig-object py" id="autoeis.parser.parse_parameter">
+<span class="sig-prename descclassname"><span class="pre">autoeis.parser.</span></span><span class="sig-name descname"><span class="pre">parse_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#autoeis.parser.parse_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Returns the type of a parameter label.</p>
 </dd></dl>
 
 </section>
@@ -241,23 +263,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="autoeis.utils.setup_rich_tracebacks.html">
+          <a class="next-page" href="autoeis.parser.get_component_labels.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">setup_rich_tracebacks</div>
+                <div class="title">get_component_labels</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../autoeis.utils.html">
+          <a class="prev-page" href="autoeis.parser.parse_component.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">utils</div>
+                <div class="title">parse_component</div>
                 
               </div>
             </a>
@@ -291,8 +313,8 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">get_logger</a><ul>
-<li><a class="reference internal" href="#autoeis.utils.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
+<li><a class="reference internal" href="#">parse_parameter</a><ul>
+<li><a class="reference internal" href="#autoeis.parser.parse_parameter"><code class="docutils literal notranslate"><span class="pre">parse_parameter()</span></code></a></li>
 </ul>
 </li>
 </ul>

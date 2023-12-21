@@ -1,0 +1,6 @@
+are\_circuits\_equivalent
+=========================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: are_circuits_equivalent

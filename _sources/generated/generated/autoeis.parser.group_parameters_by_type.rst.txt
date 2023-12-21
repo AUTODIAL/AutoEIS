@@ -1,0 +1,6 @@
+group\_parameters\_by\_type
+===========================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: group_parameters_by_type

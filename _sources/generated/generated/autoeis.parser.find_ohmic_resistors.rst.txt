@@ -1,0 +1,6 @@
+find\_ohmic\_resistors
+======================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: find_ohmic_resistors

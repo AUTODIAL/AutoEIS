@@ -1,0 +1,6 @@
+get\_component\_types
+=====================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: get_component_types

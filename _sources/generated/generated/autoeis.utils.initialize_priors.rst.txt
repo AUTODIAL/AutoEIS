@@ -1,0 +1,6 @@
+initialize\_priors
+==================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: initialize_priors

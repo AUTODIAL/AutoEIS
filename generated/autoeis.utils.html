@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="get_logger" href="generated/autoeis.utils.get_logger.html" /><link rel="prev" title="show_nticks" href="generated/autoeis.visualization.show_nticks.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="circuit_complexity" href="generated/autoeis.utils.circuit_complexity.html" /><link rel="prev" title="show_nticks" href="generated/autoeis.visualization.show_nticks.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>utils - AutoEIS 0.0.18 documentation</title>
@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c83bd9f6" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3fe4a486" />
     
     
 
@@ -162,10 +162,12 @@
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../basic_usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../modules.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -185,9 +187,29 @@
 </ul>
 </li>
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.get_logger.html">get_logger</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.suppress_output.html">suppress_output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.initialize_priors.html">initialize_priors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.validate_circuit.html">validate_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.validate_parameter.html">validate_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.parse_component.html">parse_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.parse_parameter.html">parse_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.get_component_labels.html">get_component_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.get_component_types.html">get_component_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.get_parameter_types.html">get_parameter_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.get_parameter_labels.html">get_parameter_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.group_parameters_by_type.html">group_parameters_by_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.group_parameters_by_component.html">group_parameters_by_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.count_parameters.html">count_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.convert_to_impedance_format.html">convert_to_impedance_format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.parser.find_ohmic_resistors.html">find_ohmic_resistors</a></li>
 </ul>
 </li>
 </ul>
@@ -232,14 +254,26 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.get_logger.html#autoeis.utils.get_logger" title="autoeis.utils.get_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_logger</span></code></a>(name)</p></td>
-<td><p>Get a logger with the given name.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.circuit_complexity.html#autoeis.utils.circuit_complexity" title="autoeis.utils.circuit_complexity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">circuit_complexity</span></code></a>(circuit)</p></td>
+<td><p>Computes the component complexity of the circuit.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.setup_rich_tracebacks.html#autoeis.utils.setup_rich_tracebacks" title="autoeis.utils.setup_rich_tracebacks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_rich_tracebacks</span></code></a>()</p></td>
-<td><p>Set up rich traceback for nicer exception printing.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn.html#autoeis.utils.generate_circuit_fn" title="autoeis.utils.generate_circuit_fn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn</span></code></a>(circuit[, return_str, label])</p></td>
+<td><p>Converts a circuit string to a function of (params, freq)</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.suppress_output.html#autoeis.utils.suppress_output" title="autoeis.utils.suppress_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">suppress_output</span></code></a>(func)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn_impedance_backend.html#autoeis.utils.generate_circuit_fn_impedance_backend" title="autoeis.utils.generate_circuit_fn_impedance_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn_impedance_backend</span></code></a>(circuit)</p></td>
+<td><p>Converts a circuit string to a function using impedance.py.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.fit_circuit_parameters.html#autoeis.utils.fit_circuit_parameters" title="autoeis.utils.fit_circuit_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_circuit_parameters</span></code></a>(*args, **kwargs)</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html#autoeis.utils.are_circuits_equivalent" title="autoeis.utils.are_circuits_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">are_circuits_equivalent</span></code></a>(circuit1, circuit2)</p></td>
+<td><p>Checks if two circuit strings are equivalent.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.initialize_priors.html#autoeis.utils.initialize_priors" title="autoeis.utils.initialize_priors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_priors</span></code></a>(p0, variables)</p></td>
+<td><p>Initializes priors for a given circuit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.initialize_priors_from_posteriors.html#autoeis.utils.initialize_priors_from_posteriors" title="autoeis.utils.initialize_priors_from_posteriors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_priors_from_posteriors</span></code></a>(posterior, ...)</p></td>
+<td><p>Creates new priors based on the posterior distributions.</p></td>
 </tr>
 </tbody>
 </table>
@@ -251,12 +285,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="generated/autoeis.utils.get_logger.html">
+          <a class="next-page" href="generated/autoeis.utils.circuit_complexity.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">get_logger</div>
+                <div class="title">circuit_complexity</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

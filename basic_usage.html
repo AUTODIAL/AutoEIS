@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API Reference" href="modules.html" /><link rel="prev" title="Installation" href="installation.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Circuit notation" href="circuit.html" /><link rel="prev" title="Installation" href="installation.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Basic usage - AutoEIS 0.0.18 documentation</title>
@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=c83bd9f6" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=3fe4a486" />
     
     
 
@@ -136,7 +136,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -162,10 +162,12 @@
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="modules.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -185,9 +187,29 @@
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.get_logger.html">get_logger</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.suppress_output.html">suppress_output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.initialize_priors.html">initialize_priors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.validate_circuit.html">validate_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.validate_parameter.html">validate_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.parse_component.html">parse_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.parse_parameter.html">parse_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_component_labels.html">get_component_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_component_types.html">get_component_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_parameter_types.html">get_parameter_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_parameter_labels.html">get_parameter_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.group_parameters_by_type.html">group_parameters_by_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.group_parameters_by_component.html">group_parameters_by_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.count_parameters.html">count_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.convert_to_impedance_format.html">convert_to_impedance_format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.find_ohmic_resistors.html">find_ohmic_resistors</a></li>
 </ul>
 </li>
 </ul>
@@ -220,7 +242,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -228,28 +250,26 @@
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="basic-usage">
 <h1>Basic usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h1>
-<p>To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> function to perform the whole process automatically. The following is an example of how to use the <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> function.</p>
-<section id="import-autoeis">
-<h2>Import AutoEIS<a class="headerlink" href="#import-autoeis" title="Link to this heading">#</a></h2>
+<p>To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> function to perform the whole process automatically. The following is a minimal example of how to use the <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">autoeis</span> <span class="k">as</span> <span class="nn">ae</span>
-</pre></div>
-</div>
-</section>
-<section id="load-eis-measurements">
-<h2>Load EIS measurements<a class="headerlink" href="#load-eis-measurements" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load test dataset shipped with AutoEIS</span>
+
+<span class="c1"># Load and visualize the test dataset</span>
 <span class="n">Z</span><span class="p">,</span> <span class="n">freq</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_test_dataset</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-<section id="automated-eis-analysis">
-<h2>Automated EIS analysis<a class="headerlink" href="#automated-eis-analysis" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circuits</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">perform_full_analysis</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+
+<span class="c1"># Perform the full analysis</span>
+<span class="n">circuits</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">perform_full_analysis</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>An example notebook that demonstrates how to use AutoEIS in more details can be found <a class="reference external" href="https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb">here</a>.</p>
-</section>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>While the above example should work out of the box, it is recommended to use AutoEIS in a step by step fashion to have more control over the analysis process. Furthermore, you’ll learn more about the inner workings of AutoEIS this way. An example notebook that demonstrates how to use AutoEIS in more details can be found <a class="reference external" href="https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb">here</a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Apart from the functions used in the example notebook, there are more functionalities in AutoEIS that are not yet documented. Until we add more examples on how to use these features, you can find the full list of functions in the <a class="reference internal" href="modules.html"><span class="doc std std-doc">API reference</span></a> section.</p>
+</div>
 </section>
 
         </article>
@@ -257,12 +277,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="modules.html">
+          <a class="next-page" href="circuit.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">API Reference</div>
+                <div class="title">Circuit notation</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -295,29 +315,8 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Basic usage</a><ul>
-<li><a class="reference internal" href="#import-autoeis">Import AutoEIS</a></li>
-<li><a class="reference internal" href="#load-eis-measurements">Load EIS measurements</a></li>
-<li><a class="reference internal" href="#automated-eis-analysis">Automated EIS analysis</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

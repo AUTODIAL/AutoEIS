@@ -1,0 +1,6 @@
+validate\_parameter
+===================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: validate_parameter

@@ -1,0 +1,6 @@
+count\_parameters
+=================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: count_parameters

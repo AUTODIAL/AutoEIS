@@ -1,0 +1,6 @@
+fit\_circuit\_parameters
+========================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: fit_circuit_parameters

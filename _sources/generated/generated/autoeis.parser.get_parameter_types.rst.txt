@@ -1,0 +1,6 @@
+get\_parameter\_types
+=====================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: get_parameter_types

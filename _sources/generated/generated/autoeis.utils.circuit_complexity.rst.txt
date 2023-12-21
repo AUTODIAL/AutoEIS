@@ -1,0 +1,6 @@
+circuit\_complexity
+===================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: circuit_complexity

@@ -1,0 +1,6 @@
+initialize\_priors\_from\_posteriors
+====================================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: initialize_priors_from_posteriors

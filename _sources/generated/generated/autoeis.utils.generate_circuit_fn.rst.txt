@@ -1,0 +1,6 @@
+generate\_circuit\_fn
+=====================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: generate_circuit_fn

@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,800;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap');
 
 body {
-    font-family: 'Open Sans', sans-serif !important;
+    font-family: 'Noto Sans', sans-serif !important;
 }
 
 img.sidebar-logo {
@@ -27,4 +27,11 @@ a.reference.internal {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;    
+}
+
+img.fig-ecm {
+    width: 600px;
+    padding: 25px;
+    background-color: white;
+    border-radius: 10px;
 }

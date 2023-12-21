@@ -1,0 +1,6 @@
+parse\_parameter
+================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: parse_parameter

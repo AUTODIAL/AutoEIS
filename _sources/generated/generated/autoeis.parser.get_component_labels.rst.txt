@@ -1,0 +1,6 @@
+get\_component\_labels
+======================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: get_component_labels

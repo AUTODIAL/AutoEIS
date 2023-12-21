@@ -8,7 +8,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=c83bd9f6" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=3fe4a486" />
     
     
 
@@ -159,10 +159,12 @@
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="modules.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -182,9 +184,29 @@
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.get_logger.html">get_logger</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.setup_rich_tracebacks.html">setup_rich_tracebacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.suppress_output.html">suppress_output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.initialize_priors.html">initialize_priors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.validate_circuit.html">validate_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.validate_parameter.html">validate_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.parse_component.html">parse_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.parse_parameter.html">parse_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_component_labels.html">get_component_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_component_types.html">get_component_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_parameter_types.html">get_parameter_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.get_parameter_labels.html">get_parameter_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.group_parameters_by_type.html">group_parameters_by_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.group_parameters_by_component.html">group_parameters_by_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.count_parameters.html">count_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.convert_to_impedance_format.html">convert_to_impedance_format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/generated/autoeis.parser.find_ohmic_resistors.html">find_ohmic_resistors</a></li>
 </ul>
 </li>
 </ul>

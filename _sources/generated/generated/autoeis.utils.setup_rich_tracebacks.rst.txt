@@ -1,6 +1,0 @@
-setup\_rich\_tracebacks
-=======================
-
-.. currentmodule:: autoeis.utils
-
-.. autofunction:: setup_rich_tracebacks

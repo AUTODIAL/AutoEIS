@@ -1,0 +1,6 @@
+get\_parameter\_labels
+======================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: get_parameter_labels

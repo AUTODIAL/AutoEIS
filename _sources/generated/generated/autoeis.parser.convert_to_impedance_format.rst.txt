@@ -1,0 +1,6 @@
+convert\_to\_impedance\_format
+==============================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: convert_to_impedance_format

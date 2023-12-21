@@ -1,0 +1,6 @@
+parse\_component
+================
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: parse_component

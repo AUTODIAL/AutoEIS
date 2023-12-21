@@ -1,0 +1,6 @@
+parse\_ec\_output
+=================
+
+.. currentmodule:: autoeis.io
+
+.. autofunction:: parse_ec_output
