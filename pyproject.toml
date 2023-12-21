@@ -72,3 +72,11 @@ path = "autoeis/version.py"
 include = [
     "/autoeis",
 ]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -v"
+testpaths = [
+    "tests",
+    "integration",
+]
