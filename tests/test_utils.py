@@ -1,7 +1,6 @@
 import numpy as np
-from impedance.models.circuits import CustomCircuit
 
-from autoeis import parser, utils
+from autoeis import julia_helpers, parser, utils
 
 # Real numbers
 x1 = np.random.rand(10)
@@ -14,22 +13,18 @@ y2 = x2 + np.zeros(10) * 1j
 circuit_string = "R1-[P2,R3]"
 p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10}
 p0_vals = list(p0_dict.values())
-circuit = CustomCircuit(
-    parser.impedancepy_circuit(circuit_string),
-    initial_guess=p0_vals,
-)
-circuit.parameters_ = p0_vals
+circuit_fn_gt = utils.generate_circuit_fn_impedance_backend(circuit_string)
 freq = np.logspace(-3, 3, 1000)
-Z = circuit.predict(freq)
+Z = circuit_fn_gt(p0_vals, freq)
 
 
-def test_fit_circuit_parameters_no_initial_guess():
+def test_fit_circuit_parameters_without_x0():
     p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
 
 
-def test_fit_circuit_parameters_with_initial_guess():
+def test_fit_circuit_parameters_with_x0():
     # Add some noise to the initial guess to test robustness
     p0 = p0_vals + np.random.rand(len(p0_vals)) * p0_vals * 0.5
     p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq, p0)
@@ -37,22 +32,16 @@ def test_fit_circuit_parameters_with_initial_guess():
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
 
 
-def test_find_ohmic_resistors():
-    # No ohmic resistors
-    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3"
-    ohmic_gt = []
-    ohmic = parser.find_ohmic_resistors(circuit)
-    assert ohmic == ohmic_gt
-    # Single ohmic resistor
-    circuit = "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-R3"
-    ohmic_gt = ["R3"]
-    ohmic = parser.find_ohmic_resistors(circuit)
-    assert ohmic == ohmic_gt
-    # Multiple ohmic resistors
-    circuit = "[R1,R2-P12]-L2-R9-[R6,C7-[L8,R5],L9]-R8"
-    ohmic_gt = ["R9", "R8"]
-    ohmic = parser.find_ohmic_resistors(circuit)
-    assert ohmic == ohmic_gt
+def test_generate_circuit_fn():
+    circuit = "R0-C1-[P2,R3]-[P4-[P5,C6],[L7,R8]]"
+    num_params = parser.count_parameters(circuit)
+    freq = np.array([1, 10, 100])
+    p = np.random.rand(num_params)
+    circuit_fn = utils.generate_circuit_fn(circuit)
+    Z_py = circuit_fn(p, freq)
+    ec = julia_helpers.import_backend()
+    Z_jl = np.array([ec.get_target_impedance(circuit, p, f) for f in freq])
+    np.testing.assert_allclose(Z_py, Z_jl)
 
 
 def test_circuit_complexity():
@@ -66,3 +55,16 @@ def test_circuit_complexity():
     }
     for cstr, cc in circuit_complexity_dict.items():
         assert utils.circuit_complexity(cstr) == cc
+
+
+def test_are_circuits_equivalent():
+    testset = [
+        ["R1-C2-L3-R4", "C1-R2-R5-L8", True],
+        ["R1-[C2,R3-L4]-P5", "[L1-R2,C5]-P10-R20", True],
+        ["R1-[[[C2,P5],R3],P2]", "[P1,[R1,[P5,C5]]]-R4", True],
+        ["R1-C2-L3", "R1-C2-P3", False],
+        ["[R1,C2]-[P1,C3]", "[R1,C3]-[P1,R2]", False],
+    ]
+    for row in testset:
+        c1, c2, eq = row
+        assert utils.are_circuits_equivalent(c1, c2) == eq

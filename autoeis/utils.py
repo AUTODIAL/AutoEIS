@@ -8,9 +8,9 @@ Collection of utility functions used throughout the package.
 
     circuit_complexity
     generate_circuit_fn
-    generate_circuit_fn_impy
+    generate_circuit_fn_impedance_backend
     fit_circuit_parameters
-    is_equivalent
+    are_circuits_equivalent
     initialize_priors
     initialize_priors_from_posteriors
 
@@ -27,7 +27,6 @@ from typing import Union
 import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
-import pandas as pd
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
 from numpy import pi
@@ -138,25 +137,6 @@ def timeout(seconds):
 
 # >>> Circuit utils
 
-def parse_circuit_dataframe(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Replaces the Parameters column in EquivalentCircuits.jl output from a
-    stringified list to a proper dict[str, float]: "R1 = 1" -> {"R1": 1}.
-    """
-    circuits = circuits.copy()
-
-    for row in circuits.itertuples():
-        pstr = row.Parameters
-        # Remove parentheses and spaces, then split by comma -> list[var=val, ...]
-        pstr = pstr.strip("()").replace(" ", "")
-        pstr = pstr.split(",")
-        # Extract variable names and values into a dictionary
-        pdict = {pair.split("=")[0]: float(pair.split("=")[1]) for pair in pstr}
-        # Replace the stringified list with a proper dict
-        circuits.at[row.Index, "Parameters"] = pdict
-    
-    return circuits
-
-
 def fit_circuit_parameters(
     circuit: str,
     Z: np.ndarray[complex],
@@ -172,7 +152,7 @@ def fit_circuit_parameters(
     # Use initial guess if provided, otherwise use random values
     labels = parser.get_parameter_labels(circuit)
     circuit = CustomCircuit(
-        circuit=parser.impedancepy_circuit(circuit),
+        circuit=parser.convert_to_impedance_format(circuit),
         initial_guess=p0
     )
     circuit.fit(freq, Z)
@@ -203,11 +183,11 @@ def generate_circuit_fn(
     return lambda X, F: eval(circuit_expr)
 
 
-def generate_circuit_fn_impy(circuit: str) -> callable:
+def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
     """Converts a circuit string to a function using impedance.py."""
     num_params = parser.count_parameters(circuit)
     # Convert circuit string to impedance.py format
-    circuit = parser.impedancepy_circuit(circuit)
+    circuit = parser.convert_to_impedance_format(circuit)
     # Convert circuit string to function
     p0 = np.full(num_params, np.nan)
     circuit = CustomCircuit(circuit, initial_guess=p0)
@@ -245,7 +225,7 @@ def circuit_complexity(circuit: str) -> list[int]:
     return flatten(complexity)
 
 
-def is_equivalent(circuit1: str, circuit2: str) -> bool:
+def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
     """Checks if two circuit strings are equivalent."""
     def x0(circuit:str) -> np.ndarray[float]:
         """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
@@ -260,7 +240,7 @@ def is_equivalent(circuit1: str, circuit2: str) -> bool:
         labels = parser.get_parameter_labels(circuit)
         x0 = []
         for label in labels:
-            ptype = parser.parse_parameter(label, by="type")
+            ptype = parser.parse_parameter(label)
             x0.append(values[ptype])
         return np.array(x0)
 

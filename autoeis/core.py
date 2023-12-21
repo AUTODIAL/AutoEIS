@@ -300,7 +300,7 @@ def generate_equivalent_circuits(
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
-    circuits = utils.parse_circuit_dataframe(circuits)
+    circuits = parser.parse_ec_output(circuits)
 
     if not len(circuits):
         log.warning("No plausible circuits found. Try increasing `iters`.")
@@ -402,7 +402,7 @@ def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
     for row in circuits.itertuples():
         circuit = row.circuitstring
         # Find components of each kind
-        pgroups = utils.group_parameters_by_component(circuit)
+        pgroups = parser.group_parameters_by_component(circuit)
         for ctype in components.keys():
             components[ctype].append(pgroups.get(ctype, []))
 
@@ -474,7 +474,7 @@ def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     for i, row_i in circuits.iterrows():
         circuit_i = row_i.circuitstring
         for j, row_j in circuits.loc[i+1:].iterrows():
-            if utils.is_equivalent(circuit_i, row_j.circuitstring):
+            if utils.are_circuits_equivalent(circuit_i, row_j.circuitstring):
                 circuits.drop(j, inplace=True)
 
     circuits.reset_index(drop=True, inplace=True)
@@ -575,8 +575,8 @@ def perform_bayesian_inference(
 
     # Calculate AIC
     # FIXME: Remove next line once confirmed that `iloc` is correctly used.
-    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * utils.count_parameters(circuit)
-    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * utils.count_parameters(circuit)
+    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * parser.count_parameters(circuit)
+    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * parser.count_parameters(circuit)
     # log.info(f"AIC = {aic:.1f}")
 
     return mcmc

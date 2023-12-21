@@ -17,12 +17,14 @@ Collection of functions for parsing circuit strings.
     group_parameters_by_type
     group_parameters_by_component
     count_parameters
-    impedancepy_circuit
+    convert_to_impedance_format
     find_ohmic_resistors
+    parse_ec_output
 
 """
 import re
 
+import pandas as pd
 from numpy import pi  # noqa: F401
 from pyparsing import nested_expr
 
@@ -40,6 +42,10 @@ def validate_circuit(circuit: str) -> bool:
     types = get_component_types(circuit)
     for t in types:
         assert t in valid_types, f"Invalid element type: {t}"
+    # TODO: Check for parallel elements with < 2 elements
+    # TODO: Check for duplicate "-" or "," symbols
+    # TODO: Check for disconnected elements, eg R1R2 or R1[R2,R3]
+    return True  # If all checks pass, the circuit is considered valid
 
 
 def validate_parameter(p: str) -> bool:
@@ -51,24 +57,24 @@ def validate_parameter(p: str) -> bool:
     # Check if parameter label is valid
     pattern = r"(?:R\d+|C\d+|L\d+|P\d+[wn])"
     assert re.fullmatch(pattern, p), f"Invalid parameter label: {p}"
-    
+    return True  # If all checks pass, the parameter label is considered valid
 
-def parse_component(c:str) -> str:
-    """Returns the type of a component label, e.g., R1 -> R"""
+
+def parse_component(c: str) -> str:
+    """Returns the type of a component label."""
     return re.match(r"[A-Za-z]+", c).group()
 
 
-def parse_parameter(p:str, by: str = "type") -> str:
-    """Returns the type/component of a parameter label, e.g., P4n -> Pn/P"""
-    assert by in ["type", "component"], "by must be either 'type' or 'component'."
+def parse_parameter(p: str) -> str:
+    """Returns the type of a parameter label."""
     validate_parameter(p)
     if p.startswith(("R", "C", "L")):
-        ptype, ctype = p[0], p[0]
+        ptype = p[0]
     elif p.startswith("P") and p.endswith("w"):
-        ptype, ctype = "Pw", "P"
+        ptype = "Pw"
     elif p.startswith("P") and p.endswith("n"):
-        ptype, ctype = "Pn", "P"
-    return ptype if by == "type" else ctype
+        ptype = "Pn"
+    return ptype
 
 
 def get_component_labels(circuit: str, types: list[str] = None) -> list[str]:
@@ -84,12 +90,6 @@ def get_component_types(circuit: str, unique: bool = False) -> list[str]:
     """Returns a list of component types in a circuit string."""
     types = re.findall(r"[A-Za-z]+", circuit)
     return list(set(types)) if unique else types
-
-
-def get_parameter_types(circuit: str, unique: bool = False) -> list[str]:
-    """Returns a list of parameter types in a circuit string."""        
-    ptypes = [parse_parameter(p, by="type") for p in get_parameter_labels(circuit)]
-    return list(set(ptypes)) if unique else ptypes
 
 
 def get_parameter_labels(circuit: str, types: list[str] = None) -> list[str]:
@@ -108,6 +108,12 @@ def get_parameter_labels(circuit: str, types: list[str] = None) -> list[str]:
     return parameters
 
 
+def get_parameter_types(circuit: str, unique: bool = False) -> list[str]:
+    """Returns a list of parameter types in a circuit string."""        
+    ptypes = [parse_parameter(p) for p in get_parameter_labels(circuit)]
+    return list(set(ptypes)) if unique else ptypes
+
+
 def group_parameters_by_type(circuit: str) -> dict[str, list[str]]:
     """Groups parameter labels by component type."""
     params = get_parameter_labels(circuit)
@@ -124,7 +130,7 @@ def group_parameters_by_component(circuit: str) -> dict[str, list[str]]:
     params_by_component = {ctype: [] for ctype in ctypes}
     params = get_parameter_labels(circuit)
     for param in params:
-        ctype = parse_parameter(param, by="component")
+        ctype = parse_component(param)
         params_by_component[ctype].append(param)
     return params_by_component
 
@@ -134,7 +140,7 @@ def count_parameters(circuit: str) -> int:
     return len(get_parameter_labels(circuit))
 
 
-def impedancepy_circuit(circuit: str) -> str:
+def convert_to_impedance_format(circuit: str) -> str:
     """Converts a circuit string the format used by impedance.py."""
     circuit = circuit.replace("P", "CPE")
     circuit = circuit.replace("[", "p(")
@@ -144,27 +150,30 @@ def impedancepy_circuit(circuit: str) -> str:
 
 def circuit_to_nested_expr(circuit: str) -> list:
     """Parses a circuit string to a nested list[str]."""
-    # Add brackets to the circuit string to make it a valid nested expression
-    circuit = f"[{circuit}]"
-    parser = nested_expr(opener="[", closer="]")
-    parsed = parser.parse_string(circuit, parse_all=True).as_list()
-    # Remove leftover cruft from the parsed expression
-    parsed = cleanup_nested_expr(parsed, chars=[",", "-"])
-    return parsed[0]
 
+    def cleanup(lst: list, chars: list[str]):
+        """Removes leading/trailing chars from a nested list[str]."""
+        chars = "".join(chars)
+        result = []
+        for el in lst:
+            if isinstance(el, list):
+                result.append(cleanup(el, chars))
+            else:
+                # Don't add empty strings
+                if el.strip(chars):
+                    result.append(el.strip(chars))
+        return result
+   
+    def parse(circuit: str):
+        # Enclose circuit with brackets to make it a valid nested expression
+        circuit = f"[{circuit}]"
+        parser = nested_expr(opener="[", closer="]")
+        parsed = parser.parse_string(circuit, parse_all=True).as_list()
+        return parsed
 
-def cleanup_nested_expr(lst: list, chars: list[str]):
-    """Removes leading/trailing characters ('-' ',') from a nested list[str]."""
-    chars = "".join(chars)
-    result = []
-    for el in lst:
-        if isinstance(el, list):
-            result.append(cleanup_nested_expr(el, chars))
-        else:
-            # Don't add empty strings
-            if el.strip(chars):
-                result.append(el.strip(chars))
-    return result
+    expr = parse(circuit)
+    expr = cleanup(expr, chars=[",", "-"])
+    return expr[0]
 
 
 def find_series_elements(circuit: str) -> list[str]:
@@ -214,3 +223,23 @@ def embed_impedance_expr(circuit_expr: str) -> str:
     for c in components:
         circuit_expr = circuit_expr.replace(c, replacement(c))
     return circuit_expr
+
+
+def parse_ec_output(circuits: pd.DataFrame) -> pd.DataFrame:
+    """
+    Replaces the Parameters column in EquivalentCircuits.jl output from a
+    stringified list to a proper dict[str, float]: "R1 = 1" -> {"R1": 1}.
+    """
+    circuits = circuits.copy()
+
+    for row in circuits.itertuples():
+        pstr = row.Parameters
+        # Remove parentheses and spaces, then split by comma -> list[var=val, ...]
+        pstr = pstr.strip("()").replace(" ", "")
+        pstr = pstr.split(",")
+        # Extract variable names and values into a dictionary
+        pdict = {pair.split("=")[0]: float(pair.split("=")[1]) for pair in pstr}
+        # Replace the stringified list with a proper dict
+        circuits.at[row.Index, "Parameters"] = pdict
+    
+    return circuits
