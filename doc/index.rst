@@ -17,8 +17,7 @@ What is AutoEIS?
 
 AutoEIS is a Python package that automatically proposes statistically plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradation.
 
-Please be aware that the current version is still under development and has not been formally released. If you find any bugs or have any suggestions, please file an `issue <https://github.com/AUTODIAL/AutoEIS/issues>`_ or directly submit a `pull request <https://github.com/AUTODIAL/AutoEIS/pulls>`_. We would greatly appreciate any contributions from the community.
-
+AutoEIS is still under development and therefore, the API is still not stable. If you find any bugs or have any suggestions, please file an `issue <https://github.com/AUTODIAL/AutoEIS/issues>`_ or directly submit a `pull request <https://github.com/AUTODIAL/AutoEIS/pulls>`_. We would greatly appreciate any contributions from the community.
 
 Contents
 ########
