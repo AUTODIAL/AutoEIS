@@ -19,12 +19,10 @@ Collection of functions for parsing circuit strings.
     count_parameters
     convert_to_impedance_format
     find_ohmic_resistors
-    parse_ec_output
 
 """
 import re
 
-import pandas as pd
 from numpy import pi  # noqa: F401
 from pyparsing import nested_expr
 
@@ -223,23 +221,3 @@ def embed_impedance_expr(circuit_expr: str) -> str:
     for c in components:
         circuit_expr = circuit_expr.replace(c, replacement(c))
     return circuit_expr
-
-
-def parse_ec_output(circuits: pd.DataFrame) -> pd.DataFrame:
-    """
-    Replaces the Parameters column in EquivalentCircuits.jl output from a
-    stringified list to a proper dict[str, float]: "R1 = 1" -> {"R1": 1}.
-    """
-    circuits = circuits.copy()
-
-    for row in circuits.itertuples():
-        pstr = row.Parameters
-        # Remove parentheses and spaces, then split by comma -> list[var=val, ...]
-        pstr = pstr.strip("()").replace(" ", "")
-        pstr = pstr.split(",")
-        # Extract variable names and values into a dictionary
-        pdict = {pair.split("=")[0]: float(pair.split("=")[1]) for pair in pstr}
-        # Replace the stringified list with a proper dict
-        circuits.at[row.Index, "Parameters"] = pdict
-    
-    return circuits

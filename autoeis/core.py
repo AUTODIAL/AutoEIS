@@ -32,7 +32,7 @@ from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
-from autoeis import metrics, parser, utils
+from autoeis import io, metrics, parser, utils
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
@@ -300,7 +300,7 @@ def generate_equivalent_circuits(
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
-    circuits = parser.parse_ec_output(circuits)
+    circuits = io.parse_ec_output(circuits)
 
     if not len(circuits):
         log.warning("No plausible circuits found. Try increasing `iters`.")
