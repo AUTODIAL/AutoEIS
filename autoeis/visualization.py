@@ -43,7 +43,8 @@ __all__ = [
 ]
 
 
-def _is_ipython_notebook():  # pragma: no cover
+def is_ipython_notebook() -> bool:  # pragma: no cover
+    """Returns True if the code is running in a Jupyter notebook, False otherwise."""
     try:
         shell = get_ipython().__class__.__name__
         if shell == 'ZMQInteractiveShell':
@@ -55,10 +56,9 @@ def _is_ipython_notebook():  # pragma: no cover
         return False        # Probably standard Python interpreter
 
 
-# Override print() with rich's print()
 def rich_print(*args, **kwargs):
     """Overrides the built-in print() function with rich's print() function."""
-    if _is_ipython_notebook():
+    if is_ipython_notebook():
         # HACK: prevent rich from creating a new <div> for every print()
         # NOTE: works for notebooks, but breaks for interactive sessions
         console = Console(force_jupyter=False)
@@ -67,7 +67,7 @@ def rich_print(*args, **kwargs):
         rich.print(*args, **kwargs)
 
 
-def draw_circuit(circuit: str):
+def draw_circuit(circuit: str) -> mpl.figure.Figure:
     """Draws the circuit model using lcapy.
 
     Parameters
@@ -103,7 +103,15 @@ def draw_circuit(circuit: str):
     return fig
 
 
-def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color=None, alpha=1, label=None, ax=None):
+def plot_nyquist(
+    Z: np.ndarray[complex],
+    fmt: str = "o-",
+    size: int = 4,
+    color: str = None,
+    alpha: int = 1,
+    label: str = None,
+    ax: plt.Axes = None,
+) -> tuple[plt.Figure, plt.Axes]:
     """Plots EIS data in Nyquist plot."""
     if ax is None:
         fig, ax = plt.subplots()
@@ -124,7 +132,12 @@ def plot_nyquist(Z, fmt="o-", saveto=None, size=4, color=None, alpha=1, label=No
     return ax.figure, ax
 
 
-def plot_impedance_combo(Z, freq, saveto=None, size=10, ax=None):
+def plot_impedance_combo(
+    Z: np.ndarray[complex],
+    freq: np.ndarray[float],
+    size: int = 10,
+    ax: list[plt.Axes]=None
+) -> tuple[plt.Figure, list[plt.Axes]]:
     """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
     Im_Z = Z.imag
@@ -155,16 +168,19 @@ def plot_impedance_combo(Z, freq, saveto=None, size=10, ax=None):
     # Don't show grid lines for the second y-axis (ax1 already has them)
     ax2.grid(False)
     fig.tight_layout()
-
-    if saveto is not None:
-        fig.savefig(saveto, dpi=300)
     
     return ax[0].figure, ax
 
 
-def plot_linKK_residuals(freq, res_real, res_imag, saveto=None):
+def plot_linKK_residuals(
+    freq: np.ndarray[float],
+    res_real: np.ndarray[float],
+    res_imag: np.ndarray[float],
+    ax: plt.Axes = None,
+) -> tuple[plt.Figure, plt.Axes]:
     """Plots the residuals of the linear Kramers-Kronig validation."""
-    fig, ax = plt.subplots(figsize=(5, 3.5))
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.plot(freq, res_real, label="delta Re")
     ax.plot(freq, res_imag, label="delta Im")
     ax.set_xlabel("freq (Hz)")
@@ -173,11 +189,7 @@ def plot_linKK_residuals(freq, res_real, res_imag, saveto=None):
     ax.set_title("Lin-KK validation")
     ax.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
     ax.legend()
-
-    if saveto is not None:
-        fig.savefig(saveto, dpi=300)
-    
-    return fig, ax
+    return ax.figure, ax
 
 
 def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
@@ -213,7 +225,7 @@ def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
     console.print(table)
 
 
-def override_mpl_colors(override_named_colors=True):
+def override_mpl_colors(override_named_colors: bool = True):
     """Override matplotlib's default colors with Flexoki colors."""
     # Define the Flexoki-Light color scheme based on the provided table
     # Original sequence: red, orange, yellow, green, cyan, blue, purple, magenta
@@ -257,7 +269,11 @@ def override_mpl_colors(override_named_colors=True):
     plt.style.use(flexoki_light_style)
 
 
-def set_plot_style(use_arviz=True, use_seaborn=True, use_flexoki=True) -> None:
+def set_plot_style(
+    use_arviz: bool = True,
+    use_seaborn: bool = True,
+    use_flexoki: bool = True
+):
     """Modifies the default arviz/matplotlib config for prettier plots."""
     # Arviz
     if use_arviz:
@@ -295,7 +311,7 @@ def set_plot_style(use_arviz=True, use_seaborn=True, use_flexoki=True) -> None:
         pass
 
 
-def show_nticks(ax, x=True, y=False, n=10):
+def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
     """In-place modifies Matplotlib axes to show only n ticks."""
     if x:
         xticks = ax.xaxis.get_major_ticks()

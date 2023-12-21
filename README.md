@@ -4,7 +4,7 @@
 ## What is AutoEIS?
 AutoEIS is a Python package that automatically proposes statistically plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradation.
 
-Please be aware that the current version is still under development and has not been formally released. If you find any bugs or have any suggestions, please file an [issue](https://github.com/AUTODIAL/AutoEIS/issues) or directly submit a [pull request](https://github.com/AUTODIAL/AutoEIS/pulls). We would greatly appreciate any contributions from the community.
+AutoEIS is still under development and the API is not stable. If you find any bugs or have any suggestions, please file an [issue](https://github.com/AUTODIAL/AutoEIS/issues) or directly submit a [pull request](https://github.com/AUTODIAL/AutoEIS/pulls). We would greatly appreciate any contributions from the community.
 
 ## Installation
 Follow the instructions below to install AutoEIS and its dependencies:
@@ -86,6 +86,7 @@ print(circuits)
 - `Z`: Electrochemical impedance measurements (complex array)
 - `freq`: Frequencies corresponding to the impedance measurements
 - `iters`: Numbers of equivalent circuit generation to be performed
+- `tol`: Tolerance for the evolutionary algorithm for generating equivalent circuits
 - `parallel`: Whether to use parallel processing to speed up the analysis
   
 An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb).
@@ -93,6 +94,7 @@ An example notebook that demonstrates how to use AutoEIS can be found [here](htt
 # Work in progress/known issues
 - [x] Refactor the code as it is still in the developmental stage and not yet production-ready.
 - [x] Speed up the code; Currently, it takes ~ 4 hours to generate 100 equivalent circuits (your mileage may vary).
+- [ ] Optimize Bayesian inference to process circuits in parallel.
 - [x] Add proper unit/integration tests.
 - [x] Add proper documentation (API, more examples, etc.).
 - [ ] Add a graphical user interface for a more user-friendly interaction.
