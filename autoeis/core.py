@@ -32,7 +32,7 @@ from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
-from autoeis import metrics, utils
+from autoeis import metrics, parser, utils
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
@@ -445,7 +445,7 @@ def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
     for row in circuits.itertuples():
         circuit = row.circuitstring
-        resistors = utils.find_ohmic_resistors(circuit)
+        resistors = parser.find_ohmic_resistors(circuit)
         if not resistors:
             circuits.drop(row.Index, inplace=True)
 
