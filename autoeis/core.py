@@ -1,5 +1,5 @@
 """
-Core functions including finding the best fit and Bayesian analysis.
+Collection of functions core to AutoEIS functionality.
 
 .. currentmodule:: autoeis.core
 

@@ -1,5 +1,5 @@
 """
-Collection of utility functions used throughout the package.
+Collection of functions for calculating metrics.
 
 .. currentmodule:: autoeis.metrics
 
@@ -12,7 +12,6 @@ Collection of utility functions used throughout the package.
     r2_score
 
 """
-
 import numpy as np
 
 

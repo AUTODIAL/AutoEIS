@@ -1,3 +1,26 @@
+"""
+Collection of functions for parsing circuit strings.
+
+.. currentmodule:: autoeis.parser
+
+.. autosummary::
+   :toctree: generated/
+
+    validate_circuit
+    validate_parameter
+    parse_component
+    parse_parameter
+    get_component_labels
+    get_component_types
+    get_parameter_types
+    get_parameter_labels
+    group_parameters_by_type
+    group_parameters_by_component
+    count_parameters
+    impedancepy_circuit
+    find_ohmic_resistors
+
+"""
 import re
 
 from numpy import pi  # noqa: F401
