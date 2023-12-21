@@ -1,5 +1,5 @@
 """
-Core functions including finding the best fit and Bayesian analysis.
+Collection of functions core to AutoEIS functionality.
 
 .. currentmodule:: autoeis.core
 
@@ -15,7 +15,6 @@ Core functions including finding the best fit and Bayesian analysis.
 import os
 import time
 import warnings
-from pathlib import Path
 from typing import Union
 
 import jax
@@ -32,8 +31,8 @@ from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
 import autoeis.julia_helpers as julia_helpers
-import autoeis.utils as utils
 import autoeis.visualization as viz
+from autoeis import io, metrics, parser, utils
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
@@ -45,10 +44,11 @@ log = utils.get_logger(__name__)
 
 
 __all__ = [
-    "generate_equivalent_circuits",
     "perform_full_analysis",
-    "perform_bayesian_inference",
     "preprocess_impedance_data",
+    "generate_equivalent_circuits",
+    "apply_heuristic_rules",
+    "perform_bayesian_inference",
 ]
 
 
@@ -172,7 +172,7 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK(
         freq, Z, c=0.5, max_M=100, fit_type="complex", add_cap=True
     )
-    rmse = utils.rmse_score(Z, Z_linKK)
+    rmse = metrics.rmse_score(Z, Z_linKK)
 
     # Plot residuals of Lin-KK validation
     if plot:
@@ -300,7 +300,7 @@ def generate_equivalent_circuits(
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
-    circuits = utils.parse_circuit_dataframe(circuits)
+    circuits = io.parse_ec_output(circuits)
 
     if not len(circuits):
         log.warning("No plausible circuits found. Try increasing `iters`.")
@@ -402,7 +402,7 @@ def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
     for row in circuits.itertuples():
         circuit = row.circuitstring
         # Find components of each kind
-        pgroups = utils.group_parameters_by_component(circuit)
+        pgroups = parser.group_parameters_by_component(circuit)
         for ctype in components.keys():
             components[ctype].append(pgroups.get(ctype, []))
 
@@ -445,7 +445,7 @@ def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
     for row in circuits.itertuples():
         circuit = row.circuitstring
-        resistors = utils.find_ohmic_resistors(circuit)
+        resistors = parser.find_ohmic_resistors(circuit)
         if not resistors:
             circuits.drop(row.Index, inplace=True)
 
@@ -474,7 +474,7 @@ def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     for i, row_i in circuits.iterrows():
         circuit_i = row_i.circuitstring
         for j, row_j in circuits.loc[i+1:].iterrows():
-            if utils.is_equivalent(circuit_i, row_j.circuitstring):
+            if utils.are_circuits_equivalent(circuit_i, row_j.circuitstring):
                 circuits.drop(j, inplace=True)
 
     circuits.reset_index(drop=True, inplace=True)
@@ -529,12 +529,12 @@ def perform_bayesian_inference(
     Z_pred = circuit_fn(p0_values, freq)
 
     # Compute R2, MSE, RMSE, and MAPE using the initial guess
-    r2_init = utils.r2_score(Z, Z_pred)
-    r2_real_init = utils.r2_score(Z.real, Z_pred.real)
-    r2_imag_init = utils.r2_score(Z.imag, Z_pred.imag)
-    mse_init = utils.mse_score(Z, Z_pred)
-    rmse_init = utils.rmse_score(Z, Z_pred)
-    mape_init = utils.mape_score(Z, Z_pred)
+    r2_init = metrics.r2_score(Z, Z_pred)
+    r2_real_init = metrics.r2_score(Z.real, Z_pred.real)
+    r2_imag_init = metrics.r2_score(Z.imag, Z_pred.imag)
+    mse_init = metrics.mse_score(Z, Z_pred)
+    rmse_init = metrics.rmse_score(Z, Z_pred)
+    mape_init = metrics.mape_score(Z, Z_pred)
 
     log.info(f"R² = {r2_init:.3f} (initial)")
     log.info(f"R² (Re) = {r2_real_init:.3f} (initial)")
@@ -575,8 +575,8 @@ def perform_bayesian_inference(
 
     # Calculate AIC
     # FIXME: Remove next line once confirmed that `iloc` is correctly used.
-    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * utils.count_params(circuit)
-    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * utils.count_params(circuit)
+    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * parser.count_parameters(circuit)
+    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * parser.count_parameters(circuit)
     # log.info(f"AIC = {aic:.1f}")
 
     return mcmc
