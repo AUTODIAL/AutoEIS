@@ -484,6 +484,8 @@ def perform_bayesian_inference(
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
+    num_warmup=1000,
+    num_samples=1000,
     num_chains=1,
     seed: int = None,
     progress_bar: bool = True,
