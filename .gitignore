@@ -165,7 +165,7 @@ cython_debug/
 examples/**/*.png
 examples/**/*.csv
 examples/**/*.txt
-results*/
+results/
 
 # Local development
 benchmark_jaxfit.py
