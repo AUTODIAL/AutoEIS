@@ -163,7 +163,7 @@ def fit_circuit_parameters(
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
 if os.name != "nt":
-    fit_circuit_parameters = timeout(60)(fit_circuit_parameters)
+    fit_circuit_parameters = timeout(300)(fit_circuit_parameters)
 
 
 def generate_circuit_fn(
