@@ -21,7 +21,6 @@ import jax
 import jax.numpy as jnp  # noqa: F401
 import numpy as np
 import numpyro
-import numpyro.distributions as dist
 import pandas as pd
 from impedance.validation import linKK
 from jax import random
@@ -33,6 +32,10 @@ from tqdm.auto import tqdm
 import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
 from autoeis import io, metrics, parser, utils
+from autoeis.models import (
+    circuit_component_regression,
+    circuit_component_regression_fn_wrapped,
+)
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
