@@ -521,47 +521,18 @@ def perform_bayesian_inference(
     if p0 is None:
         p0 = utils.fit_circuit_parameters(circuit, Z, freq)
     assert isinstance(p0, dict), "p0 must be a dictionary"
-    p0_values = np.array(list(p0.values()))
 
-    # Zfunc = circuit_to_function(circuit, use_jax=True)
     circuit_fn = utils.generate_circuit_fn(circuit)
-    Z_pred = circuit_fn(p0_values, freq)
-
-    # Compute R2, MSE, RMSE, and MAPE using the initial guess
-    r2_init = metrics.r2_score(Z, Z_pred)
-    r2_real_init = metrics.r2_score(Z.real, Z_pred.real)
-    r2_imag_init = metrics.r2_score(Z.imag, Z_pred.imag)
-    mse_init = metrics.mse_score(Z, Z_pred)
-    rmse_init = metrics.rmse_score(Z, Z_pred)
-    mape_init = metrics.mape_score(Z, Z_pred)
-
-    log.info(f"R² = {r2_init:.3f} (initial)")
-    log.info(f"R² (Re) = {r2_real_init:.3f} (initial)")
-    log.info(f"R² (Im) = {r2_imag_init:.3f} (initial)")
-    log.info(f"MSE = {mse_init:.3e} (initial)")
-    log.info(f"RMSE = {rmse_init:.3e} (initial)")
-    log.info(f"MAPE = {mape_init:.3f}% (initial)")
-
-    def model(F, Z_true, priors: dict, circuit_func: callable):
-        # Sample each element of X separately
-        X = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
-        # Predict Z using the model
-        Z_pred = circuit_func(X, F)
-        # Define observation model for real and imaginary parts of Z
-        sigma_real = numpyro.sample("sigma_real", dist.Exponential(rate=1.0))
-        numpyro.sample("obs_real", dist.Normal(Z_pred.real, sigma_real), obs=Z_true.real)
-        sigma_imag = numpyro.sample("sigma_imag", dist.Exponential(rate=1.0))
-        numpyro.sample("obs_imag", dist.Normal(Z_pred.imag, sigma_imag), obs=Z_true.imag)
+    circuit_fn = jax.jit(circuit_fn)
 
     # Compute prior predictive distribution using the initial guess
-    prior_predictive = Predictive(model, num_samples=200)
     priors = utils.initialize_priors(p0, variables=p0.keys())
-    rng_key, rng_subkey = random.split(rng_key)
-    kwargs = {"F": freq, "Z_true": Z, "priors": priors, "circuit_func": circuit_fn}
-    # TODO: somehow include prior predictive in the results
-    prior_prediction = prior_predictive(rng_subkey, **kwargs)
-    
-    nuts_kernel = NUTS(model)
+    rng_key, rng_subkey = random.split(rng_key)   
+    # nuts_kernel = NUTS(circuit_component_regression)
+    nuts_kernel = NUTS(
+        model=circuit_component_regression_fn_wrapped,
+        init_strategy=numpyro.infer.init_to_median
+    )
     kwargs_mcmc = {
         "num_samples": num_samples,
         "num_warmup": num_warmup,
@@ -570,13 +541,9 @@ def perform_bayesian_inference(
     }
     mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
     rng_key, rng_subkey = jax.random.split(rng_key)
-    mcmc.run(rng_subkey, F=freq, Z_true=Z, priors=priors, circuit_func=circuit_fn)
-
-    # Calculate AIC
-    # FIXME: Remove next line once confirmed that `iloc` is correctly used.
-    # AIC_value = az.waic(mcmc_i)[0] * (-2) + 2 * parser.count_parameters(circuit)
-    # aic = az.waic(mcmc).iloc[0] * (-2) + 2 * parser.count_parameters(circuit)
-    # log.info(f"AIC = {aic:.1f}")
+    # kwargs_inference = {"Z": Z, "freq": freq, "priors": priors, "circuit": circuit}
+    kwargs_inference = {"Z": Z, "freq": freq, "priors": priors, "circuit_fn": circuit_fn}
+    mcmc.run(rng_subkey, **kwargs_inference)
 
     return mcmc
 
