@@ -19,7 +19,7 @@ Z = circuit_fn_gt(p0_vals, freq)
 
 
 def test_fit_circuit_parameters_without_x0():
-    p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq)
+    p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq, iters=5)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
 

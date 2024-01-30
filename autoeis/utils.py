@@ -144,26 +144,38 @@ def fit_circuit_parameters(
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
+    iters: int = 1
 ) -> dict[str, float]:
     """Fits a circuit to impedance data and returns the parameters."""
-    num_params = parser.count_parameters(circuit)
     # Deal with initial guess
-    p0 = np.random.rand(num_params) if p0 is None else p0
-    p0 = list(p0.values()) if isinstance(p0, dict) else p0
+    num_params = parser.count_parameters(circuit)
+    if p0 is None:
+        p0 = np.random.rand(num_params)
+    elif isinstance(p0, dict):
+        p0 = list(p0.values())
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
-    # Use initial guess if provided, otherwise use random values
-    labels = parser.get_parameter_labels(circuit)
-    circuit = CustomCircuit(
+
+    # Fit circuit parameters
+    circuit_impy = CustomCircuit(
         circuit=parser.convert_to_impedance_format(circuit),
         initial_guess=p0
     )
-    circuit.fit(freq, Z)
-    params = circuit.parameters_
-    return dict(zip(labels, params))
+    # HACK: Use multiple random initial guesses to avoid local minima
+    err_min = np.inf
+    for _ in range(iters):
+        circuit_impy.fit(freq, Z)
+        err = np.mean(np.abs(circuit_impy.predict(freq) - Z)**2)
+        if err < err_min:
+            err_min = err
+            p0 = circuit_impy.parameters_
+        circuit_impy.initial_guess = np.random.rand(num_params).tolist()
+
+    labels = parser.get_parameter_labels(circuit)
+    return dict(zip(labels, p0))
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
 if os.name != "nt":
-    fit_circuit_parameters = timeout(60)(fit_circuit_parameters)
+    fit_circuit_parameters = timeout(300)(fit_circuit_parameters)
 
 
 def generate_circuit_fn(
