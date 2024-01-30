@@ -484,8 +484,7 @@ def perform_bayesian_inference(
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
-    num_warmup=500,
-    num_samples=500,
+    num_chains=1,
     seed: int = None,
     progress_bar: bool = True,
 ) -> numpyro.infer.mcmc.MCMC:
@@ -564,7 +563,7 @@ def perform_bayesian_inference(
     kwargs_mcmc = {
         "num_samples": num_samples,
         "num_warmup": num_warmup,
-        "num_chains": 1,
+        "num_chains": num_chains,
         "progress_bar": progress_bar
     }
     mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
