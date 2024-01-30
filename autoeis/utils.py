@@ -24,14 +24,16 @@ from collections.abc import Iterable
 from functools import wraps
 from typing import Union
 
+import jax  # NOQA: F401
 import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
-from numpy import pi
+from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
-from scipy.stats import lognorm, norm
+from scipy import stats
+from tensorflow_probability import distributions as tfdist  # NOQA: F401
 
 from autoeis import parser
 
