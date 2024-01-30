@@ -33,8 +33,8 @@ from impedance.models.circuits import CustomCircuit
 from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
 from scipy import stats
-from tensorflow_probability import distributions as tfdist  # NOQA: F401
 
+# from tensorflow_probability import distributions as tfdist  # NOQA: F401
 from autoeis import parser
 
 # >>> Logging utils
