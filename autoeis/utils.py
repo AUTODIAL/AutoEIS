@@ -24,15 +24,17 @@ from collections.abc import Iterable
 from functools import wraps
 from typing import Union
 
+import jax  # NOQA: F401
 import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
-from numpy import pi
+from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
-from scipy.stats import lognorm, norm
+from scipy import stats
 
+# from tensorflow_probability import distributions as tfdist  # NOQA: F401
 from autoeis import parser
 
 # >>> Logging utils
@@ -167,12 +169,13 @@ if os.name != "nt":
 def generate_circuit_fn(
     circuit: str,
     return_str: bool = False,
-    label: str = "X"
+    label: str = "X",
 ) -> Union[callable, str]:
+    assert isinstance(circuit, str), "Circuit must be a string."
     """Converts a circuit string to a function of (params, freq)"""
     # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
     circuit_expr = parser.generate_mathematical_expr(circuit)
-    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*np.pi*F*C1))
+    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*pi*F*C1))
     circuit_expr = parser.embed_impedance_expr(circuit_expr)
     # Replace variables with array indexing, e.g., R1, P2w, P2n -> X[0], X[1], X[2]
     variables = parser.get_parameter_labels(circuit)
@@ -268,31 +271,44 @@ def initialize_priors(
             priors[var] = dist.Uniform(0, 1)
         else:
             # Search over a log-normal dist spanning [0.01*u0, 100*u0]
-            mean, std_dev = jnp.log(value), jnp.log(100)
+            mean, std_dev = jnp.log(value), jnp.log(10)
             priors[var] = dist.LogNormal(mean, std_dev)
     return priors
 
 
 def initialize_priors_from_posteriors(
     posterior: dict[str, np.ndarray[float]],
-    variables: list[str]
+    variables: list[str],
+    dist_type: str = "lognormal",
 ) -> dict[str, dist.Distribution]:
     """Creates new priors based on the posterior distributions."""
     priors = {}
     for var in variables:
-        sample = posterior[var]
+        samples = posterior[var]
         # Fit data to a truncated normal distribution for exponents of CPE elements
         # HACK: for better convergence (fewer parameters), fit a normal and truncate it
         if "n" in var:
             # Exponent of CPE elements is bounded between 0 and 1
-            loc, scale = norm.fit(sample)
-            priors[var] = dist.TruncatedNormal(loc=loc, scale=2*scale, low=0, high=1)
+            loc, scale = stats.norm.fit(samples)
+            priors[var] = dist.TruncatedNormal(loc=loc, scale=1*scale, low=0, high=1)
         # Fit data to a log-normal distribution for all other parameters
         else:
             # NOTE: s and scale in scipy.stats -> scale and np.exp(loc) in numpyro
             # NOTE: above conversion is only valid when loc = 0
-            s, loc, scale = lognorm.fit(sample, floc=0)
-            priors[var] = dist.LogNormal(loc=np.log(scale), scale=2*s)
+            if dist_type == "lognormal":
+                s, loc, scale = stats.lognorm.fit(samples, floc=0)
+                priors[var] = dist.LogNormal(loc=np.log(scale), scale=8*s)
+            elif dist_type == "normal":
+                loc, scale = stats.norm.fit(samples)
+                priors[var] = dist.TruncatedNormal(loc=loc, scale=1*scale, low=0, high=np.inf)
+            elif dist_type == "weibull":
+                c, loc, scale = stats.weibull_min.fit(samples, floc=1)
+                priors[var] = dist.Weibull(scale=scale, concentration=c)
+            elif dist_type == "t":
+                df, loc, scale = stats.t.fit(samples)
+                priors[var] = dist.StudentT(df=df, loc=loc, scale=scale)
+            else:
+                raise ValueError(f"Unknown distribution: {dist_type}")
     return priors
 
 # <<< Statistics utils
