@@ -167,12 +167,13 @@ if os.name != "nt":
 def generate_circuit_fn(
     circuit: str,
     return_str: bool = False,
-    label: str = "X"
+    label: str = "X",
 ) -> Union[callable, str]:
+    assert isinstance(circuit, str), "Circuit must be a string."
     """Converts a circuit string to a function of (params, freq)"""
     # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
     circuit_expr = parser.generate_mathematical_expr(circuit)
-    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*np.pi*F*C1))
+    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*pi*F*C1))
     circuit_expr = parser.embed_impedance_expr(circuit_expr)
     # Replace variables with array indexing, e.g., R1, P2w, P2n -> X[0], X[1], X[2]
     variables = parser.get_parameter_labels(circuit)
