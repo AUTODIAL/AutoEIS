@@ -310,7 +310,7 @@ def generate_equivalent_circuits(
 
 
 def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
-    """Generate potential ECMs using EquivalentCircuits.jl in serial."""
+    """Generates candidate circuit models in serial."""
     Main = julia_helpers.init_julia()
     ec = julia_helpers.import_backend(Main)
 
