@@ -25,7 +25,7 @@ import pandas as pd
 from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
-from numpyro.infer import MCMC, NUTS, Predictive
+from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
