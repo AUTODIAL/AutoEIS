@@ -312,8 +312,6 @@ def generate_equivalent_circuits(
 def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     """Generate potential ECMs using EquivalentCircuits.jl in serial."""
     Main = julia_helpers.init_julia()
-    # Suppress Julia warnings (coming from Optim.jl)
-    Main.redirect_stderr()
     ec = julia_helpers.import_backend(Main)
 
     # Set random seed for reproducibility (Python and Julia)
@@ -346,11 +344,6 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
         # Set random seed for reproducibility (Python and Julia)
         np.random.seed(seed)
         Main.eval(f"import Random; Random.seed!({seed})")
-        # Suppress Julia warnings (coming from Optim.jl)
-        Main.redirect_stderr()
-        # Suppress Julia output (coming from EquivalentCircuits.jl) until
-        # MaximeVH/EquivalentCircuits.jl/issues/28 is fixed
-        Main.redirect_stdout()
         ec = julia_helpers.import_backend(Main)
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
@@ -400,11 +393,6 @@ def _generate_ecm_parallel2(impedance, freq, iters, ec_kwargs, seed):
     # Set random seed for reproducibility (Python and Julia)
     np.random.seed(seed)
     Main.eval(f"import Random; Random.seed!({seed})")
-    # Suppress Julia warnings (coming from Optim.jl)
-    # Main.redirect_stderr()
-    # Suppress Julia output (coming from EquivalentCircuits.jl) until
-    # MaximeVH/EquivalentCircuits.jl/issues/28 is fixed
-    # Main.redirect_stdout()
     ec = julia_helpers.import_backend(Main)
     try:
         circuits = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters)
