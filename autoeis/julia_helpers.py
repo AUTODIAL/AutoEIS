@@ -75,7 +75,7 @@ def install(julia_project=None, quiet=False, precompile=None, offline=False):  #
         Main.eval(f"Pkg.precompile({io_arg})")
 
     if not quiet:
-        log.warn(
+        log.warning(
             "It is recommended to restart Python after installing AutoEIS "
             "dependencies, so that the Julia environment is properly initialized."
         )
@@ -118,7 +118,7 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
             # Static python binary, so we turn off pre-compiled modules.
             julia_kwargs = {**julia_kwargs, "compiled_modules": False}
             Julia(**julia_kwargs)
-            log.warn(
+            log.warning(
                 "Your system's Python library is static (e.g., conda), "
                 "so precompilation will be turned off. For a dynamic library, "
                 "try using `pyenv` and installing with `--enable-shared`: "
@@ -144,7 +144,7 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
         # Remove the `compiled_modules` key, since it is not a user-specified kwarg:
         set_diff = {k: v for k, v in set_diff if k != "compiled_modules"}
         if len(set_diff) > 0:
-            log.warn(
+            log.warning(
                 f"Julia has already started. The new Julia options {set_diff} "
                 "will be ignored."
             )
@@ -346,14 +346,14 @@ def _backend_version_assertion(Main):
         backend_version = Main.eval("string(pkgversion(EquivalentCircuits))")
         expected_backend_version = __equivalent_circuits_jl_version__
         if backend_version != expected_backend_version:  # pragma: no cover
-            log.warn(
+            log.warning(
                 f"AutoEIS backend (EquivalentCircuits.jl) version {backend_version} "
                 f"does not match expected version {expected_backend_version}. "
                 "Things may break. Please update your AutoEIS installation with "
                 "`import autoeis; autoeis.julia_helpers.install()`."
             )
     except JuliaError:  # pragma: no cover
-        log.warn(
+        log.warning(
             "You seem to have an outdated version of EquivalentCircuits.jl. "
             "Things may break. Please update your AutoEIS installation with "
             "`import autoeis; autoeis.julia_helpers.install()`."
