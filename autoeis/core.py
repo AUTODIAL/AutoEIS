@@ -400,6 +400,7 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
         circuits = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters)
     except Exception as e:
         log.error(f"Error generating circuits: {e}")
+        circuits = []
     
     # Format output as list of strings since Julia objects cannot be pickled
     circuits_py = []
