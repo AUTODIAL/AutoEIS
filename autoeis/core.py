@@ -335,6 +335,7 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     return df
 
 
+# TODO: This function is deprecated, use _generate_ecm_parallel_julia instead
 def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
     """Generates candidate circuit models in parallel via Python multiprocessing."""
 
