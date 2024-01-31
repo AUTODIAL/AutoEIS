@@ -13,6 +13,7 @@ Collection of functions core to AutoEIS functionality.
 
 """
 import os
+import sys
 import time
 import warnings
 from typing import Union
@@ -22,6 +23,7 @@ import jax.numpy as jnp  # noqa: F401
 import numpy as np
 import numpyro
 import pandas as pd
+import psutil
 from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
@@ -395,13 +397,33 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
     np.random.seed(seed)
     Main.eval(f"import Random; Random.seed!({seed})")
+    Main.eval("import Logging; Logging.disable_logging(Logging.Warn)")
     ec = julia_helpers.import_backend(Main)
-    try:
-        circuits = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters)
-    except Exception as e:
-        log.error(f"Error generating circuits: {e}")
-        circuits = []
-    
+
+    # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
+    nprocs = psutil.cpu_count(logical=False)
+    # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
+    iters_chunked = [nprocs] * (iters // nprocs)
+    if iters % nprocs:
+        iters_chunked.append(iters % nprocs)
+
+    # Perform parallelized GEP in chunks
+    circuits = []
+
+    with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
+        # HACK: Flush once for progress bar to show up
+        sys.stderr.flush()
+        for iters_ in iters_chunked:
+            try:
+                circuits_ = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters_)
+            except Exception as e:
+                log.error(f"Error generating circuits: {e}")
+                circuits_ = []
+            circuits += circuits_
+            pbar.update(iters_)
+            # HACK: Flush every iteration to refresh progress bar
+            sys.stderr.flush()
+   
     # Format output as list of strings since Julia objects cannot be pickled
     circuits_py = []
     for circuit in circuits:
