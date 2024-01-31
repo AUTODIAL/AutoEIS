@@ -313,11 +313,12 @@ def _add_ec_to_julia_project(Main, io_arg):
     """Install EquivalentCircuits.jl and dependencies to the Julia project."""
     Main.eval("using Pkg")
     Main.eval(f"Pkg.Registry.update({io_arg})")
-    Main.ec_spec = Main.PackageSpec(
-        name="EquivalentCircuits",
-        # url="https://github.com/MaximeVH/EquivalentCircuits.jl",
-        version="v" + __equivalent_circuits_jl_version__,
-    )
+    kwargs = {"name": "EquivalentCircuits"}
+    if __equivalent_circuits_jl_version__.startswith("v"):
+        kwargs["version"] = __equivalent_circuits_jl_version__
+    else:
+        kwargs["rev"] = __equivalent_circuits_jl_version__
+    Main.ec_spec = Main.PackageSpec(**kwargs)
     Main.eval(f"Pkg.add([ec_spec], {io_arg})")
 
 
