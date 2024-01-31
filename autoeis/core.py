@@ -637,7 +637,7 @@ def perform_full_analysis(
     Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=0.05)
     
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-4, "parallel": parallel}
+    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-2, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
