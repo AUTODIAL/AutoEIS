@@ -297,7 +297,7 @@ def generate_equivalent_circuits(
         "population_size": population_size,
     }
 
-    ecm_generator = _generate_ecm_parallel2 if parallel else _generate_ecm_serial
+    ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
@@ -335,8 +335,8 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     return df
 
 
-def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
-    """Generate potential ECMs using EquivalentCircuits.jl in parallel."""
+def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
+    """Generates candidate circuit models in parallel via Python multiprocessing."""
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
@@ -387,10 +387,11 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
     return df
 
 
-def _generate_ecm_parallel2(impedance, freq, iters, ec_kwargs, seed):
-    """Generate potential ECMs using EquivalentCircuits.jl in parallel."""
+def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
+    """Generates candidate circuit models in parallel directly from Julia."""
     Main = julia_helpers.init_julia()
     # Set random seed for reproducibility (Python and Julia)
+    # FIXME: This doesn't work when multiprocessing, use @everywhere instead
     np.random.seed(seed)
     Main.eval(f"import Random; Random.seed!({seed})")
     ec = julia_helpers.import_backend(Main)
