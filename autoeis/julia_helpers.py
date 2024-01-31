@@ -177,7 +177,9 @@ def import_backend(Main=None):
     if Main is None:
         Main = init_julia()
     EquivalentCircuits = import_package("EquivalentCircuits", Main=Main)
-    _backend_version_assertion(Main)
+    # FIXME: Currently don't know how to assert branch name if installed from GitHub
+    if __equivalent_circuits_jl_version__.startswith("v"):
+        _backend_version_assertion(Main)
     return EquivalentCircuits
 
 
