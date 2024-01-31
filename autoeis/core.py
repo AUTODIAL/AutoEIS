@@ -13,6 +13,7 @@ Collection of functions core to AutoEIS functionality.
 
 """
 import os
+import sys
 import time
 import warnings
 from typing import Union
@@ -22,10 +23,11 @@ import jax.numpy as jnp  # noqa: F401
 import numpy as np
 import numpyro
 import pandas as pd
+import psutil
 from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
-from numpyro.infer import MCMC, NUTS, Predictive
+from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
@@ -250,7 +252,7 @@ def generate_equivalent_circuits(
     freq: np.ndarray[float],
     iters: int = 100,
     complexity: int = 12,
-    tol: float = 5e-4,
+    tol: float = 1e-2,
     parallel: bool = True,
     generations: int = 30,
     population_size: int = 100,
@@ -297,7 +299,7 @@ def generate_equivalent_circuits(
         "population_size": population_size,
     }
 
-    ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
+    ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
@@ -310,10 +312,8 @@ def generate_equivalent_circuits(
 
 
 def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
-    """Generate potential ECMs using EquivalentCircuits.jl in serial."""
+    """Generates candidate circuit models in serial."""
     Main = julia_helpers.init_julia()
-    # Suppress Julia warnings (coming from Optim.jl)
-    Main.redirect_stderr()
     ec = julia_helpers.import_backend(Main)
 
     # Set random seed for reproducibility (Python and Julia)
@@ -337,8 +337,9 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     return df
 
 
-def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
-    """Generate potential ECMs using EquivalentCircuits.jl in parallel."""
+# TODO: This function is deprecated, use _generate_ecm_parallel_julia instead
+def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
+    """Generates candidate circuit models in parallel via Python multiprocessing."""
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
@@ -346,11 +347,6 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
         # Set random seed for reproducibility (Python and Julia)
         np.random.seed(seed)
         Main.eval(f"import Random; Random.seed!({seed})")
-        # Suppress Julia warnings (coming from Optim.jl)
-        Main.redirect_stderr()
-        # Suppress Julia output (coming from EquivalentCircuits.jl) until
-        # MaximeVH/EquivalentCircuits.jl/issues/28 is fixed
-        Main.redirect_stdout()
         ec = julia_helpers.import_backend(Main)
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
@@ -390,6 +386,52 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
 
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
     df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
+
+    return df
+
+
+def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
+    """Generates candidate circuit models in parallel directly from Julia."""
+    Main = julia_helpers.init_julia()
+    # Set random seed for reproducibility (Python and Julia)
+    # FIXME: This doesn't work when multiprocessing, use @everywhere instead
+    np.random.seed(seed)
+    Main.eval(f"import Random; Random.seed!({seed})")
+    Main.eval("import Logging; Logging.disable_logging(Logging.Warn)")
+    ec = julia_helpers.import_backend(Main)
+
+    # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
+    nprocs = psutil.cpu_count(logical=False)
+    # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
+    iters_chunked = [nprocs] * (iters // nprocs)
+    if iters % nprocs:
+        iters_chunked.append(iters % nprocs)
+
+    # Perform parallelized GEP in chunks
+    circuits = []
+
+    with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
+        # HACK: Flush once for progress bar to show up
+        sys.stderr.flush()
+        for iters_ in iters_chunked:
+            try:
+                circuits_ = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters_)
+            except Exception as e:
+                log.error(f"Error generating circuits: {e}")
+                circuits_ = []
+            circuits += circuits_
+            pbar.update(iters_)
+            # HACK: Flush every iteration to refresh progress bar
+            sys.stderr.flush()
+   
+    # Format output as list of strings since Julia objects cannot be pickled
+    circuits_py = []
+    for circuit in circuits:
+        if circuit != Main.nothing:
+            circuits_py.append([circuit.circuitstring, Main.string(circuit.Parameters)])
+
+    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
+    df = pd.DataFrame(circuits_py, columns=["circuitstring", "Parameters"])
 
     return df
 
@@ -608,7 +650,7 @@ def perform_full_analysis(
     Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=0.05)
     
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-4, "parallel": parallel}
+    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-2, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
