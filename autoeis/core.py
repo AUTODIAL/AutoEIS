@@ -297,7 +297,7 @@ def generate_equivalent_circuits(
         "population_size": population_size,
     }
 
-    ecm_generator = _generate_ecm_parallel if parallel else _generate_ecm_serial
+    ecm_generator = _generate_ecm_parallel2 if parallel else _generate_ecm_serial
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
     # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
@@ -390,6 +390,35 @@ def _generate_ecm_parallel(impedance, freq, iters, ec_kwargs, seed):
 
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
     df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
+
+    return df
+
+
+def _generate_ecm_parallel2(impedance, freq, iters, ec_kwargs, seed):
+    """Generate potential ECMs using EquivalentCircuits.jl in parallel."""
+    Main = julia_helpers.init_julia()
+    # Set random seed for reproducibility (Python and Julia)
+    np.random.seed(seed)
+    Main.eval(f"import Random; Random.seed!({seed})")
+    # Suppress Julia warnings (coming from Optim.jl)
+    # Main.redirect_stderr()
+    # Suppress Julia output (coming from EquivalentCircuits.jl) until
+    # MaximeVH/EquivalentCircuits.jl/issues/28 is fixed
+    # Main.redirect_stdout()
+    ec = julia_helpers.import_backend(Main)
+    try:
+        circuits = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters)
+    except Exception as e:
+        log.error(f"Error generating circuits: {e}")
+    
+    # Format output as list of strings since Julia objects cannot be pickled
+    circuits_py = []
+    for circuit in circuits:
+        if circuit != Main.nothing:
+            circuits_py.append([circuit.circuitstring, Main.string(circuit.Parameters)])
+
+    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
+    df = pd.DataFrame(circuits_py, columns=["circuitstring", "Parameters"])
 
     return df
 
