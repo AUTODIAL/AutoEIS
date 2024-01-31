@@ -25,13 +25,13 @@ def test_mse_score_complex():
 
 def test_rmse_score_real():
     rmse = metrics.rmse_score(x1, x2)
-    rmse_gt = skmetrics.mean_squared_error(x1, x2, squared=False)
+    rmse_gt = skmetrics.root_mean_squared_error(x1, x2)
     assert np.isclose(rmse, rmse_gt)
 
 
 def test_rmse_score_complex():
     rmse = metrics.rmse_score(y1, y2)
-    rmse_gt = skmetrics.mean_squared_error(x1, x2, squared=False)
+    rmse_gt = skmetrics.root_mean_squared_error(x1, x2)
     assert np.isclose(rmse, rmse_gt)
 
 
