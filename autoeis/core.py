@@ -250,7 +250,7 @@ def generate_equivalent_circuits(
     freq: np.ndarray[float],
     iters: int = 100,
     complexity: int = 12,
-    tol: float = 5e-4,
+    tol: float = 1e-2,
     parallel: bool = True,
     generations: int = 30,
     population_size: int = 100,
