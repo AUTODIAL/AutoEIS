@@ -30,7 +30,6 @@ from pyparsing import nested_expr
 def validate_circuit(circuit: str) -> bool:
     """Checks if a circuit string is valid."""
     # Check for duplicate elements
-    components = get_component_labels(circuit)
     duplicates = [e for e in components if components.count(e) > 1]
     assert not duplicates, f"Duplicate elements found: {set(duplicates)}"
     # Test circuit is not empty
