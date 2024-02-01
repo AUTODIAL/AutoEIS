@@ -8,6 +8,7 @@ Collection of functions core to AutoEIS functionality.
 
     perform_full_analysis
     generate_equivalent_circuits
+    filter_implausible_circuits
     perform_bayesian_inference
     preprocess_impedance_data 
 
@@ -52,7 +53,7 @@ __all__ = [
     "perform_full_analysis",
     "preprocess_impedance_data",
     "generate_equivalent_circuits",
-    "apply_heuristic_rules",
+    "filter_implausible_circuits",
     "perform_bayesian_inference",
 ]
 
@@ -593,7 +594,7 @@ def perform_bayesian_inference(
     return mcmc
 
 
-def apply_heuristic_rules(circuits: pd.DataFrame) -> pd.DataFrame:
+def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     """Apply heuristic rules to filter the generated ECMs.
 
     Parameters
@@ -654,7 +655,7 @@ def perform_full_analysis(
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
-    circuits = apply_heuristic_rules(circuits_unfiltered)
+    circuits = filter_implausible_circuits(circuits_unfiltered)
 
     # Perform Bayesian inference on the filtered ECMs
     mcmc_list = []
