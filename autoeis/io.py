@@ -35,7 +35,7 @@ def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
     fpath = os.path.join(PATH, "test_data.txt")
     freq, Zreal, Zimag = np.loadtxt(fpath, skiprows=1, unpack=True, usecols=(0, 1, 2))
     # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
-    Z = Zreal - 1j*Zimag
+    Z = Zreal - 1j * Zimag
     return Z, freq
 
 
@@ -55,5 +55,5 @@ def parse_ec_output(circuits: pd.DataFrame) -> pd.DataFrame:
         pdict = {pair.split("=")[0]: float(pair.split("=")[1]) for pair in pstr}
         # Replace the stringified list with a proper dict
         circuits.at[row.Index, "Parameters"] = pdict
-    
+
     return circuits

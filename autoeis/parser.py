@@ -107,7 +107,7 @@ def get_parameter_labels(circuit: str, types: list[str] = None) -> list[str]:
 
 
 def get_parameter_types(circuit: str, unique: bool = False) -> list[str]:
-    """Returns a list of parameter types in a circuit string."""        
+    """Returns a list of parameter types in a circuit string."""
     ptypes = [parse_parameter(p) for p in get_parameter_labels(circuit)]
     return list(set(ptypes)) if unique else ptypes
 
@@ -161,7 +161,7 @@ def circuit_to_nested_expr(circuit: str) -> list:
                 if el.strip(chars):
                     result.append(el.strip(chars))
         return result
-   
+
     def parse(circuit: str):
         # Enclose circuit with brackets to make it a valid nested expression
         circuit = f"[{circuit}]"
@@ -186,11 +186,11 @@ def find_ohmic_resistors(circuit: list) -> list[str]:
     """Finds all ohmic resistors in a nested circuit expression."""
     series_elements = find_series_elements(circuit)
     return re.findall(r"R\d+", str(series_elements))
-  
 
-def generate_mathematical_expr(circuit:str) -> str:
+
+def generate_mathematical_expr(circuit: str) -> str:
     """Converts a circuit string to a mathematical expression.
-    
+
     Each variable in the expression is the impedance of the
     corresponding component.
     """
@@ -207,14 +207,16 @@ def generate_mathematical_expr(circuit:str) -> str:
 
 def embed_impedance_expr(circuit_expr: str) -> str:
     """Updates the circuit expression with the impedance of a component."""
+
     def replacement(var):
         eltype = get_component_types(var)[0]
         return {
             "R": f"{var}",
             "C": f"(1/(2*1j*pi*F*{var}))",
             "L": f"(2*1j*pi*F*{var})",
-            "P": f"(1/({var}w*(2*1j*pi*F)**{var}n))"
+            "P": f"(1/({var}w*(2*1j*pi*F)**{var}n))",
         }[eltype]
+
     # Get component lables
     components = get_component_labels(circuit_expr)
     # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*pi*F*C1))

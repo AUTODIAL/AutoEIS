@@ -47,13 +47,13 @@ def is_ipython_notebook() -> bool:  # pragma: no cover
     """Returns True if the code is running in a Jupyter notebook, False otherwise."""
     try:
         shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
-            return True     # Jupyter notebook or qtconsole
-        if shell == 'TerminalInteractiveShell':
-            return False    # Terminal running IPython
-        return False        # Other type (?)
+        if shell == "ZMQInteractiveShell":
+            return True  # Jupyter notebook or qtconsole
+        if shell == "TerminalInteractiveShell":
+            return False  # Terminal running IPython
+        return False  # Other type (?)
     except NameError:
-        return False        # Probably standard Python interpreter
+        return False  # Probably standard Python interpreter
 
 
 def rich_print(*args, **kwargs):
@@ -136,7 +136,7 @@ def plot_impedance_combo(
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     size: int = 10,
-    ax: list[plt.Axes]=None
+    ax: list[plt.Axes] = None,
 ) -> tuple[plt.Figure, list[plt.Axes]]:
     """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
@@ -154,7 +154,7 @@ def plot_impedance_combo(
 
     # Bode plot (magnitude) <- Re(Z)
     ax1 = ax[1]
-    ax1.scatter(freq, Re_Z, s=size, color='blue', label=r'$Re(Z)$')
+    ax1.scatter(freq, Re_Z, s=size, color="blue", label=r"$Re(Z)$")
     ax1.set_xscale("log")
     ax1.set_xlabel("freq (Hz)")
     ax1.set_ylabel(r"$Re(Z) / \Omega$")
@@ -162,13 +162,13 @@ def plot_impedance_combo(
 
     # Bode plot (phase) <- Im(Z)
     ax2 = ax1.twinx()  # instantiate a second y-axis sharing the same x-axis
-    ax2.scatter(freq, -Im_Z, s=size, color='red', label=r'$-Im(Z)$')
+    ax2.scatter(freq, -Im_Z, s=size, color="red", label=r"$-Im(Z)$")
     ax2.set_ylabel(r"$-Im(Z) / \Omega$")
     ax2.yaxis.label.set_color("red")
     # Don't show grid lines for the second y-axis (ax1 already has them)
     ax2.grid(False)
     fig.tight_layout()
-    
+
     return ax[0].figure, ax
 
 
@@ -187,7 +187,7 @@ def plot_linKK_residuals(
     ax.set_ylabel("delta %")
     ax.set_xscale("log")
     ax.set_title("Lin-KK validation")
-    ax.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))
+    ax.ticklabel_format(axis="y", style="sci", scilimits=(-2, 2))
     ax.legend()
     return ax.figure, ax
 
@@ -237,7 +237,7 @@ def override_mpl_colors(override_named_colors: bool = True):
         "purple": "#8B7EC8",
         "yellow": "#D0A215",
         "cyan": "#3AA99F",
-        "magenta": "#CE5D97"
+        "magenta": "#CE5D97",
     }
 
     # Override default named colors
@@ -270,9 +270,7 @@ def override_mpl_colors(override_named_colors: bool = True):
 
 
 def set_plot_style(
-    use_arviz: bool = True,
-    use_seaborn: bool = True,
-    use_flexoki: bool = True
+    use_arviz: bool = True, use_seaborn: bool = True, use_flexoki: bool = True
 ):
     """Modifies the default arviz/matplotlib config for prettier plots."""
     # Arviz
@@ -290,7 +288,13 @@ def set_plot_style(
     legend_size = label_size - 1
 
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = ["Helvetica", "Arial", "Verdana", "Tahoma", "DejaVu Sans"]
+    plt.rcParams["font.sans-serif"] = [
+        "Helvetica",
+        "Arial",
+        "Verdana",
+        "Tahoma",
+        "DejaVu Sans",
+    ]
     plt.rcParams["mathtext.fontset"] = "dejavuserif"
     plt.rcParams["xtick.labelsize"] = tick_size
     plt.rcParams["ytick.labelsize"] = tick_size
@@ -306,7 +310,8 @@ def set_plot_style(
     # Set up Jupyter notebook
     try:
         import IPython
-        IPython.display.set_matplotlib_formats('retina')
+
+        IPython.display.set_matplotlib_formats("retina")
     except ImportError:
         pass
 
