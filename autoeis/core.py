@@ -531,7 +531,7 @@ def perform_bayesian_inference(
     num_chains=1,
     seed: int = None,
     progress_bar: bool = True,
-) -> numpyro.infer.mcmc.MCMC:
+) -> tuple(numpyro.infer.mcmc.MCMC, int):
     """Performs Bayesian inference on the circuit based on impedance data.
 
     Parameters
@@ -549,8 +549,8 @@ def perform_bayesian_inference(
 
     Returns
     -------
-    mcmc : numpyro.infer.mcmc.MCMC
-        MCMC object.
+    tuple(numpyro.infer.mcmc.MCMC, int)
+        MCMC object and exit code (0 if successful, -1 if failed).
     """
     log.info("Performing Bayesian inference on the circuit {circuit}.")
 
@@ -570,7 +570,6 @@ def perform_bayesian_inference(
     # Compute prior predictive distribution using the initial guess
     priors = utils.initialize_priors(p0, variables=p0.keys())
     rng_key, rng_subkey = random.split(rng_key)
-    # nuts_kernel = NUTS(circuit_component_regression)
     nuts_kernel = NUTS(
         model=circuit_component_regression_fn_wrapped,
         init_strategy=numpyro.infer.init_to_median,
@@ -583,16 +582,18 @@ def perform_bayesian_inference(
     }
     mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
     rng_key, rng_subkey = jax.random.split(rng_key)
-    # kwargs_inference = {"Z": Z, "freq": freq, "priors": priors, "circuit": circuit}
     kwargs_inference = {
         "Z": Z,
         "freq": freq,
         "priors": priors,
         "circuit_fn": circuit_fn,
     }
-    mcmc.run(rng_subkey, **kwargs_inference)
 
-    return mcmc
+    try:
+        mcmc.run(rng_subkey, **kwargs_inference)
+    except RuntimeError:
+        log.error(f"Inference failed for circuit: {circuit}")
+        return mcmc, -1
 
 
 def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
