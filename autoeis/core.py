@@ -627,6 +627,10 @@ def perform_full_analysis(
     freq: np.ndarray[float],
     iters: int = 100,
     parallel: bool = True,
+    linKK_threshold: float = 5e-2,
+    tol: float = 1e-2,
+    num_warmup: int = 2500,
+    num_samples: int = 1000,
 ) -> pd.DataFrame:
     """Performs automated EIS analysis by generating plausible ECMs
     followed by Bayesian inference on component values.
@@ -641,17 +645,25 @@ def perform_full_analysis(
         Number of iterations for ECM generation. Default is 100.
     parallel : bool, optional
         If True, the ECM generation will be done in parallel. Default is True.
+    linKK_threshold : float, optional
+        Threshold for the Lin-KK validation. Default is 5e-2.
+    tol : float, optional
+        Convergence threshold for the ECM generation. Default is 1e-2.
+    num_warmup : int, optional
+        Number of warmup samples for the MCMC. Default is 2500.
+    num_samples : int, optional
+        Number of samples for the MCMC. Default is 1000.
 
     Returns
     -------
     results: pd.DataFrame
-        Dataframe containing plausible ECMs with Bayesian inference results.
+        Dataframe containing circuits, parameters, and MCMC results.
     """
     # Filter out bad impedance data
-    Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=0.05)
+    Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=linKK_threshold)
     
     # Generate a pool of potential ECMs via an evolutionary algorithm
-    kwargs = {"iters": iters, "complexity": 12, "tol": 1e-2, "parallel": parallel}
+    kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
@@ -665,7 +677,7 @@ def perform_full_analysis(
         p0_dict = row.Parameters
         # Get another set of initial guesses using impedance.py (not guaranteed to converge)
         p0_fit = utils.fit_circuit_parameters(circuit, Z, freq, p0=p0_dict)
-        kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
+        kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples, "progress_bar": False}
         mcmc = perform_bayesian_inference(circuit, Z, freq, p0_fit, **kwargs_mcmc)
         mcmc_list.append(mcmc)
 
