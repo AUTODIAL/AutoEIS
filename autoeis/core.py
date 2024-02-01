@@ -35,7 +35,7 @@ from tqdm.auto import tqdm
 import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
 from autoeis import io, metrics, parser, utils
-from autoeis.models import circuit_regression, circuit_regression_wrapped
+from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
