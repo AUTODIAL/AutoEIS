@@ -36,8 +36,8 @@ import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
 from autoeis import io, metrics, parser, utils
 from autoeis.models import (
-    circuit_component_regression,
-    circuit_component_regression_fn_wrapped,
+    circuit_regression,
+    circuit_regression_wrapped,
 )
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
@@ -571,7 +571,7 @@ def perform_bayesian_inference(
     priors = utils.initialize_priors(p0, variables=p0.keys())
     rng_key, rng_subkey = random.split(rng_key)
     nuts_kernel = NUTS(
-        model=circuit_component_regression_fn_wrapped,
+        model=circuit_regression_wrapped,
         init_strategy=numpyro.infer.init_to_median,
     )
     kwargs_mcmc = {
