@@ -528,7 +528,7 @@ def perform_bayesian_inference(
     num_chains=1,
     seed: int = None,
     progress_bar: bool = True,
-) -> tuple(numpyro.infer.mcmc.MCMC, int):
+) -> tuple[numpyro.infer.mcmc.MCMC, int]:
     """Performs Bayesian inference on the circuit based on impedance data.
 
     Parameters
