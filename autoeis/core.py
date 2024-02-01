@@ -526,7 +526,7 @@ def perform_bayesian_inference(
     seed: int = None,
     progress_bar: bool = True,
 ) -> numpyro.infer.mcmc.MCMC:
-    """Performs Bayesian inference on the circuit based on EIS data.
+    """Performs Bayesian inference on the circuit based on impedance data.
 
     Parameters
     ----------
