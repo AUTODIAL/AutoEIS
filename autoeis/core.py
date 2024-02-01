@@ -609,6 +609,9 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     circuits = ohmic_resistance_filter(circuits)
     circuits = merge_identical_circuits(circuits)
 
+    # Drop the columns added by split_components
+    circuits = circuits.drop(columns=["Resistors", "Capacitors", "Inductors", "CPEs"])
+
     return circuits
 
 
