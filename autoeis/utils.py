@@ -39,13 +39,14 @@ from autoeis import parser
 
 # >>> Logging utils
 
+
 def get_logger(name: str) -> logging.Logger:
     """Get a logger with the given name."""
     logger = logging.getLogger(name)
     if logger.hasHandlers():
         # If logger has handlers, do not add another to avoid duplicate logs
         return logger
-    
+
     logger.setLevel(logging.WARNING)
     handler = RichHandler(rich_tracebacks=True)
     handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
@@ -57,13 +58,16 @@ def setup_rich_tracebacks():
     """Set up rich traceback for nicer exception printing."""
     rich.traceback.install()
 
+
 # <<< Logging utils
 
 
 # >>> General utils
 
+
 def flatten(xs: list) -> list:
     """Returns a list of all elements in a nested iterable."""
+
     def _flatten(xs):
         """Returns a generator that flattens a nested iterable."""
         for x in xs:
@@ -71,6 +75,7 @@ def flatten(xs: list) -> list:
                 yield from flatten(x)
             else:
                 yield x
+
     return list(_flatten(xs))
 
 
@@ -81,7 +86,7 @@ def find_identical_rows(a: np.ndarray) -> list[list[int]]:
     for i in range(a.shape[0]):
         if i not in flatten(idx):
             idx.append([i])
-        for j in range(i+1, a.shape[0]):
+        for j in range(i + 1, a.shape[0]):
             if np.allclose(a[i, :], a[j, :]):
                 idx[-1].append(j)
     return idx
@@ -91,8 +96,8 @@ class _SuppressOutput:
     def __enter__(self):
         self._original_stdout = sys.stdout
         self._original_stderr = sys.stderr
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w')
+        sys.stdout = open(os.devnull, "w")
+        sys.stderr = open(os.devnull, "w")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
@@ -103,18 +108,22 @@ class _SuppressOutput:
 
 def suppress_output(func):
     """Suppresses the output of a function."""
+
     @wraps(func)
     def wrapped(*args, **kwargs):
         with _SuppressOutput():
             return func(*args, **kwargs)
+
     return wrapped
 
 
 class TimeoutException(Exception):
     pass
 
+
 def timeout(seconds):
     """Raises a TimeoutException if decorated function doesn't return in time."""
+
     def decorator(func):
         def _handle_timeout(signum, frame):
             raise TimeoutException("Didn't converge in time!")
@@ -132,19 +141,22 @@ def timeout(seconds):
             return result
 
         return wrapper
+
     return decorator
+
 
 # <<< General utils
 
 
 # >>> Circuit utils
 
+
 def fit_circuit_parameters(
     circuit: str,
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
-    iters: int = 1
+    iters: int = 1,
 ) -> dict[str, float]:
     """Fits a circuit to impedance data and returns the parameters."""
     # Deal with initial guess
@@ -157,14 +169,13 @@ def fit_circuit_parameters(
 
     # Fit circuit parameters
     circuit_impy = CustomCircuit(
-        circuit=parser.convert_to_impedance_format(circuit),
-        initial_guess=p0
+        circuit=parser.convert_to_impedance_format(circuit), initial_guess=p0
     )
     # HACK: Use multiple random initial guesses to avoid local minima
     err_min = np.inf
     for _ in range(iters):
         circuit_impy.fit(freq, Z)
-        err = np.mean(np.abs(circuit_impy.predict(freq) - Z)**2)
+        err = np.mean(np.abs(circuit_impy.predict(freq) - Z) ** 2)
         if err < err_min:
             err_min = err
             p0 = circuit_impy.parameters_
@@ -172,6 +183,7 @@ def fit_circuit_parameters(
 
     labels = parser.get_parameter_labels(circuit)
     return dict(zip(labels, p0))
+
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
 if os.name != "nt":
@@ -206,17 +218,20 @@ def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
     # Convert circuit string to function
     p0 = np.full(num_params, np.nan)
     circuit = CustomCircuit(circuit, initial_guess=p0)
+
     def func(params, freq):
         circuit.parameters_ = params
         return circuit.predict(freq)
+
     return func
 
 
 def circuit_complexity(circuit: str) -> list[int]:
     """Computes the component complexity of the circuit."""
+
     def increment(arr):
         """Add one to each element in a nested list."""
-        return [increment(e) if isinstance(e, list) else e+1 for e in arr]
+        return [increment(e) if isinstance(e, list) else e + 1 for e in arr]
 
     def depth(arr: list):
         """Compute the depth of each element in a nested list."""
@@ -242,9 +257,10 @@ def circuit_complexity(circuit: str) -> list[int]:
 
 def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
     """Checks if two circuit strings are equivalent."""
-    def x0(circuit:str) -> np.ndarray[float]:
+
+    def x0(circuit: str) -> np.ndarray[float]:
         """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
-        
+
         The idea is that if two circuits are equivalent, then Z(x0) should be
         the same for both circuits, given that x0 corresponds to the same
         component values in both circuits. Since the order of the components
@@ -264,14 +280,15 @@ def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
     Z2 = generate_circuit_fn(circuit2)(x0(circuit2), freq)
     return np.allclose(Z1, Z2)
 
+
 # <<< Circuit utils
 
 
 # >>> Statistics utils
 
+
 def initialize_priors(
-    p0: dict[str, float],
-    variables: list[str]
+    p0: dict[str, float], variables: list[str]
 ) -> dict[str, dist.Distribution]:
     """Initializes priors for a given circuit."""
     priors = {}
@@ -302,17 +319,19 @@ def initialize_priors_from_posteriors(
         if "n" in var:
             # Exponent of CPE elements is bounded between 0 and 1
             loc, scale = stats.norm.fit(samples)
-            priors[var] = dist.TruncatedNormal(loc=loc, scale=1*scale, low=0, high=1)
+            priors[var] = dist.TruncatedNormal(loc=loc, scale=1 * scale, low=0, high=1)
         # Fit data to a log-normal distribution for all other parameters
         else:
             # NOTE: s and scale in scipy.stats -> scale and np.exp(loc) in numpyro
             # NOTE: above conversion is only valid when loc = 0
             if dist_type == "lognormal":
                 s, loc, scale = stats.lognorm.fit(samples, floc=0)
-                priors[var] = dist.LogNormal(loc=np.log(scale), scale=8*s)
+                priors[var] = dist.LogNormal(loc=np.log(scale), scale=8 * s)
             elif dist_type == "normal":
                 loc, scale = stats.norm.fit(samples)
-                priors[var] = dist.TruncatedNormal(loc=loc, scale=1*scale, low=0, high=np.inf)
+                priors[var] = dist.TruncatedNormal(
+                    loc=loc, scale=1 * scale, low=0, high=np.inf
+                )
             elif dist_type == "weibull":
                 c, loc, scale = stats.weibull_min.fit(samples, floc=1)
                 priors[var] = dist.Weibull(scale=scale, concentration=c)
@@ -323,4 +342,6 @@ def initialize_priors_from_posteriors(
                 raise ValueError(f"Unknown distribution: {dist_type}")
     return priors
 
+
 # <<< Statistics utils
+
