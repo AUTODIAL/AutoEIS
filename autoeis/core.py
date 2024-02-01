@@ -67,13 +67,13 @@ def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) ->
     Z : np.ndarray[complex]
         Impedance measurements.
     freq : np.ndarray[float]
-        Frequencies corresponding to impedance measurements.        
+        Frequencies corresponding to impedance measurements.
 
     Returns
     -------
     ohmic_resistance: float
         The ohmic resistance of impedance data.
-    
+
     Raises
     ------
     ValueError
@@ -91,8 +91,8 @@ def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) ->
     y = 1 / Z.real[:]
 
     def func(x, a, b, c):
-        return (a*x + b) / (x + c)
-    
+        return (a * x + b) / (x + c)
+
     fallback = False
     bounds = ([0, -np.inf, -np.inf], np.inf)
 
@@ -101,7 +101,7 @@ def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) ->
         R = 1 / a
     except RuntimeError:
         fallback = True
-    if R < 0 or R < 0.2*Z.real[0]:
+    if R < 0 or R < 0.2 * Z.real[0]:
         fallback = True
     if fallback:
         R = Z.real[0]
@@ -228,7 +228,9 @@ def preprocess_impedance_data(
             ohmic_resistance = compute_ohmic_resistance(Z_mask, freq_mask)
             ohmic_resistance_found = True
         except ValueError:
-            log.error("Ohmic resistance not found. Check data or increase KK threshold.")
+            log.error(
+                "Ohmic resistance not found. Check data or increase KK threshold."
+            )
             ohmic_resistance_found = False
 
         # Convert the data to a dataframe for easier manipulation
@@ -292,7 +294,7 @@ def generate_equivalent_circuits(
 
     # Set the seed for reproducibility (if not set, use current time in nanoseconds)
     seed = seed or time.time_ns() % 2**32
-        
+
     ec_kwargs = {
         "head": complexity,
         "terminals": "RLP",
@@ -320,8 +322,8 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
 
     # Set random seed for reproducibility (Python and Julia)
     np.random.seed(seed)
-    Main.eval(f"import Random; Random.seed!({seed})")            
-    
+    Main.eval(f"import Random; Random.seed!({seed})")
+
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
         try:
@@ -370,7 +372,7 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
     # Julia cannot be initialized in the main process -> guard against this
     runtime_error = False
-    
+
     # Set a different seed for each process
     seed = [seed + i for i in range(iters)]
 
@@ -381,7 +383,9 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
             runtime_error = True
 
     if runtime_error:
-        raise RuntimeError("Julia must not be manually initialized, restart the kernel.")
+        raise RuntimeError(
+            "Julia must not be manually initialized, restart the kernel."
+        )
 
     # Remove None values
     circuits = [circuit for circuit in circuits if circuit is not None]
@@ -417,7 +421,9 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
         sys.stderr.flush()
         for iters_ in iters_chunked:
             try:
-                circuits_ = ec.circuit_evolution_batch(impedance, freq, **ec_kwargs, iters=iters_)
+                circuits_ = ec.circuit_evolution_batch(
+                    impedance, freq, **ec_kwargs, iters=iters_
+                )
             except Exception as e:
                 log.error(f"Error generating circuits: {e}")
                 circuits_ = []
@@ -425,7 +431,7 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
             pbar.update(iters_)
             # HACK: Flush every iteration to refresh progress bar
             sys.stderr.flush()
-   
+
     # Format output as list of strings since Julia objects cannot be pickled
     circuits_py = []
     for circuit in circuits:
@@ -507,14 +513,14 @@ def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
 
     for i, row_i in circuits.iterrows():
         circuit_i = row_i.circuitstring
-        for j, row_j in circuits.loc[i+1:].iterrows():
+        for j, row_j in circuits.loc[i + 1 :].iterrows():
             if utils.are_circuits_equivalent(circuit_i, row_j.circuitstring):
                 circuits.drop(j, inplace=True)
 
     circuits.reset_index(drop=True, inplace=True)
     return circuits
- 
- 
+
+
 def perform_bayesian_inference(
     circuit: str,
     Z: np.ndarray[complex],
@@ -540,7 +546,7 @@ def perform_bayesian_inference(
         Initial guess for the circuit parameters (default is None).
     seed : int, optional
         Random seed for reproducibility (default is None).
-        
+
     Returns
     -------
     mcmc : numpyro.infer.mcmc.MCMC
@@ -563,22 +569,27 @@ def perform_bayesian_inference(
 
     # Compute prior predictive distribution using the initial guess
     priors = utils.initialize_priors(p0, variables=p0.keys())
-    rng_key, rng_subkey = random.split(rng_key)   
+    rng_key, rng_subkey = random.split(rng_key)
     # nuts_kernel = NUTS(circuit_component_regression)
     nuts_kernel = NUTS(
         model=circuit_component_regression_fn_wrapped,
-        init_strategy=numpyro.infer.init_to_median
+        init_strategy=numpyro.infer.init_to_median,
     )
     kwargs_mcmc = {
         "num_samples": num_samples,
         "num_warmup": num_warmup,
         "num_chains": num_chains,
-        "progress_bar": progress_bar
+        "progress_bar": progress_bar,
     }
     mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
     rng_key, rng_subkey = jax.random.split(rng_key)
     # kwargs_inference = {"Z": Z, "freq": freq, "priors": priors, "circuit": circuit}
-    kwargs_inference = {"Z": Z, "freq": freq, "priors": priors, "circuit_fn": circuit_fn}
+    kwargs_inference = {
+        "Z": Z,
+        "freq": freq,
+        "priors": priors,
+        "circuit_fn": circuit_fn,
+    }
     mcmc.run(rng_subkey, **kwargs_inference)
 
     return mcmc
@@ -654,7 +665,7 @@ def perform_full_analysis(
     """
     # Filter out bad impedance data
     Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=linKK_threshold)
-    
+
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
     circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
@@ -665,12 +676,18 @@ def perform_full_analysis(
     # Perform Bayesian inference on the filtered ECMs
     mcmc_list = []
 
-    for row in tqdm(circuits.itertuples(), total=len(circuits), desc="Bayesian Inference"):
+    for row in tqdm(
+        circuits.itertuples(), total=len(circuits), desc="Bayesian Inference"
+    ):
         circuit = row.circuitstring
         p0_dict = row.Parameters
         # Get another set of initial guesses using impedance.py (not guaranteed to converge)
         p0_fit = utils.fit_circuit_parameters(circuit, Z, freq, p0=p0_dict)
-        kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples, "progress_bar": False}
+        kwargs_mcmc = {
+            "num_warmup": num_warmup,
+            "num_samples": num_samples,
+            "progress_bar": False,
+        }
         mcmc = perform_bayesian_inference(circuit, Z, freq, p0_fit, **kwargs_mcmc)
         mcmc_list.append(mcmc)
 
