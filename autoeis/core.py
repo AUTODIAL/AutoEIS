@@ -591,6 +591,7 @@ def perform_bayesian_inference(
     except RuntimeError:
         log.error(f"Inference failed for circuit: {circuit}")
         return mcmc, -1
+    return mcmc, 0
 
 
 def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
