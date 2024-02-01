@@ -109,6 +109,7 @@ def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) ->
     return R
 
 
+# TODO: Needs heavy refactoring
 def preprocess_impedance_data(
     impedance: np.ndarray[complex],
     freq: np.ndarray[float],
@@ -259,7 +260,7 @@ def generate_equivalent_circuits(
     population_size: int = 100,
     seed: int = None,
 ) -> pd.DataFrame:
-    """Generate potential ECMs using evolutionary algorithms.
+    """Generates candidate circuits that fit impedance data using genetic algorithm.
 
     Parameters
     ----------
@@ -285,7 +286,7 @@ def generate_equivalent_circuits(
     Returns
     -------
     pd.DataFrame or None
-        DataFrame containing ECM solutions or None if no solutions are found.
+        Dataframe containing circuits.
     """
     log.info("Generating equivalent circuits via evolutionary algorithms.")
 
@@ -313,7 +314,7 @@ def generate_equivalent_circuits(
 
 
 def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
-    """Generates candidate circuit models in serial."""
+    """Generates candidate circuits in serial."""
     Main = julia_helpers.init_julia()
     ec = julia_helpers.import_backend(Main)
 
@@ -340,7 +341,7 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
 
 # TODO: This function is deprecated, use _generate_ecm_parallel_julia instead
 def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
-    """Generates candidate circuit models in parallel via Python multiprocessing."""
+    """Generates candidate circuits in parallel via Python multiprocessing."""
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
@@ -392,7 +393,7 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
 
 def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
-    """Generates candidate circuit models in parallel directly from Julia."""
+    """Generates candidate circuits in parallel using Julia multiprocessing."""
     Main = julia_helpers.init_julia()
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
@@ -438,7 +439,7 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
 
 
 def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Adds an individual column for each component in the circuit with its value."""
+    """Augments the circuits dataframe with additional columns for each component."""
     # Initialize lists to populate the component columns later
     components = {"R": [], "C": [], "L": [], "P": []}
     labels = {"R": "Resistors", "C": "Capacitors", "L": "Inductors", "P": "CPEs"}
@@ -459,18 +460,7 @@ def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Exclude ideal capacitors from the circuits dataframe.
-
-    Parameters
-    ----------
-    circuits: pd.DataFrame
-       Dataframe containing ECMs (6 columns)
-
-    Returns
-    -------
-    df_circuits: pd.DataFrame
-       Dataframe containing ECMs without ideal capacitors (6 columns)
-    """
+    """Excludes ideal capacitors from the circuits dataframe."""
     circuits = circuits.copy()
 
     for row in circuits.itertuples():
@@ -484,7 +474,7 @@ def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Filters the circuits that don't have ohmic resistance in the main chain."""
+    """Excludes circuits without an ohmic resistance from the circuits dataframe."""
     circuits = circuits.copy()
 
     for row in circuits.itertuples():
@@ -498,7 +488,7 @@ def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Filters out circuits without any components connected in parallel."""
+    """Excludes circuits with series-only components from the circuits dataframe."""
     circuits = circuits.copy()
 
     for row in circuits.itertuples():
@@ -512,7 +502,7 @@ def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
-    """Merges identical circuits (removes rows with equivalent circuits)."""
+    """Merges identical circuits from the circuits dataframe."""
     circuits = circuits.copy()
 
     for i, row_i in circuits.iterrows():
@@ -536,7 +526,7 @@ def perform_bayesian_inference(
     seed: int = None,
     progress_bar: bool = True,
 ) -> numpyro.infer.mcmc.MCMC:
-    """Performs Bayesian inference on the circuit based on EIS measurements.
+    """Performs Bayesian inference on the circuit based on EIS data.
 
     Parameters
     ----------
@@ -600,12 +590,12 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     Parameters
     ----------
     circuits : pd.DataFrame
-        DataFrame containing the generated ECMs.
+        Dataframe containing circuits.
 
     Returns
     -------
     circuits : pd.DataFrame
-        DataFrame containing the filtered ECMs.
+        Dataframe containing circuits (filtered for plausibility)
     """
     log.info("Filtering the circuits using heuristic rules.")
 
@@ -632,8 +622,8 @@ def perform_full_analysis(
     num_warmup: int = 2500,
     num_samples: int = 1000,
 ) -> pd.DataFrame:
-    """Performs automated EIS analysis by generating plausible ECMs
-    followed by Bayesian inference on component values.
+    """Performs automated EIS analysis by generating plausible ECMs that
+    fit the impedance data, followed by Bayesian inference on components.
 
     Parameters
     ----------
