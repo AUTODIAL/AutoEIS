@@ -13,6 +13,7 @@ Collection of utility functions used throughout the package.
     are_circuits_equivalent
     initialize_priors
     initialize_priors_from_posteriors
+    validate_circuits_dataframe
 
 """
 import logging
@@ -28,6 +29,7 @@ import jax  # NOQA: F401
 import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
+import pandas as pd
 import rich.traceback
 from impedance.models.circuits import CustomCircuit
 from numpy import pi  # NOQA: F401
@@ -345,3 +347,24 @@ def initialize_priors_from_posteriors(
 
 # <<< Statistics utils
 
+
+# >>> Miscellaneous utils
+
+
+def validate_circuits_dataframe(circuits: pd.DataFrame):
+    """Validates the circuits dataframe format (columns and dtype)."""
+    # Check if the dataframe has the required columns
+    required_columns = ["circuitstring", "Parameters"]
+    missing = set(required_columns).symmetric_difference(circuits.columns)
+    assert not missing, f"Missing columns: {missing}"
+    # Check if the circuitstring column contains only strings
+    assert (
+        circuits["circuitstring"].apply(lambda x: isinstance(x, str)).all()
+    ), "circuitstring column must contain only strings."
+    # Check if the Parameters column contains only dictionaries
+    assert (
+        circuits["Parameters"].apply(lambda x: isinstance(x, dict)).all()
+    ), "Parameters column must contain only dictionaries."
+
+
+# <<< Miscellaneous utils
