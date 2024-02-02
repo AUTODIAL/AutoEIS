@@ -1,0 +1,6 @@
+validate\_circuits\_dataframe
+=============================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: validate_circuits_dataframe

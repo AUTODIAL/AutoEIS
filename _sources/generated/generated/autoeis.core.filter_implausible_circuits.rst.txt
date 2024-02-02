@@ -1,0 +1,6 @@
+filter\_implausible\_circuits
+=============================
+
+.. currentmodule:: autoeis.core
+
+.. autofunction:: filter_implausible_circuits

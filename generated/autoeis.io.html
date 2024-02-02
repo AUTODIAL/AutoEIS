@@ -167,13 +167,16 @@
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">io</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_test_circuits.html">load_test_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.perform_full_analysis.html">perform_full_analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference_batch.html">perform_bayesian_inference_batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
 </ul>
 </li>
@@ -194,6 +197,7 @@
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.initialize_priors.html">initialize_priors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.validate_circuits_dataframe.html">validate_circuits_dataframe</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -260,7 +264,10 @@
 <tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html#autoeis.io.load_test_dataset" title="autoeis.io.load_test_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_dataset</span></code></a>()</p></td>
 <td><p>Returns a test dataset as a tuple of impedance and frequency arrays.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html#autoeis.io.parse_ec_output" title="autoeis.io.parse_ec_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_ec_output</span></code></a>(circuits)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_circuits.html#autoeis.io.load_test_circuits" title="autoeis.io.load_test_circuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_circuits</span></code></a>([filtered])</p></td>
+<td><p>Returns equivalent circuits fitted to test dataset for testing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html#autoeis.io.parse_ec_output" title="autoeis.io.parse_ec_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_ec_output</span></code></a>(circuits)</p></td>
 <td><p>Parses the output of EquivalentCircuits.jl's <code class="docutils literal notranslate"><span class="pre">circuit_evolution</span></code> and returns a dataframe with circuit parameters stored as dict[str, float].</p></td>
 </tr>
 </tbody>

@@ -1,0 +1,6 @@
+load\_test\_circuits
+====================
+
+.. currentmodule:: autoeis.io
+
+.. autofunction:: load_test_circuits

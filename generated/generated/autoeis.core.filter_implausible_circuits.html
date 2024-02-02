@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="generate_circuit_fn_impedance_backend" href="autoeis.utils.generate_circuit_fn_impedance_backend.html" /><link rel="prev" title="circuit_complexity" href="autoeis.utils.circuit_complexity.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="perform_bayesian_inference" href="autoeis.core.perform_bayesian_inference.html" /><link rel="prev" title="generate_equivalent_circuits" href="autoeis.core.generate_equivalent_circuits.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>generate_circuit_fn - AutoEIS 0.0.21 documentation</title>
+        <title>filter_implausible_circuits - AutoEIS 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -171,10 +171,10 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.core.html">core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_full_analysis.html">perform_full_analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">filter_implausible_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_bayesian_inference_batch.html">perform_bayesian_inference_batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
@@ -189,9 +189,9 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.visualization.show_nticks.html">show_nticks</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">generate_circuit_fn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
@@ -252,12 +252,24 @@
           </label>
         </div>
         <article role="main">
-          <section id="generate-circuit-fn">
-<h1>generate_circuit_fn<a class="headerlink" href="#generate-circuit-fn" title="Link to this heading">#</a></h1>
+          <section id="filter-implausible-circuits">
+<h1>filter_implausible_circuits<a class="headerlink" href="#filter-implausible-circuits" title="Link to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="autoeis.utils.generate_circuit_fn">
-<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">generate_circuit_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#autoeis.utils.generate_circuit_fn" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="autoeis.core.filter_implausible_circuits">
+<span class="sig-prename descclassname"><span class="pre">autoeis.core.</span></span><span class="sig-name descname"><span class="pre">filter_implausible_circuits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#autoeis.core.filter_implausible_circuits" title="Link to this definition">#</a></dt>
+<dd><p>Apply heuristic rules to filter the generated ECMs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>circuits</strong> (<em>pd.DataFrame</em>) – Dataframe containing circuits.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>circuits</strong> – Dataframe containing circuits (filtered for plausibility)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 
@@ -266,23 +278,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="autoeis.utils.generate_circuit_fn_impedance_backend.html">
+          <a class="next-page" href="autoeis.core.perform_bayesian_inference.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">generate_circuit_fn_impedance_backend</div>
+                <div class="title">perform_bayesian_inference</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="autoeis.utils.circuit_complexity.html">
+          <a class="prev-page" href="autoeis.core.generate_equivalent_circuits.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">circuit_complexity</div>
+                <div class="title">generate_equivalent_circuits</div>
                 
               </div>
             </a>
@@ -316,8 +328,8 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">generate_circuit_fn</a><ul>
-<li><a class="reference internal" href="#autoeis.utils.generate_circuit_fn"><code class="docutils literal notranslate"><span class="pre">generate_circuit_fn()</span></code></a></li>
+<li><a class="reference internal" href="#">filter_implausible_circuits</a><ul>
+<li><a class="reference internal" href="#autoeis.core.filter_implausible_circuits"><code class="docutils literal notranslate"><span class="pre">filter_implausible_circuits()</span></code></a></li>
 </ul>
 </li>
 </ul>

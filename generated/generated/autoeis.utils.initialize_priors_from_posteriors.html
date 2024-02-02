@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="parser" href="../autoeis.parser.html" /><link rel="prev" title="initialize_priors" href="autoeis.utils.initialize_priors.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="validate_circuits_dataframe" href="autoeis.utils.validate_circuits_dataframe.html" /><link rel="prev" title="initialize_priors" href="autoeis.utils.initialize_priors.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
         <title>initialize_priors_from_posteriors - AutoEIS 0.0.21 documentation</title>
@@ -167,13 +167,16 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_circuits.html">load_test_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_full_analysis.html">perform_full_analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_bayesian_inference_batch.html">perform_bayesian_inference_batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
 </ul>
 </li>
@@ -194,6 +197,7 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.initialize_priors.html">initialize_priors</a></li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">initialize_priors_from_posteriors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.validate_circuits_dataframe.html">validate_circuits_dataframe</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -263,12 +267,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../autoeis.parser.html">
+          <a class="next-page" href="autoeis.utils.validate_circuits_dataframe.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">parser</div>
+                <div class="title">validate_circuits_dataframe</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
