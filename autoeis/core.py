@@ -26,7 +26,6 @@ import numpyro
 import pandas as pd
 import psutil
 from impedance.validation import linKK
-from jax import random
 from mpire import WorkerPool
 from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
@@ -317,8 +316,7 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     Main = julia_helpers.init_julia()
     ec = julia_helpers.import_backend(Main)
 
-    # Set random seed for reproducibility (Python and Julia)
-    np.random.seed(seed)
+    # Set random seed for reproducibility
     Main.eval(f"import Random; Random.seed!({seed})")
 
     circuits = []
@@ -345,8 +343,7 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
         Main = julia_helpers.init_julia()
-        # Set random seed for reproducibility (Python and Julia)
-        np.random.seed(seed)
+        # Set random seed for reproducibility
         Main.eval(f"import Random; Random.seed!({seed})")
         ec = julia_helpers.import_backend(Main)
         try:
@@ -398,7 +395,6 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     Main = julia_helpers.init_julia()
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
-    np.random.seed(seed)
     Main.eval(f"import Random; Random.seed!({seed})")
     Main.eval("import Logging; Logging.disable_logging(Logging.Warn)")
     ec = julia_helpers.import_backend(Main)
