@@ -174,3 +174,6 @@ sandbox.py
 sandbox.jl
 scratchpad.py
 test.py
+
+# macOS
+.DS_Store

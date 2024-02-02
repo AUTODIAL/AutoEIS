@@ -107,7 +107,7 @@ def get_parameter_labels(circuit: str, types: list[str] = None) -> list[str]:
 
 
 def get_parameter_types(circuit: str, unique: bool = False) -> list[str]:
-    """Returns a list of parameter types in a circuit string."""        
+    """Returns a list of parameter types in a circuit string."""
     ptypes = [parse_parameter(p) for p in get_parameter_labels(circuit)]
     return list(set(ptypes)) if unique else ptypes
 
@@ -161,7 +161,7 @@ def circuit_to_nested_expr(circuit: str) -> list:
                 if el.strip(chars):
                     result.append(el.strip(chars))
         return result
-   
+
     def parse(circuit: str):
         # Enclose circuit with brackets to make it a valid nested expression
         circuit = f"[{circuit}]"
@@ -186,38 +186,59 @@ def find_ohmic_resistors(circuit: list) -> list[str]:
     """Finds all ohmic resistors in a nested circuit expression."""
     series_elements = find_series_elements(circuit)
     return re.findall(r"R\d+", str(series_elements))
-  
 
-def generate_mathematical_expr(circuit:str) -> str:
-    """Converts a circuit string to a mathematical expression.
-    
-    Each variable in the expression is the impedance of the
-    corresponding component.
+
+def generate_mathematical_expr(circuit: str) -> str:
+    """Converts a circuit string to a mathematical expression for impedance.
+     
+    The returned string can be evaluated assuming 'x' is an array of
+    component values and 'f' is the frequency (scalar/array).
     """
+    # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
     replacements = {
         "-": "+",
         "[": "((",
         ",": ")**(-1)+(",
         "]": ")**(-1))**(-1)"
     }
+    expr = circuit
     for j, k in replacements.items():
-        circuit = circuit.replace(j, k)
-    return circuit
+        expr = expr.replace(j, k)
+
+    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*pi*f*C1))
+    expr = replace_components_with_impedance(expr)
+
+    # Replace parameters with array indexing, e.g., R1, P2w, P2n -> x[0], x[1], x[2]
+    parameters = get_parameter_labels(circuit)    
+    for i, var in enumerate(parameters):
+        expr = expr.replace(var, f"x[{i}]", 1)
+    
+    return expr
 
 
-def embed_impedance_expr(circuit_expr: str) -> str:
-    """Updates the circuit expression with the impedance of a component."""
+def replace_components_with_impedance(expr: str) -> str:
+    """Updates the circuit expression with the impedance of the components.
+    
+    Notes
+    -----
+    The impedance expressions are described 'parameter' labels, not 'component'
+    labels, although the two are often the same (except for components defined
+    by more than one parameter). For example, a CPE element P1 has impedance
+    expression as a function of of P1w and P1n.
+    """
+
     def replacement(var):
         eltype = get_component_types(var)[0]
         return {
             "R": f"{var}",
-            "C": f"(1/(2*1j*pi*F*{var}))",
-            "L": f"(2*1j*pi*F*{var})",
-            "P": f"(1/({var}w*(2*1j*pi*F)**{var}n))"
+            "C": f"(1/(2*1j*pi*f*{var}))",
+            "L": f"(2*1j*pi*f*{var})",
+            "P": f"(1/({var}w*(2*1j*pi*f)**{var}n))",
         }[eltype]
+
     # Get component lables
-    components = get_component_labels(circuit_expr)
-    # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*pi*F*C1))
+    components = get_component_labels(expr)
+    # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*pi*f*C1))
     for c in components:
-        circuit_expr = circuit_expr.replace(c, replacement(c))
-    return circuit_expr
+        expr = expr.replace(c, replacement(c))
+    return expr

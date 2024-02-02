@@ -6,8 +6,8 @@ Collection of functions to be used as models for Bayesian inference.
 .. autosummary::
    :toctree: generated/
 
-    circuit_component_regression
-    circuit_component_regression_fn_wrapped
+    circuit_regression
+    circuit_regression_wrapped
 
 """
 import jax
@@ -19,7 +19,7 @@ import numpyro.distributions as dist
 from autoeis import utils
 
 
-def circuit_component_regression(
+def circuit_regression(
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     priors: dict[str, dist.Distribution],
@@ -39,7 +39,7 @@ def circuit_component_regression(
     numpyro.sample("obs_imag", dist.Normal(Z_pred.imag, sigma_imag), obs=Z.imag)
 
 
-def circuit_component_regression_fn_wrapped(
+def circuit_regression_wrapped(
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
     priors: dict[str, dist.Distribution],

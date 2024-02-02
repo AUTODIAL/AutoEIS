@@ -39,7 +39,7 @@ dependencies = [
     "jax",
     "julia",
     "matplotlib",
-    "mpire",
+    "mpire[dill]",
     "numpy",
     "numpyro",
     "pandas",
@@ -81,3 +81,6 @@ testpaths = [
     "tests",
     "integration",
 ]
+
+[tool.ruff]
+line-length = 88
