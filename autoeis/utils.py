@@ -22,7 +22,7 @@ import re
 import signal
 import sys
 from collections.abc import Iterable
-from functools import wraps
+from functools import partial, wraps
 from typing import Union
 
 import jax  # NOQA: F401
@@ -192,24 +192,15 @@ if os.name != "nt":
     fit_circuit_parameters = timeout(300)(fit_circuit_parameters)
 
 
-def generate_circuit_fn(
-    circuit: str,
-    return_str: bool = False,
-    label: str = "X",
-) -> Union[callable, str]:
-    assert isinstance(circuit, str), "Circuit must be a string."
-    """Converts a circuit string to a function of (params, freq)"""
-    # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
-    circuit_expr = parser.generate_mathematical_expr(circuit)
-    # Embed impedance expressions, e.g., C1 -> (1/(2*1j*pi*F*C1))
-    circuit_expr = parser.embed_impedance_expr(circuit_expr)
-    # Replace variables with array indexing, e.g., R1, P2w, P2n -> X[0], X[1], X[2]
-    variables = parser.get_parameter_labels(circuit)
-    for i, var in enumerate(variables):
-        circuit_expr = circuit_expr.replace(var, f"{label}[{i}]", 1)
-    if return_str:
-        return circuit_expr
-    return lambda X, F: eval(circuit_expr)
+def eval_circuit(circuit: str, x: np.ndarray[float], f: np.ndarray[float]) -> np.ndarray:
+    """Converts a circuit string to a function of (params, freq) and evaluates it."""
+    Z_expr = parser.generate_mathematical_expr(circuit)
+    return eval(Z_expr)
+
+
+def generate_circuit_fn(circuit: str, jit=False):
+    fn = partial(eval_circuit, circuit)
+    return jax.jit(fn) if jit else fn
 
 
 def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
