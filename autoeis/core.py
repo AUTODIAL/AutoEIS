@@ -10,6 +10,7 @@ Collection of functions core to AutoEIS functionality.
     generate_equivalent_circuits
     filter_implausible_circuits
     perform_bayesian_inference
+    perform_bayesian_inference_batch
     preprocess_impedance_data 
 
 """
@@ -591,6 +592,80 @@ def perform_bayesian_inference(
         log.error(f"Inference failed for circuit: {circuit}")
         return mcmc, -1
     return mcmc, 0
+
+
+def perform_bayesian_inference_batch(
+    circuits: Union[pd.DataFrame, list],
+    Z: np.ndarray[complex],
+    freq: np.ndarray[float],
+    p0: list[dict[str, float]] = None,
+    num_warmup=2500,
+    num_samples=1000,
+    num_chains=1,
+    seed: Union[int, jax.Array] = None,
+    progress_bar=True,
+):
+    """Performs Bayesian inference on a list of circuits in parallel.
+    
+    Parameters
+    ----------
+    circuits : pd.DataFrame or list[str]
+        Dataframe containing circuits or list of circuit strings.
+    Z : np.ndarray[complex]
+        Complex impedance data.
+    freq: np.ndarray[float]
+        Frequency data.
+    p0 : list[dict[str, float]], optional
+        Initial guess for the circuit parameters (default is None).
+    seed : int, optional
+        Random seed for reproducibility (default is None).
+
+    Returns
+    -------
+    list[tuple[numpyro.infer.mcmc.MCMC, int]]
+        List of MCMC objects and exit codes (0 if successful, -1 if failed).
+    """
+    if len(circuits) == 0:
+        log.warning("Circuits' dataframe is empty!")
+        return []
+
+    # Validate inputs
+    if isinstance(circuits, pd.DataFrame):
+        utils.validate_circuits_dataframe(circuits)
+        p0 = circuits["Parameters"].tolist() if p0 is None else p0
+        circuits = circuits["circuitstring"].tolist()
+    assert all(isinstance(circuit, str) for circuit in circuits)
+
+    # Generate a random seed for each circuit
+    N = len(circuits)
+    seed = seed or time.time_ns() % 2**32
+    key = jax.random.PRNGKey(seed)
+    key, *subkeys = jax.random.split(key, N + 1)
+
+    # Multiprocessing requires all inputs to be iterables of the same length
+    bi_kwargs = {
+        "circuits": circuits,
+        "Z": [Z] * N,
+        "freq": [freq] * N,
+        "p0": p0 if isinstance(p0, list) else [p0] * N,
+        "num_warmup": [num_warmup] * N,
+        "num_samples": [num_samples] * N,
+        "num_chains": [num_chains] * N,
+        "seed": subkeys,
+        "progress_bar": [False] * N,
+    }
+
+    # Perform Bayesian inference in parallel
+    with WorkerPool(use_dill=True) as pool:
+        mcmcs = pool.map(
+            perform_bayesian_inference,
+            zip(*bi_kwargs.values()),
+            progress_bar=progress_bar,
+            progress_bar_style="notebook",
+            iterable_len=len(circuits),
+        )
+
+    return mcmcs
 
 
 def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
