@@ -340,7 +340,7 @@ def validate_circuits_dataframe(circuits: pd.DataFrame):
     """Validates the circuits dataframe format (columns and dtype)."""
     # Check if the dataframe has the required columns
     required_columns = ["circuitstring", "Parameters"]
-    missing = set(required_columns).symmetric_difference(circuits.columns)
+    missing = set(required_columns).difference(circuits.columns)
     assert not missing, f"Missing columns: {missing}"
     # Check if the circuitstring column contains only strings
     assert (
