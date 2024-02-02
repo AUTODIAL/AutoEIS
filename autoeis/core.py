@@ -751,24 +751,12 @@ def perform_full_analysis(
     circuits = filter_implausible_circuits(circuits_unfiltered)
 
     # Perform Bayesian inference on the filtered ECMs
-    mcmc_list = []
-
-    for row in tqdm(
-        circuits.itertuples(), total=len(circuits), desc="Bayesian Inference"
-    ):
-        circuit = row.circuitstring
-        p0_dict = row.Parameters
-        # Get another set of initial guesses using impedance.py (not guaranteed to converge)
-        p0_fit = utils.fit_circuit_parameters(circuit, Z, freq, p0=p0_dict)
-        kwargs_mcmc = {
-            "num_warmup": num_warmup,
-            "num_samples": num_samples,
-            "progress_bar": False,
-        }
-        mcmc = perform_bayesian_inference(circuit, Z, freq, p0_fit, **kwargs_mcmc)
-        mcmc_list.append(mcmc)
+    kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}    
+    mcmcs = perform_bayesian_inference_batch(circuits, Z, freq, **kwargs_mcmc)
 
     # Add the results to the circuits dataframe as a new column
-    circuits["MCMC"] = mcmc_list
+    chains, status = zip(*mcmcs)
+    circuits["MCMC (chain)"] = chains
+    circuits["MCMC (status)"] = status
 
     return circuits
