@@ -547,12 +547,14 @@ def perform_bayesian_inference(
     """
     log.info("Performing Bayesian inference on the circuit {circuit}.")
 
-    # Set the seed for reproducibility (if not set, use current time in nanoseconds)
-    seed = seed or time.time_ns() % 2**32
+
     # If the seed is already set using JAX, use it
+    assert isinstance(seed, (int, jax.Array, type(None)))
     if isinstance(seed, jax.Array) and len(seed) == 2:
         subkey = seed
+    # If seed is int -> use it, else generate a new seed using time
     else:
+        seed = time.time_ns() % 2**32 if seed is None else seed
         key = jax.random.PRNGKey(seed)
         key, subkey = jax.random.split(key)
 
