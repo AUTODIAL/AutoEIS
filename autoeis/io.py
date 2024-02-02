@@ -8,6 +8,7 @@ Collection of functions for importing and exporting EIS data/results.
 
     get_assets_path
     load_test_dataset
+    load_test_circuits
     parse_ec_output
 
 """
@@ -37,6 +38,17 @@ def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
     # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
     Z = Zreal - 1j * Zimag
     return Z, freq
+
+
+def load_test_circuits(filtered=False) -> pd.DataFrame:
+    """Returns equivalent circuits fitted to test dataset for testing."""
+    PATH = get_assets_path()
+    fname = "circuits_filtered.csv" if filtered else "circuits_unfiltered.csv"
+    fpath = os.path.join(PATH, fname)
+    circuits = pd.read_csv(fpath)
+    # Convert stringified list to proper Python objects
+    circuits["Parameters"] = circuits["Parameters"].apply(eval)
+    return circuits
 
 
 def parse_ec_output(circuits: pd.DataFrame) -> pd.DataFrame:
