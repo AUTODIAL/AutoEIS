@@ -39,7 +39,7 @@ dependencies = [
     "jax",
     "julia",
     "matplotlib",
-    "mpire",
+    "mpire[dill]",
     "numpy",
     "numpyro",
     "pandas",
