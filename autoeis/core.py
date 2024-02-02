@@ -548,7 +548,6 @@ def perform_bayesian_inference(
     """
     log.info("Performing Bayesian inference on the circuit {circuit}.")
 
-
     # If the seed is already set using JAX, use it
     assert isinstance(seed, (int, jax.Array, type(None)))
     if isinstance(seed, jax.Array) and len(seed) == 2:
@@ -606,7 +605,7 @@ def perform_bayesian_inference_batch(
     progress_bar=True,
 ):
     """Performs Bayesian inference on a list of circuits in parallel.
-    
+
     Parameters
     ----------
     circuits : pd.DataFrame or list[str]
@@ -697,8 +696,10 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     circuits = circuits.drop(columns=["Resistors", "Capacitors", "Inductors", "CPEs"])
 
     if len(circuits) == 0:
-        log.warning("No plausible circuits found. Rerun"
-                    " generate_equivalent_circuits with higher iters or tol.")
+        log.warning(
+            "No plausible circuits found. Increase `iters` or `tol` and rerun"
+            " `generate_equivalent_circuits`"
+        )
 
     return circuits
 
@@ -751,7 +752,7 @@ def perform_full_analysis(
     circuits = filter_implausible_circuits(circuits_unfiltered)
 
     # Perform Bayesian inference on the filtered ECMs
-    kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}    
+    kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}
     mcmcs = perform_bayesian_inference_batch(circuits, Z, freq, **kwargs_mcmc)
 
     # Add the results to the circuits dataframe as a new column
