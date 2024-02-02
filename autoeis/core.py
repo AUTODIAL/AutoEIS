@@ -522,7 +522,7 @@ def perform_bayesian_inference(
     num_warmup=1000,
     num_samples=1000,
     num_chains=1,
-    seed: int = None,
+    seed: Union[int, jax.Array] = None,
     progress_bar: bool = True,
 ) -> tuple[numpyro.infer.mcmc.MCMC, int]:
     """Performs Bayesian inference on the circuit based on impedance data.
@@ -537,7 +537,7 @@ def perform_bayesian_inference(
         Frequency data.
     p0 : Union[np.ndarray[float], dict[str, float]], optional
         Initial guess for the circuit parameters (default is None).
-    seed : int, optional
+    seed : Union[int, jax.Array], optional
         Random seed for reproducibility (default is None).
 
     Returns
@@ -549,20 +549,22 @@ def perform_bayesian_inference(
 
     # Set the seed for reproducibility (if not set, use current time in nanoseconds)
     seed = seed or time.time_ns() % 2**32
-    np.random.seed(seed)
-    rng_key = random.PRNGKey(seed)
+    # If the seed is already set using JAX, use it
+    if isinstance(seed, jax.Array) and len(seed) == 2:
+        subkey = seed
+    else:
+        key = jax.random.PRNGKey(seed)
+        key, subkey = jax.random.split(key)
 
     # Deal with initial values for the circuit parameters
     if p0 is None:
         p0 = utils.fit_circuit_parameters(circuit, Z, freq)
     assert isinstance(p0, dict), "p0 must be a dictionary"
 
-    circuit_fn = utils.generate_circuit_fn(circuit)
-    circuit_fn = jax.jit(circuit_fn)
+    circuit_fn = utils.generate_circuit_fn(circuit, jit=True)
 
     # Compute prior predictive distribution using the initial guess
     priors = utils.initialize_priors(p0, variables=p0.keys())
-    rng_key, rng_subkey = random.split(rng_key)
     nuts_kernel = NUTS(
         model=circuit_regression_wrapped,
         init_strategy=numpyro.infer.init_to_median,
@@ -574,7 +576,6 @@ def perform_bayesian_inference(
         "progress_bar": progress_bar,
     }
     mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
-    rng_key, rng_subkey = jax.random.split(rng_key)
     kwargs_inference = {
         "Z": Z,
         "freq": freq,
@@ -583,7 +584,7 @@ def perform_bayesian_inference(
     }
 
     try:
-        mcmc.run(rng_subkey, **kwargs_inference)
+        mcmc.run(subkey, **kwargs_inference)
     except RuntimeError:
         log.error(f"Inference failed for circuit: {circuit}")
         return mcmc, -1
