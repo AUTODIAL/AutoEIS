@@ -30,7 +30,6 @@ import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
-import rich.traceback
 from impedance.models.circuits import CustomCircuit
 from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
@@ -54,11 +53,6 @@ def get_logger(name: str) -> logging.Logger:
     handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
     logger.addHandler(handler)
     return logger
-
-
-def setup_rich_tracebacks():
-    """Set up rich traceback for nicer exception printing."""
-    rich.traceback.install()
 
 
 # <<< Logging utils
