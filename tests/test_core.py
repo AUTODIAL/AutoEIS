@@ -1,5 +1,7 @@
 import numpy as np
+import numpyro
 import pandas as pd
+import pytest
 
 from autoeis import core, io, utils
 
@@ -56,3 +58,56 @@ def test_gep_parallel():
     }
     circuits = core.generate_equivalent_circuits(Z, freq, **kwargs)
     assert isinstance(circuits, pd.DataFrame)
+
+
+def test_filter_implausible_circuits():
+    Z, freq = io.load_test_dataset()
+    circuits_unfiltered = io.load_test_circuits()
+    N1 = len(circuits_unfiltered)
+    circuits = core.filter_implausible_circuits(circuits_unfiltered)
+    N2 = len(circuits)
+    assert N2 < N1
+
+
+def test_bayesian_inference():
+    Z, freq = io.load_test_dataset()
+    circuits = io.load_test_circuits(filtered=True)
+    mcmcs = []
+    for row in circuits.itertuples():
+        circuit = row.circuitstring
+        p0_dict = row.Parameters
+        kwargs_mcmc = {
+            "num_warmup": 2500,
+            "num_samples": 1000,
+            "progress_bar": False,
+        }
+        mcmc, exist_code = core.perform_bayesian_inference(
+            circuit, Z, freq, p0_dict, **kwargs_mcmc
+        )
+        mcmcs.append((mcmc, exist_code))
+        assert exist_code in [-1, 0]
+        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
+    assert len(mcmcs) == len(circuits)
+
+
+def test_bayesian_inference_batch():
+    Z, freq = io.load_test_dataset()
+    circuits = io.load_test_circuits(filtered=True)
+    mcmcs = core.perform_bayesian_inference_batch(circuits, Z, freq)
+    assert len(mcmcs) == len(circuits)
+    for mcmc, exist_code in mcmcs:
+        assert exist_code in [-1, 0]
+        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
+
+
+@pytest.mark.skip(reason="This test is too slow!")
+def test_perform_full_analysis():
+    Z, freq = io.load_test_dataset()
+    results = core.perform_full_analysis(Z, freq)
+    required_columns = [
+        "circuitstring",
+        "Parameters",
+        "MCMC (chains)",
+        "MCMC (status)",
+    ]
+    assert all(col in results.columns for col in required_columns)
