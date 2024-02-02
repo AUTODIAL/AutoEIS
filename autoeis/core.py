@@ -696,6 +696,10 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     # Drop the columns added by split_components
     circuits = circuits.drop(columns=["Resistors", "Capacitors", "Inductors", "CPEs"])
 
+    if len(circuits) == 0:
+        log.warning("No plausible circuits found. Rerun"
+                    " generate_equivalent_circuits with higher iters or tol.")
+
     return circuits
 
 
