@@ -94,7 +94,7 @@ An example notebook that demonstrates how to use AutoEIS can be found [here](htt
 # Work in progress/known issues
 - [x] Refactor the code as it is still in the developmental stage and not yet production-ready.
 - [x] Speed up the code; Currently, it takes ~ 4 hours to generate 100 equivalent circuits (your mileage may vary).
-- [ ] Optimize Bayesian inference to process circuits in parallel.
+- [x] Optimize Bayesian inference to process circuits in parallel.
 - [x] Add proper unit/integration tests.
 - [x] Add proper documentation (API, more examples, etc.).
 - [ ] Add a graphical user interface for a more user-friendly interaction.
