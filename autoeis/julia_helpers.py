@@ -184,7 +184,7 @@ def import_backend(Main=None):
 
 
 # HACK: On Windows, for some reason the first two imports fail, fix this.
-def import_package(pkg_name, Main=None):
+def import_package2(pkg_name, Main=None):
     """Load a Julia package and return a reference to it."""
     num_failed_imports = 0
 
@@ -202,6 +202,18 @@ def import_package(pkg_name, Main=None):
             _raise_import_error(root=e)
         ref = import_package(pkg_name, Main=Main)
 
+    return ref
+
+
+def import_package(pkg_name, Main=None):
+    """Load a Julia package and return a reference to it."""
+    if Main is None:
+        Main = init_julia()
+    try:
+        Main.eval(f"using {pkg_name}")
+    except (JuliaError, RuntimeError) as e:
+        _raise_import_error(root=e)
+    ref = importlib.import_module(f"julia.{pkg_name}")
     return ref
 
 
