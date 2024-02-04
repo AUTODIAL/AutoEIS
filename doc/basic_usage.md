@@ -9,7 +9,7 @@ Z, freq = ae.io.load_test_dataset()
 ae.visualization.plot_impedance_combo(Z, freq)
 
 # Perform the full analysis
-circuits = ae.perform_full_analysis(Z, freq, iters=12, parallel=True)
+circuits = ae.perform_full_analysis(Z, freq, iters=24, parallel=True)
 print(circuits)
 ```
 
