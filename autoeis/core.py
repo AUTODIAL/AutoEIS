@@ -793,7 +793,7 @@ def perform_full_analysis(
 
     # Perform Bayesian inference on the filtered ECMs
     kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}
-    mcmcs = _perform_bayesian_inference_batch(circuits, Z, freq, **kwargs_mcmc)
+    mcmcs = perform_bayesian_inference(circuits, Z, freq, **kwargs_mcmc)
 
     # Add the results to the circuits dataframe as a new column
     chains, status = zip(*mcmcs)
