@@ -53,6 +53,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest",
+  "nbmake",
 ]
 doc = [
     "furo",
