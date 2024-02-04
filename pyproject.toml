@@ -46,7 +46,7 @@ dependencies = [
     "psutil",
     "pyparsing",
     "rich",
-    "scikit-learn",
+    "scikit-learn >= 1.4",
     "seaborn",
     "tqdm",
 ]
