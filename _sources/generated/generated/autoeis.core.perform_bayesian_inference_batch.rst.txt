@@ -1,6 +1,0 @@
-perform\_bayesian\_inference\_batch
-===================================
-
-.. currentmodule:: autoeis.core
-
-.. autofunction:: perform_bayesian_inference_batch

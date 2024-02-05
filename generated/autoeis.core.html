@@ -176,7 +176,6 @@
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference_batch.html">perform_bayesian_inference_batch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.core.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
 </ul>
 </li>
@@ -267,13 +266,10 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.core.filter_implausible_circuits.html#autoeis.core.filter_implausible_circuits" title="autoeis.core.filter_implausible_circuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_implausible_circuits</span></code></a>(circuits)</p></td>
 <td><p>Apply heuristic rules to filter the generated ECMs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference.html#autoeis.core.perform_bayesian_inference" title="autoeis.core.perform_bayesian_inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">perform_bayesian_inference</span></code></a>(circuit, Z, freq)</p></td>
-<td><p>Performs Bayesian inference on the circuit based on impedance data.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference.html#autoeis.core.perform_bayesian_inference" title="autoeis.core.perform_bayesian_inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">perform_bayesian_inference</span></code></a>(circuits, Z, freq)</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.core.perform_bayesian_inference_batch.html#autoeis.core.perform_bayesian_inference_batch" title="autoeis.core.perform_bayesian_inference_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">perform_bayesian_inference_batch</span></code></a>(circuits, ...)</p></td>
-<td><p>Performs Bayesian inference on a list of circuits in parallel.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.core.preprocess_impedance_data.html#autoeis.core.preprocess_impedance_data" title="autoeis.core.preprocess_impedance_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_impedance_data</span></code></a>(impedance, freq[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.core.preprocess_impedance_data.html#autoeis.core.preprocess_impedance_data" title="autoeis.core.preprocess_impedance_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_impedance_data</span></code></a>(impedance, freq[, ...])</p></td>
 <td><p>Preprocess impedance data, filtering out data with a positive imaginary part in high frequencies and applying KK validation.</p></td>
 </tr>
 </tbody>
