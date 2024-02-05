@@ -46,13 +46,14 @@ dependencies = [
     "psutil",
     "pyparsing",
     "rich",
-    "scikit-learn",
+    "scikit-learn >= 1.4",
     "seaborn",
     "tqdm",
 ]
 [project.optional-dependencies]
 test = [
   "pytest",
+  "nbmake",
 ]
 doc = [
     "furo",

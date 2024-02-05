@@ -69,33 +69,29 @@ def test_filter_implausible_circuits():
     assert N2 < N1
 
 
-def test_bayesian_inference():
+def test_bayesian_inference_single():
     Z, freq = io.load_test_dataset()
     circuits = io.load_test_circuits(filtered=True)
-    mcmcs = []
-    for row in circuits.itertuples():
-        circuit = row.circuitstring
-        p0_dict = row.Parameters
-        kwargs_mcmc = {
-            "num_warmup": 2500,
-            "num_samples": 1000,
-            "progress_bar": False,
-        }
-        mcmc, exist_code = core.perform_bayesian_inference(
-            circuit, Z, freq, p0_dict, **kwargs_mcmc
-        )
-        mcmcs.append((mcmc, exist_code))
-        assert exist_code in [-1, 0]
-        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
-    assert len(mcmcs) == len(circuits)
+    circuit = circuits.iloc[0].circuitstring
+    p0 = circuits.iloc[0].Parameters
+    kwargs_mcmc = {
+        "num_warmup": 2500,
+        "num_samples": 1000,
+        "progress_bar": False,
+    }
+    mcmc, exist_code = core._perform_bayesian_inference(
+        circuit, Z, freq, p0, **kwargs_mcmc
+    )
+    assert exist_code in [-1, 0]
+    assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 
 
 def test_bayesian_inference_batch():
     Z, freq = io.load_test_dataset()
     circuits = io.load_test_circuits(filtered=True)
-    mcmcs = core.perform_bayesian_inference_batch(circuits, Z, freq)
-    assert len(mcmcs) == len(circuits)
-    for mcmc, exist_code in mcmcs:
+    mcmc_results = core.perform_bayesian_inference(circuits, Z, freq)
+    assert len(mcmc_results) == len(circuits)
+    for mcmc, exist_code in mcmc_results:
         assert exist_code in [-1, 0]
         assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 

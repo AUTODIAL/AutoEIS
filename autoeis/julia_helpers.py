@@ -17,6 +17,7 @@ import autoeis.utils as utils
 
 from .version import __equivalent_circuits_jl_version__, __version__
 
+MAX_RETRIES = 2
 juliainfo = None
 julia_initialized = False
 julia_kwargs_at_initialization = None
@@ -176,32 +177,29 @@ def import_backend(Main=None):
     """Load EquivalentCircuits.jl, verify version and return a reference."""
     if Main is None:
         Main = init_julia()
-    EquivalentCircuits = import_package("EquivalentCircuits", Main=Main)
+    ec = import_package("EquivalentCircuits", Main=Main)
     # FIXME: Currently don't know how to assert branch name if installed from GitHub
     if __equivalent_circuits_jl_version__.startswith("v"):
         _backend_version_assertion(Main)
-    return EquivalentCircuits
+    return ec
 
 
-# HACK: On Windows, for some reason the first two imports fail, fix this.
 def import_package(pkg_name, Main=None):
     """Load a Julia package and return a reference to it."""
-    num_failed_imports = 0
-
-    try:
-        if Main is None:
-            Main = init_julia()
+    if Main is None:
+        Main = init_julia()
+    # HACK: On Windows, for som reason, the first two imports fail!        
+    for _ in range(MAX_RETRIES):
         try:
             Main.eval(f"using {pkg_name}")
-        except (JuliaError, RuntimeError) as e:
-            _raise_import_error(root=e)
-        ref = importlib.import_module(f"julia.{pkg_name}")
-    except ImportError:
-        num_failed_imports += 1
-        if num_failed_imports > 3:
-            _raise_import_error(root=e)
-        ref = import_package(pkg_name, Main=Main)
-
+        except Exception:
+            pass
+    # Now, normally import the package
+    try:
+        Main.eval(f"using {pkg_name}")
+    except (JuliaError, RuntimeError) as e:
+        _raise_import_error(root=e)
+    ref = importlib.import_module(f"julia.{pkg_name}")
     return ref
 
 
