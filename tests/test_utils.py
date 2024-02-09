@@ -39,7 +39,8 @@ def test_generate_circuit_fn():
     p = np.random.rand(num_params)
     circuit_fn = utils.generate_circuit_fn(circuit)
     Z_py = circuit_fn(p, freq)
-    ec = julia_helpers.import_backend()
+    Main = julia_helpers.init_julia()
+    ec = julia_helpers.import_backend(Main)
     Z_jl = np.array([ec.get_target_impedance(circuit, p, f) for f in freq])
     np.testing.assert_allclose(Z_py, Z_jl)
 

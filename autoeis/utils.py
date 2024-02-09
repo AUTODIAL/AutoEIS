@@ -35,6 +35,8 @@ from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
 from scipy import stats
 
+import __main__
+
 # from tensorflow_probability import distributions as tfdist  # NOQA: F401
 from autoeis import parser
 
@@ -42,7 +44,7 @@ from autoeis import parser
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a logger with the given name."""
+    """Returns a logger with the given name."""
     logger = logging.getLogger(name)
     if logger.hasHandlers():
         # If logger has handlers, do not add another to avoid duplicate logs
@@ -139,6 +141,36 @@ def timeout(seconds):
         return wrapper
 
     return decorator
+
+
+# Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
+def get_runtime():
+    """Returns the runtime environment."""
+    if "google.colab" in sys.modules:
+        return "Google Colab"
+    elif "ipykernel" in sys.modules:
+        if "jupyter" in sys.modules:
+            return "JupyterLab"
+        else:
+            return "Jupyter Notebook"
+    elif "win32" in sys.platform:
+        if "CMDEXTVERSION" in os.environ:
+            return "Windows Command Prompt"
+        else:
+            return "Windows PowerShell"
+    elif "darwin" in sys.platform:
+        return "MacOS Terminal"
+    else:
+        if hasattr(__main__, "__file__"):
+            return "Linux Terminal"
+        else:
+            return "Interactive Python Shell"
+
+
+def is_notebook():
+    """Returns True if the code is running in a Jupyter notebook."""
+    runtime = get_runtime()
+    return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
 
 
 # <<< General utils

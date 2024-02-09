@@ -44,7 +44,7 @@ dependencies = [
     "numpyro",
     "pandas",
     "psutil",
-    "pyparsing",
+    "pyparsing >= 3",
     "rich",
     "scikit-learn >= 1.4",
     "seaborn",
@@ -82,6 +82,3 @@ testpaths = [
     "tests",
     "integration",
 ]
-
-[tool.ruff]
-line-length = 88

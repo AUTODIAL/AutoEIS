@@ -15,7 +15,6 @@ Collection of functions core to AutoEIS functionality.
 
 """
 import os
-import sys
 import time
 import warnings
 from typing import Union
@@ -45,6 +44,12 @@ linKK = utils.suppress_output(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
+# Initialize Julia runtime (need to catch ImportError for pip install to work)
+try:
+    Main = julia_helpers.init_julia()
+    ec = julia_helpers.import_backend(Main)
+except Exception:
+    pass
 
 __all__ = [
     "perform_full_analysis",
@@ -314,7 +319,8 @@ def generate_equivalent_circuits(
 
 def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     """Generates candidate circuits in serial."""
-    Main = julia_helpers.init_julia()
+    global Main
+    Main = julia_helpers.init_julia() if Main is None else Main
     ec = julia_helpers.import_backend(Main)
 
     # Set random seed for reproducibility
@@ -343,7 +349,8 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
-        Main = julia_helpers.init_julia()
+        global Main
+        Main = julia_helpers.init_julia() if Main is None else Main
         # Set random seed for reproducibility
         Main.eval(f"import Random; Random.seed!({seed})")
         ec = julia_helpers.import_backend(Main)
@@ -393,18 +400,20 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
 def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     """Generates candidate circuits in parallel using Julia multiprocessing."""
-    Main = julia_helpers.init_julia()
+    global Main
+    Main = julia_helpers.init_julia() if Main is None else Main
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
     Main.eval(f"import Random; Random.seed!({seed})")
     Main.eval("import Logging; Logging.disable_logging(Logging.Warn)")
+
     ec = julia_helpers.import_backend(Main)
 
     # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
     nprocs = psutil.cpu_count(logical=False)
     # Double the number of workers to buffer for those with slow convergence
     # (don't do this for small iters, otherwise progress bar becomes pointless)
-    nprocs = 2*nprocs if (iters // nprocs) > 10 else nprocs
+    nprocs = 2 * nprocs if (iters // nprocs) > 10 else nprocs
     # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
     iters_chunked = [nprocs] * (iters // nprocs)
     if iters % nprocs:
@@ -414,20 +423,16 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     circuits = []
 
     with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
-        # HACK: Flush once for progress bar to show up
-        sys.stderr.flush()
         for iters_ in iters_chunked:
             try:
                 circuits_ = ec.circuit_evolution_batch(
-                    impedance, freq, **ec_kwargs, iters=iters_
+                    impedance, freq, **ec_kwargs, iters=iters_, quiet=True
                 )
             except Exception as e:
                 log.error(f"Error generating circuits: {e}")
                 circuits_ = []
             circuits += circuits_
             pbar.update(iters_)
-            # HACK: Flush every iteration to refresh progress bar
-            sys.stderr.flush()
 
     # Format output as list of strings since Julia objects cannot be pickled
     circuits_py = []
@@ -703,7 +708,7 @@ def _perform_bayesian_inference_batch(
             _perform_bayesian_inference,
             zip(*bi_kwargs.values()),
             progress_bar=progress_bar,
-            progress_bar_style="notebook",
+            progress_bar_style="notebook" if utils.is_notebook() else "rich",
             iterable_len=len(circuits),
         )
 
