@@ -23,6 +23,7 @@ jobs:
       - name: "Set up Python"
         uses: conda-incubator/setup-miniconda@v3
         with:
+          python-version: '3.10'
           miniforge-version: latest
       - name: "Install AutoEIS"
         run: |
