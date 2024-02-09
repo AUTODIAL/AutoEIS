@@ -42,7 +42,7 @@ from autoeis import parser
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a logger with the given name."""
+    """Returns a logger with the given name."""
     logger = logging.getLogger(name)
     if logger.hasHandlers():
         # If logger has handlers, do not add another to avoid duplicate logs
