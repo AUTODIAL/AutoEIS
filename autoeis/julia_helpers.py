@@ -27,7 +27,9 @@ log = utils.get_logger(__name__)
 # TODO: For virtualenvs see https://github.com/JuliaPy/PyCall.jl?tab=readme-ov-file#python-virtual-environments
 
 
-def install(julia_project=None, quiet=False, precompile=None, offline=False):  # pragma: no cover
+def install(
+    julia_project=None, quiet=False, precompile=None, offline=False
+):  # pragma: no cover
     """Install all required dependencies for EquivalentCircuits.jl."""
     import julia
 
@@ -36,9 +38,9 @@ def install(julia_project=None, quiet=False, precompile=None, offline=False):  #
     processed_julia_project, is_shared = _process_julia_project(julia_project)
     _set_julia_project_env(processed_julia_project, is_shared)
 
-    if precompile == False:
+    if precompile is False:
         os.environ["JULIA_PKG_PRECOMPILE_AUTO"] = "0"
-    
+
     if offline:
         os.environ["JULIA_PKG_OFFLINE"] = "true"
 
@@ -126,7 +128,7 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
                 "https://github.com/pyenv/pyenv/blob/master/plugins/python-build/README.md"
             )
 
-    using_compiled_modules = (not "compiled_modules" in julia_kwargs) or julia_kwargs[
+    using_compiled_modules = ("compiled_modules" not in julia_kwargs) or julia_kwargs[
         "compiled_modules"
     ]
 
@@ -173,10 +175,8 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
     return Main
 
 
-def import_backend(Main=None):
+def import_backend(Main):
     """Load EquivalentCircuits.jl, verify version and return a reference."""
-    if Main is None:
-        Main = init_julia()
     ec = import_package("EquivalentCircuits", Main=Main)
     # FIXME: Currently don't know how to assert branch name if installed from GitHub
     if __equivalent_circuits_jl_version__.startswith("v"):
@@ -184,11 +184,9 @@ def import_backend(Main=None):
     return ec
 
 
-def import_package(pkg_name, Main=None):
+def import_package(pkg_name, Main):
     """Load a Julia package and return a reference to it."""
-    if Main is None:
-        Main = init_julia()
-    # HACK: On Windows, for som reason, the first two imports fail!        
+    # HACK: On Windows, for some reason, the first two imports fail!
     for _ in range(MAX_RETRIES):
         try:
             Main.eval(f"using {pkg_name}")
@@ -201,28 +199,28 @@ def import_package(pkg_name, Main=None):
             Main.eval(f"using {pkg_name}")
         except (JuliaError, RuntimeError) as e:
             _raise_import_error(root=e)
-    ref = importlib.import_module(f"julia.{pkg_name}")
-    return ref
+    return importlib.import_module(f"julia.{pkg_name}")
 
 
 def add_to_path(path):
     if not os.path.exists(path):
         raise ValueError(f"The provided path '{path}' does not exist.")
-    
+
     if path not in os.environ["PATH"].split(os.pathsep):
         os.environ["PATH"] += os.pathsep + path
 
 
 def _recompile_pycall():
     import julia
+
     try:
         os.environ["PYCALL_JL_RUNTIME_PYTHON"] = sys.executable
         julia.install(quiet=True)
     except julia.tools.PyCallInstallError:
-        pass    
+        pass
 
 
-def _raise_import_error(root: Exception=None):
+def _raise_import_error(root: Exception = None):
     """Raise ImportError if Julia dependencies are not installed."""
     raise ImportError(
         "Required dependencies are not installed or built. Run the "
@@ -230,7 +228,7 @@ def _raise_import_error(root: Exception=None):
     ) from root
 
 
-def _raise_julia_not_found(root: Exception=None):
+def _raise_julia_not_found(root: Exception = None):
     """Raise FileNotFoundError if Julia is not installed."""
     raise FileNotFoundError(
         "Julia is not installed in your PATH. Please install Julia "
