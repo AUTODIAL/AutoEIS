@@ -82,6 +82,3 @@ testpaths = [
     "tests",
     "integration",
 ]
-
-[tool.ruff]
-line-length = 88
