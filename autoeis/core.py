@@ -324,7 +324,7 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     ec = julia_helpers.import_backend(Main)
 
     # Set random seed for reproducibility
-    Main.eval(f"import Random; Random.seed!({seed})")
+    Main.seval(f"import Random; Random.seed!({seed})")
 
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
@@ -352,7 +352,7 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
         global Main
         Main = julia_helpers.init_julia() if Main is None else Main
         # Set random seed for reproducibility
-        Main.eval(f"import Random; Random.seed!({seed})")
+        Main.seval(f"import Random; Random.seed!({seed})")
         ec = julia_helpers.import_backend(Main)
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
@@ -404,8 +404,8 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     Main = julia_helpers.init_julia() if Main is None else Main
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
-    Main.eval(f"import Random; Random.seed!({seed})")
-    Main.eval("import Logging; Logging.disable_logging(Logging.Warn)")
+    Main.seval(f"import Random; Random.seed!({seed})")
+    Main.seval("import Logging; Logging.disable_logging(Logging.Warn)")
 
     ec = julia_helpers.import_backend(Main)
 
