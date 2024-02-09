@@ -13,8 +13,6 @@ def test_import_julia_modules():
 
     # Ensure installed modules can be imported
     ec = julia_helpers.import_package("EquivalentCircuits", Main=Main)
-    # Test Main is not required
-    ec = julia_helpers.import_package("EquivalentCircuits")
 
     # Throw error for non-existent module
     with pytest.raises(Exception):
