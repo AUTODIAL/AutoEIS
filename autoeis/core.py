@@ -15,7 +15,6 @@ Collection of functions core to AutoEIS functionality.
 
 """
 import os
-import sys
 import time
 import warnings
 from typing import Union
@@ -45,9 +44,12 @@ linKK = utils.suppress_output(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
-# Initialize Julia runtime
-Main = julia_helpers.init_julia()
-ec = julia_helpers.import_backend(Main)
+# Initialize Julia runtime (need to catch ImportError for pip install to work)
+try:
+    Main = julia_helpers.init_julia()
+    ec = julia_helpers.import_backend(Main)
+except Exception:
+    pass
 
 __all__ = [
     "perform_full_analysis",
