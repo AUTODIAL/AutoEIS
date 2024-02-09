@@ -404,7 +404,7 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     nprocs = psutil.cpu_count(logical=False)
     # Double the number of workers to buffer for those with slow convergence
     # (don't do this for small iters, otherwise progress bar becomes pointless)
-    nprocs = 2*nprocs if (iters // nprocs) > 10 else nprocs
+    nprocs = 2 * nprocs if (iters // nprocs) > 10 else nprocs
     # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
     iters_chunked = [nprocs] * (iters // nprocs)
     if iters % nprocs:
