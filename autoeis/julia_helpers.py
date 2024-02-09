@@ -1,18 +1,22 @@
 import shutil
 
-import juliapkg
-
 from autoeis.version import __equivalent_circuits_jl_version__
 
 
-def install():
+def install(ec_path=None):
     """Installs Julia dependencies for AutoEIS."""
     assert_julia_installed()
+    import juliapkg
+
     kwargs = {"name": "EquivalentCircuits", "uuid": "da5bd070-f609-4e16-a30d-de86b3faa756"}
-    if __equivalent_circuits_jl_version__.startswith("v"):
-        kwargs["version"] = __equivalent_circuits_jl_version__
+    if ec_path is not None:
+        kwargs["path"] = ec_path
+        kwargs["dev"] = True
     else:
-        kwargs["rev"] = __equivalent_circuits_jl_version__
+        if __equivalent_circuits_jl_version__.startswith("v"):
+            kwargs["version"] = __equivalent_circuits_jl_version__
+        else:
+            kwargs["rev"] = __equivalent_circuits_jl_version__
     pkg_spec = juliapkg.PkgSpec(**kwargs)
     juliapkg.add(pkg_spec)
     juliapkg.resolve()
