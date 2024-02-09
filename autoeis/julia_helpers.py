@@ -192,13 +192,15 @@ def import_package(pkg_name, Main=None):
     for _ in range(MAX_RETRIES):
         try:
             Main.eval(f"using {pkg_name}")
+            break
         except Exception:
             pass
-    # Now, normally import the package
-    try:
-        Main.eval(f"using {pkg_name}")
-    except (JuliaError, RuntimeError) as e:
-        _raise_import_error(root=e)
+    else:
+        # Import failed, raise proper error
+        try:
+            Main.eval(f"using {pkg_name}")
+        except (JuliaError, RuntimeError) as e:
+            _raise_import_error(root=e)
     ref = importlib.import_module(f"julia.{pkg_name}")
     return ref
 
