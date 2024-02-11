@@ -43,11 +43,8 @@ warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
 # Initialize Julia runtime (need to catch ImportError for pip install to work)
-try:
-    jl = julia_helpers.init_julia()
-    ec = julia_helpers.import_backend(jl)
-except ImportError:
-    jl = ec = None
+jl = julia_helpers.init_julia()
+ec = julia_helpers.import_backend(jl)
 
 __all__ = [
     "perform_full_analysis",
