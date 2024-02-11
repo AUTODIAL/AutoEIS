@@ -1,8 +1,9 @@
 import shutil
 
+from autoeis.utils import get_logger
 from autoeis.version import __equivalent_circuits_jl_version__
 
-
+log = get_logger(__name__)
 def install(ec_path=None):
     """Installs Julia dependencies for AutoEIS."""
     assert_julia_installed()
@@ -36,8 +37,9 @@ def import_package(package_name, Main):
     return eval(f"Main.{package_name}")
 
 
-def import_backend(Main):
+def import_backend(Main=None):
     """Imports EquivalentCircuits package from Julia."""
+    Main = init_julia() if Main is None else Main
     assert_backend_installed()
     return import_package("EquivalentCircuits", Main)
 
@@ -45,12 +47,14 @@ def import_backend(Main):
 def assert_julia_installed():
     """Asserts that Julia is installed."""
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
-    assert shutil.which("julia"), msg
+    if shutil.which("julia"):
+        raise ImportError(msg)
 
 
-def assert_backend_installed():
+def assert_backend_installed(Main=None):
     """Asserts that EquivalentCircuits.jl is installed."""
     assert_julia_installed()
-    Main = init_julia()
+    Main = init_julia() if Main is None else Main
     msg = "EquivalentCircuits.jl not installed."
-    assert import_package("EquivalentCircuits", Main), msg
+    if import_package("EquivalentCircuits", Main) is None:
+        raise ImportError(msg)
