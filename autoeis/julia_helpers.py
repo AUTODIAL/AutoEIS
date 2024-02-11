@@ -1,6 +1,5 @@
 import juliapkg
 from juliapkg.find_julia import ju_find_julia_noinstall
-from juliapkg.state import STATE
 
 from .utils import get_logger, suppress_output
 from .version import __equivalent_circuits_jl_version__
@@ -80,9 +79,8 @@ def is_julia_installed(error=False, install=False):
 
 def is_backend_installed(Main=None, error=False, install=False):
     """Asserts that EquivalentCircuits.jl is installed."""
-    is_julia_installed(error=True)
     Main = init_julia() if Main is None else Main
-    if import_package("EquivalentCircuits", Main) is not None:
+    if import_package("EquivalentCircuits", Main, error=False) is not None:
         return True
     if install:
         log.warning("EquivalentCircuits.jl not found, installing...")
