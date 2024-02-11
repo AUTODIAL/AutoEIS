@@ -36,8 +36,13 @@ def init_julia():
 
 def import_package(package_name, Main):
     """Imports a package in Julia and returns the module."""
-    Main.seval(f"using {package_name}")
-    return eval(f"Main.{package_name}")
+    from juliacall import JuliaError
+
+    try:
+        Main.seval(f"using {package_name}")
+        return eval(f"Main.{package_name}")
+    except JuliaError:
+        return None
 
 
 def import_backend(Main=None):
@@ -52,6 +57,7 @@ def assert_julia_installed():
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
     if shutil.which("julia") is None:
         raise ImportError(msg)
+    # return shutil.which("julia") is not None
 
 
 def assert_backend_installed(Main=None):
@@ -61,3 +67,4 @@ def assert_backend_installed(Main=None):
     msg = "EquivalentCircuits.jl not installed."
     if import_package("EquivalentCircuits", Main) is None:
         raise ImportError(msg)
+    # return import_package("EquivalentCircuits", Main) is not None
