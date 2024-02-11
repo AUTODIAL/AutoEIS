@@ -35,10 +35,10 @@ def install_backend(ec_path=None):
 
 def init_julia():
     """Initializes Julia and returns the Main module."""
-    is_julia_installed()
-    import juliacall
+    is_julia_installed(error=True, install=False)
+    from juliacall import Main
 
-    return juliacall.Main
+    return Main
 
 
 def import_package(package_name, Main, error=False):
