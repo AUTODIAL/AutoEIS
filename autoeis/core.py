@@ -38,7 +38,7 @@ from autoeis.models import circuit_regression, circuit_regression_wrapped  # noq
 numpyro.set_platform("cpu")
 
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
-linKK = utils.suppress_output(linKK)
+linKK = utils.suppress_output_legacy(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 

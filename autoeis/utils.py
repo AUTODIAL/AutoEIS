@@ -22,6 +22,7 @@ import re
 import signal
 import sys
 from collections.abc import Iterable
+from contextlib import contextmanager
 from functools import partial, wraps
 from typing import Union
 
@@ -35,9 +36,9 @@ from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
 from scipy import stats
 
+# from tensorflow_probability import distributions as tfdist  # NOQA: F401
 import __main__
 
-# from tensorflow_probability import distributions as tfdist  # NOQA: F401
 from . import parser
 
 # >>> Logging utils
@@ -104,8 +105,9 @@ class _SuppressOutput:
         sys.stderr = self._original_stderr
 
 
-def suppress_output(func):
+def suppress_output_legacy(func):
     """Suppresses the output of a function."""
+    # NOTE: This approach only works when stdout/stderr are managed by Python
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -113,6 +115,28 @@ def suppress_output(func):
             return func(*args, **kwargs)
 
     return wrapped
+
+
+@contextmanager
+def suppress_output():
+    """Suppresses the output of a block of code using file descriptors."""
+    # NOTE: This approach is more system-level than suppress_output
+    # Save the current file descriptors
+    original_stderr_fd = os.dup(2)
+    original_stdout_fd = os.dup(1)
+
+    try:
+        # Use os.devnull to redirect the standard output and standard error
+        with open(os.devnull, "wb") as devnull:
+            os.dup2(devnull.fileno(), 1)
+            os.dup2(devnull.fileno(), 2)
+            yield
+    finally:
+        # Restore the original file descriptors
+        os.dup2(original_stdout_fd, 1)
+        os.dup2(original_stderr_fd, 2)
+        os.close(original_stdout_fd)
+        os.close(original_stderr_fd)
 
 
 class TimeoutException(Exception):

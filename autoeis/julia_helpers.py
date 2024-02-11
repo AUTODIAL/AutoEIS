@@ -70,7 +70,8 @@ def is_julia_installed(error=False, install=False):
         return True
     if install:
         log.warning("Julia not found, installing Julia...")
-        suppress_output(install_julia)()
+        with suppress_output():
+            install_julia()
         return True
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
     if error:
@@ -86,7 +87,8 @@ def is_backend_installed(Main=None, error=False, install=False):
         return True
     if install:
         log.warning("EquivalentCircuits.jl not found, installing...")
-        suppress_output(install_backend)()
+        with suppress_output():
+            install_backend()
         return True
     msg = "EquivalentCircuits.jl not found, run 'python -m autoeis install'"
     if error:
