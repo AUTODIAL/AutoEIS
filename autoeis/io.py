@@ -66,6 +66,6 @@ def parse_ec_output(circuits: list[str]) -> list[tuple[str, dict[str, float]]]:
         pstr = pstr.replace(" ", "").rstrip(",").split(",")
         pdict = dict(pair.split("=") for pair in pstr)
         pdict = {p.split("=")[0]: float(p.split("=")[1]) for p in pstr}
-        parsed.append((cstr, pdict))
+        parsed.append([cstr, pdict])
 
-    return parsed
+    return pd.DataFrame(parsed, columns=["circuitstring", "Parameters"])
