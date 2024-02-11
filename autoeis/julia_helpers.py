@@ -4,6 +4,8 @@ from autoeis.utils import get_logger
 from autoeis.version import __equivalent_circuits_jl_version__
 
 log = get_logger(__name__)
+
+
 def install(ec_path=None):
     """Installs Julia dependencies for AutoEIS."""
     assert_julia_installed()
