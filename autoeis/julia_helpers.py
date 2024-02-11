@@ -1,4 +1,5 @@
 from juliapkg.find_julia import ju_find_julia_noinstall
+from juliapkg.state import STATE
 
 from .utils import get_logger
 from .version import __equivalent_circuits_jl_version__
@@ -61,7 +62,9 @@ def import_backend(Main=None):
 
 def is_julia_installed(error=False):
     """Asserts that Julia is installed."""
-    if ju_find_julia_noinstall():
+    julia_installed_sys = ju_find_julia_noinstall()
+    julia_installed_exe = "executable" in STATE
+    if julia_installed_sys or julia_installed_exe:
         return True
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
     if error:
