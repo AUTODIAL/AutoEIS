@@ -18,6 +18,7 @@ def install(ec_path=None):
             kwargs["version"] = __equivalent_circuits_jl_version__
         else:
             kwargs["rev"] = __equivalent_circuits_jl_version__
+            kwargs["url"] = "https://github.com/ma-sadeghi/EquivalentCircuits.jl"
     pkg_spec = juliapkg.PkgSpec(**kwargs)
     juliapkg.add(pkg_spec)
     juliapkg.resolve()
