@@ -42,7 +42,8 @@ linKK = utils.suppress_output(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
-# Initialize Julia runtime (need to catch ImportError for pip install to work)
+# Initialize Julia runtime
+julia_helpers.ensure_julia_deps_ready()
 jl = julia_helpers.init_julia()
 ec = julia_helpers.import_backend(jl)
 
