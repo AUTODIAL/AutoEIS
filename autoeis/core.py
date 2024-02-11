@@ -312,12 +312,8 @@ def generate_equivalent_circuits(
 
 def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
     """Generates candidate circuits in serial."""
-    global Main
-    Main = julia_helpers.init_julia() if Main is None else Main
-    ec = julia_helpers.import_backend(Main)
-
     # Set random seed for reproducibility
-    Main.seval(f"import Random; Random.seed!({seed})")
+    jl.seval(f"import Random; Random.seed!({seed})")
 
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
@@ -326,11 +322,11 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
-        if circuit != Main.nothing:
+        if circuit != jl.nothing:
             circuits.append(circuit)
 
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = [(c.circuitstring, Main.string(c.Parameters)) for c in circuits]
+    df = [(c.circuitstring, jl.string(c.Parameters)) for c in circuits]
     df = pd.DataFrame(df, columns=["circuitstring", "Parameters"])
 
     return df
@@ -342,20 +338,19 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
-        global Main
-        Main = julia_helpers.init_julia() if Main is None else Main
+        jl = julia_helpers.init_julia()
+        ec = julia_helpers.import_backend(jl)
         # Set random seed for reproducibility
-        Main.seval(f"import Random; Random.seed!({seed})")
-        ec = julia_helpers.import_backend(Main)
+        jl.seval(f"import Random; Random.seed!({seed})")
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             return None
-        if circuit == Main.nothing:
+        if circuit == jl.nothing:
             return None
         # Format output as list of strings since Julia objects cannot be pickled
-        return [circuit.circuitstring, Main.string(circuit.Parameters)]
+        return [circuit.circuitstring, jl.string(circuit.Parameters)]
 
     nproc = os.cpu_count()
     mpire_kwargs = {
@@ -391,14 +386,9 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
 def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     """Generates candidate circuits in parallel using Julia multiprocessing."""
-    global Main
-    Main = julia_helpers.init_julia() if Main is None else Main
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
-    Main.seval(f"import Random; Random.seed!({seed})")
-    Main.seval("import Logging; Logging.disable_logging(Logging.Warn)")
-
-    ec = julia_helpers.import_backend(Main)
+    jl.seval(f"import Random; Random.seed!({seed})")
 
     # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
     nprocs = psutil.cpu_count(logical=False)
@@ -428,8 +418,8 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     # Format output as list of strings since Julia objects cannot be pickled
     circuits_py = []
     for circuit in circuits:
-        if circuit != Main.nothing:
-            circuits_py.append([circuit.circuitstring, Main.string(circuit.Parameters)])
+        if circuit != jl.nothing:
+            circuits_py.append([circuit.circuitstring, jl.string(circuit.Parameters)])
 
     # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
     df = pd.DataFrame(circuits_py, columns=["circuitstring", "Parameters"])
