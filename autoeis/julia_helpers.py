@@ -65,7 +65,7 @@ def import_backend(Main=None):
 def is_julia_installed(error=False, install=False):
     """Asserts that Julia is installed."""
     julia_installed_sys = ju_find_julia_noinstall()
-    julia_installed_exe = "executable" in STATE
+    julia_installed_exe = juliapkg.deps.can_skip_resolve()
     if julia_installed_sys or julia_installed_exe:
         return True
     if install:
