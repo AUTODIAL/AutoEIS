@@ -56,9 +56,8 @@ def import_package(package_name, Main, error=False):
 
 def import_backend(Main=None):
     """Imports EquivalentCircuits package from Julia."""
-    # is_julia_installed(error=True)
     Main = init_julia() if Main is None else Main
-    is_backend_installed(error=True, install=True)
+    is_backend_installed(error=True, install=False)
     return import_package("EquivalentCircuits", Main)
 
 
