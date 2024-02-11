@@ -38,7 +38,7 @@ from scipy import stats
 import __main__
 
 # from tensorflow_probability import distributions as tfdist  # NOQA: F401
-from autoeis import parser
+from . import parser
 
 # >>> Logging utils
 
