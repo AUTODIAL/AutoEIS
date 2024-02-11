@@ -38,10 +38,11 @@ def test_gep_serial():
         "complexity": 12,
         "population_size": 10,
         "generations": 5,
-        "tol": 1e-2,
+        "tol": 1e10,
         "parallel": False,
     }
     circuits = core.generate_equivalent_circuits(Z, freq, **kwargs)
+    assert len(circuits) == kwargs["iters"]
     assert isinstance(circuits, pd.DataFrame)
 
 
@@ -53,10 +54,11 @@ def test_gep_parallel():
         "complexity": 12,
         "population_size": 10,
         "generations": 5,
-        "tol": 1e-2,
+        "tol": 1e10,
         "parallel": True,
     }
     circuits = core.generate_equivalent_circuits(Z, freq, **kwargs)
+    assert len(circuits) == kwargs["iters"]
     assert isinstance(circuits, pd.DataFrame)
 
 
