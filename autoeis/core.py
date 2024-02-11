@@ -301,16 +301,16 @@ def generate_equivalent_circuits(
     ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
-    # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
+    # Convert output to DataFrame with columns ("circuitstring", "Parameters")
     circuits = io.parse_ec_output(circuits)
 
     if not len(circuits):
-        log.warning("No plausible circuits found. Try increasing `iters`.")
+        log.warning("No plausible circuits found. Increase `iters` or lower `tol`.")
 
     return circuits
 
 
-def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
+def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed) -> list[str]:
     """Generates candidate circuits in serial."""
     # Set random seed for reproducibility
     jl.seval(f"import Random; Random.seed!({seed})")
@@ -322,14 +322,10 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
-        if circuit != jl.nothing:
-            circuits.append(circuit)
+        circuits.append(circuit)
 
-    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = [(c.circuitstring, jl.string(c.Parameters)) for c in circuits]
-    df = pd.DataFrame(df, columns=["circuitstring", "Parameters"])
-
-    return df
+    circuits = [str(c) for c in circuits if c is not None]
+    return circuits
 
 
 # TODO: This function is deprecated, use _generate_ecm_parallel_julia instead
@@ -347,10 +343,9 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             return None
-        if circuit == jl.nothing:
-            return None
-        # Format output as list of strings since Julia objects cannot be pickled
-        return [circuit.circuitstring, jl.string(circuit.Parameters)]
+        # # Format output as list of strings since Julia objects cannot be pickled
+        # return [circuit.circuitstring, jl.string(circuit.Parameters)]
+        return circuit
 
     nproc = os.cpu_count()
     mpire_kwargs = {
@@ -375,13 +370,8 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
     if runtime_error:
         raise RuntimeError("Julia must not be manually initialized, restart the kernel.")
 
-    # Remove None values
-    circuits = [circuit for circuit in circuits if circuit is not None]
-
-    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
-
-    return df
+    circuits = [str(c) for c in circuits if c is not None]
+    return circuits
 
 
 def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
@@ -415,16 +405,8 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
             circuits += circuits_
             pbar.update(iters_)
 
-    # Format output as list of strings since Julia objects cannot be pickled
-    circuits_py = []
-    for circuit in circuits:
-        if circuit != jl.nothing:
-            circuits_py.append([circuit.circuitstring, jl.string(circuit.Parameters)])
-
-    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = pd.DataFrame(circuits_py, columns=["circuitstring", "Parameters"])
-
-    return df
+    circuits = [str(c) for c in circuits if c != jl.nothing]
+    return circuits
 
 
 def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
