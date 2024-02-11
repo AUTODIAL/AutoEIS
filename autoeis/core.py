@@ -31,9 +31,8 @@ from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
-import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
-from autoeis import io, metrics, parser, utils
+from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
@@ -45,11 +44,8 @@ warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
 # Initialize Julia runtime (need to catch ImportError for pip install to work)
-try:
-    Main = julia_helpers.init_julia()
-    ec = julia_helpers.import_backend(Main)
-except Exception:
-    pass
+jl = julia_helpers.init_julia()
+ec = julia_helpers.import_backend(jl)
 
 __all__ = [
     "perform_full_analysis",
@@ -230,9 +226,7 @@ def preprocess_impedance_data(
             ohmic_resistance = compute_ohmic_resistance(Z_mask, freq_mask)
             ohmic_resistance_found = True
         except ValueError:
-            log.error(
-                "Ohmic resistance not found. Check data or increase KK threshold."
-            )
+            log.error("Ohmic resistance not found. Check data or increase KK threshold.")
             ohmic_resistance_found = False
 
         # Convert the data to a dataframe for easier manipulation
@@ -385,9 +379,7 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
             runtime_error = True
 
     if runtime_error:
-        raise RuntimeError(
-            "Julia must not be manually initialized, restart the kernel."
-        )
+        raise RuntimeError("Julia must not be manually initialized, restart the kernel.")
 
     # Remove None values
     circuits = [circuit for circuit in circuits if circuit is not None]
