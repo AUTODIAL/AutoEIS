@@ -13,6 +13,7 @@ Collection of functions for importing and exporting EIS data/results.
 
 """
 import os
+import re
 from pathlib import Path
 
 import numpy as np
@@ -51,21 +52,20 @@ def load_test_circuits(filtered=False) -> pd.DataFrame:
     return circuits
 
 
-def parse_ec_output(circuits: pd.DataFrame) -> pd.DataFrame:
-    """
-    Parses the output of EquivalentCircuits.jl's ``circuit_evolution``
-    and returns a dataframe with circuit parameters stored as dict[str, float].
-    """
-    circuits = circuits.copy()
+def parse_ec_output(circuits: list[str]) -> list[tuple[str, dict[str, float]]]:
+    """Parses the output of EquivalentCircuits.jl's ``circuit_evolution``."""
+    # Example: 'EquivalentCircuit("R1", (R1 = 1.0,))' -> ('R1', {'R1': 1.0})
+    circuits = [circuits] if isinstance(circuits, str) else circuits
+    parsed = []
 
-    for row in circuits.itertuples():
-        pstr = row.Parameters
-        # Remove parentheses and spaces, then split by comma -> list[var=val, ...]
-        pstr = pstr.strip("()").replace(" ", "")
-        pstr = pstr.split(",")
-        # Extract variable names and values into a dictionary
-        pdict = {pair.split("=")[0]: float(pair.split("=")[1]) for pair in pstr}
-        # Replace the stringified list with a proper dict
-        circuits.at[row.Index, "Parameters"] = pdict
+    for circuit in circuits:
+        circuit = circuit.removeprefix("EquivalentCircuit(").removesuffix(")")
+        cstr = re.findall(r"\"(.*?)\"", circuit)[0]
+        pstr = re.findall(r"\((.*?)\)", circuit)[0]
+        # NOTE: rstrip(",") to account for the trailing comma in one-element tuples
+        pstr = pstr.replace(" ", "").rstrip(",").split(",")
+        pdict = dict(pair.split("=") for pair in pstr)
+        pdict = {p.split("=")[0]: float(p.split("=")[1]) for p in pstr}
+        parsed.append((cstr, pdict))
 
-    return circuits
+    return parsed
