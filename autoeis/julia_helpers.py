@@ -47,7 +47,7 @@ def import_backend(Main=None):
 def assert_julia_installed():
     """Asserts that Julia is installed."""
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
-    if shutil.which("julia"):
+    if shutil.which("julia") is None:
         raise ImportError(msg)
 
 
