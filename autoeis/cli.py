@@ -1,6 +1,6 @@
 import click
 
-from autoeis.julia_helpers import install
+from .julia_helpers import install
 
 
 @click.group("autoeis")
