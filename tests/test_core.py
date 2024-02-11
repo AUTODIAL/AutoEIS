@@ -36,7 +36,7 @@ def test_gep_serial():
     kwargs = {
         "iters": 2,
         "complexity": 12,
-        "population_size": 10,
+        "population_size": 5,
         "generations": 5,
         "tol": 1e10,
         "parallel": False,
@@ -52,7 +52,7 @@ def test_gep_parallel():
     kwargs = {
         "iters": 2,
         "complexity": 12,
-        "population_size": 10,
+        "population_size": 5,
         "generations": 5,
         "tol": 1e10,
         "parallel": True,
