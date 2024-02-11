@@ -1,4 +1,4 @@
-import shutil
+from juliapkg.find_julia import ju_find_julia_noinstall
 
 from .utils import get_logger
 from .version import __equivalent_circuits_jl_version__
@@ -61,7 +61,7 @@ def import_backend(Main=None):
 
 def is_julia_installed(error=False):
     """Asserts that Julia is installed."""
-    if shutil.which("julia"):
+    if ju_find_julia_noinstall():
         return True
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
     if error:
