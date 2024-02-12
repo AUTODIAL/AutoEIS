@@ -136,7 +136,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -245,7 +245,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -253,43 +253,23 @@
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>Follow the instructions below to install AutoEIS and its dependencies:</p>
-<section id="autoeis">
-<h2>AutoEIS<a class="headerlink" href="#autoeis" title="Link to this heading">#</a></h2>
 <p>Open a terminal (or command prompt on Windows) and run the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>autoeis
 </pre></div>
 </div>
-</section>
-<section id="julia-dependencies">
-<h2>Julia dependencies<a class="headerlink" href="#julia-dependencies" title="Link to this heading">#</a></h2>
-<section id="julia-language">
-<h3>Julia language<a class="headerlink" href="#julia-language" title="Link to this heading">#</a></h3>
-<p>The official way to install Julia is via <a class="reference external" href="https://github.com/JuliaLang/juliaup">juliaup</a>. <a class="reference external" href="https://github.com/JuliaLang/juliaup">Juliaup</a> provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with <a class="reference external" href="https://github.com/JuliaLang/juliaup">juliaup</a> is straightforward; Please follow the instructions on its GitHub <a class="reference external" href="https://github.com/JuliaLang/juliaup">page</a>.</p>
+<p>Julia dependencies will be automatically installed at first import. It’s recommended that you have your own Julia installation, but if you don’t, Julia itself will also be installed automatically.</p>
+<div class="note admonition">
+<p class="admonition-title">How to install Julia</p>
+<p>If you decided to have your own Julia installation (recommended), the official way to install Julia is via <a class="reference external" href="https://github.com/JuliaLang/juliaup">juliaup</a>. <a class="reference external" href="https://github.com/JuliaLang/juliaup">Juliaup</a> provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with <a class="reference external" href="https://github.com/JuliaLang/juliaup">juliaup</a> is straightforward; Please follow the instructions on its GitHub <a class="reference external" href="https://github.com/JuliaLang/juliaup">page</a>.</p>
+</div>
 <div class="warning admonition">
 <p class="admonition-title">Minimum Julia version</p>
 <p>AutoEIS requires Julia version 1.9 or higher. This strict requirement is due to many optimizations introduced in Julia 1.9 that significantly reduce the startup time of <code class="docutils literal notranslate"><span class="pre">EquivalentCircuits.jl</span></code>, the backend of AutoEIS.</p>
 </div>
-</section>
-<section id="equivalentcircuits-jl">
-<h3>EquivalentCircuits.jl<a class="headerlink" href="#equivalentcircuits-jl" title="Link to this heading">#</a></h3>
-<p>The circuit generation in AutoEIS is done using the Julia package <a class="reference external" href="https://github.com/MaximeVH/EquivalentCircuits.jl">EquivalentCircuits.jl</a>. AutoEIS provides a helper function to automatically install the required Julia dependencies. Open a terminal (or command prompt on Windows) and run the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>autoeis<span class="w"> </span>install
-</pre></div>
-</div>
 <div class="note admonition">
 <p class="admonition-title">About shared environments</p>
-<p>AutoEIS doesn’t pollute your global Julia environment. Instead, it creates a new shared environment called <code class="docutils literal notranslate"><span class="pre">autoeis-VERSION_NUMBER</span></code> (<code class="docutils literal notranslate"><span class="pre">VERSION_NUMBER</span></code> is the AutoEIS version) and installs the required packages there. This way, you can safely use AutoEIS without worrying about breaking your global Julia environment. Shared environments are stored in the <code class="docutils literal notranslate"><span class="pre">~/.julia/environments</span></code> directory on Unix-based systems and <code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\.julia\environments</span></code> on Windows.</p>
+<p>AutoEIS doesn’t pollute your global Julia environment. Instead, it creates a new environment with the same name as your Python virtual environment (if you’re in on!) and installs the required packages there. This way, you can safely use AutoEIS without worrying about breaking your global Julia environment. The Julia environment is stored in the same folder as your Python virtual environment. For instance, if you’re using the Anaconda Python distribution and the name of your Python virtual environment is <code class="docutils literal notranslate"><span class="pre">myenv</span></code>, the path to the Julia environment is <code class="docutils literal notranslate"><span class="pre">~/anaconda3/envs/myenv/julia_env</span></code> on Unix-based systems and <code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\anaconda3/envs/myenv/julia_env</span></code> on Windows.</p>
 </div>
-</section>
-</section>
-<section id="verify-the-installation">
-<h2>Verify the installation<a class="headerlink" href="#verify-the-installation" title="Link to this heading">#</a></h2>
-<p>If all steps were completed successfully, you should now be able to use AutoEIS. To confirm that AutoEIS is installed correctly, running the following command in a terminal (or command prompt on Windows) should print the version number:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import autoeis; print(autoeis.__version__)&quot;</span>
-</pre></div>
-</div>
-</section>
 </section>
 
         </article>
@@ -335,33 +315,8 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#autoeis">AutoEIS</a></li>
-<li><a class="reference internal" href="#julia-dependencies">Julia dependencies</a><ul>
-<li><a class="reference internal" href="#julia-language">Julia language</a></li>
-<li><a class="reference internal" href="#equivalentcircuits-jl">EquivalentCircuits.jl</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#verify-the-installation">Verify the installation</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
