@@ -1,5 +1,6 @@
 import juliapkg
-from juliapkg.find_julia import ju_find_julia_noinstall
+from juliapkg.deps import can_skip_resolve
+from juliapkg.find_julia import find_julia
 
 from .utils import get_logger, suppress_output
 from .version import __equivalent_circuits_jl_version__
@@ -62,9 +63,14 @@ def import_backend(Main=None):
 
 def is_julia_installed(error=False, install=False):
     """Asserts that Julia is installed."""
-    julia_installed_sys = ju_find_julia_noinstall()
-    julia_installed_exe = juliapkg.deps.can_skip_resolve()
-    if julia_installed_sys or julia_installed_exe:
+    # Look for system-wide Julia executable
+    try:
+        find_julia()
+        return True
+    except Exception:
+        pass
+    # Look for local Julia executable (e.g., installed by juliapkg)
+    if can_skip_resolve():
         return True
     if install:
         log.warning("Julia not found, installing Julia...")
