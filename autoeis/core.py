@@ -10,12 +10,10 @@ Collection of functions core to AutoEIS functionality.
     generate_equivalent_circuits
     filter_implausible_circuits
     perform_bayesian_inference
-    perform_bayesian_inference_batch
-    preprocess_impedance_data 
+    preprocess_impedance_data
 
 """
 import os
-import sys
 import time
 import warnings
 from typing import Union
@@ -32,19 +30,22 @@ from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
-import autoeis.julia_helpers as julia_helpers
 import autoeis.visualization as viz
-from autoeis import io, metrics, parser, utils
+from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
 
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
 
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
-linKK = utils.suppress_output(linKK)
+linKK = utils.suppress_output_legacy(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = utils.get_logger(__name__)
 
+# Initialize Julia runtime
+julia_helpers.ensure_julia_deps_ready()
+jl = julia_helpers.init_julia()
+ec = julia_helpers.import_backend(jl)
 
 __all__ = [
     "perform_full_analysis",
@@ -225,9 +226,7 @@ def preprocess_impedance_data(
             ohmic_resistance = compute_ohmic_resistance(Z_mask, freq_mask)
             ohmic_resistance_found = True
         except ValueError:
-            log.error(
-                "Ohmic resistance not found. Check data or increase KK threshold."
-            )
+            log.error("Ohmic resistance not found. Check data or increase KK threshold.")
             ohmic_resistance_found = False
 
         # Convert the data to a dataframe for easier manipulation
@@ -303,22 +302,19 @@ def generate_equivalent_circuits(
     ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
     circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
 
-    # Convert Parameters column to dict, e.g., (R1 = 1.0, etc.) -> {"R1": 1.0, etc.}
+    # Convert output to DataFrame with columns ("circuitstring", "Parameters")
     circuits = io.parse_ec_output(circuits)
 
     if not len(circuits):
-        log.warning("No plausible circuits found. Try increasing `iters`.")
+        log.warning("No plausible circuits found. Increase `iters` or lower `tol`.")
 
     return circuits
 
 
-def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
+def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed) -> list[str]:
     """Generates candidate circuits in serial."""
-    Main = julia_helpers.init_julia()
-    ec = julia_helpers.import_backend(Main)
-
     # Set random seed for reproducibility
-    Main.eval(f"import Random; Random.seed!({seed})")
+    jl.seval(f"import Random; Random.seed!({seed})")
 
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
@@ -327,14 +323,10 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed):
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
-        if circuit != Main.nothing:
-            circuits.append(circuit)
+        circuits.append(circuit)
 
-    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = [(c.circuitstring, Main.string(c.Parameters)) for c in circuits]
-    df = pd.DataFrame(df, columns=["circuitstring", "Parameters"])
-
-    return df
+    circuits = [str(c) for c in circuits if c is not None]
+    return circuits
 
 
 # TODO: This function is deprecated, use _generate_ecm_parallel_julia instead
@@ -343,19 +335,18 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
-        Main = julia_helpers.init_julia()
+        jl = julia_helpers.init_julia()
+        ec = julia_helpers.import_backend(jl)
         # Set random seed for reproducibility
-        Main.eval(f"import Random; Random.seed!({seed})")
-        ec = julia_helpers.import_backend(Main)
+        jl.seval(f"import Random; Random.seed!({seed})")
         try:
             circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             return None
-        if circuit == Main.nothing:
-            return None
-        # Format output as list of strings since Julia objects cannot be pickled
-        return [circuit.circuitstring, Main.string(circuit.Parameters)]
+        # # Format output as list of strings since Julia objects cannot be pickled
+        # return [circuit.circuitstring, jl.string(circuit.Parameters)]
+        return circuit
 
     nproc = os.cpu_count()
     mpire_kwargs = {
@@ -378,33 +369,23 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
             runtime_error = True
 
     if runtime_error:
-        raise RuntimeError(
-            "Julia must not be manually initialized, restart the kernel."
-        )
+        raise RuntimeError("Julia must not be manually initialized, restart the kernel.")
 
-    # Remove None values
-    circuits = [circuit for circuit in circuits if circuit is not None]
-
-    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = pd.DataFrame(circuits, columns=["circuitstring", "Parameters"])
-
-    return df
+    circuits = [str(c) for c in circuits if c is not None]
+    return circuits
 
 
 def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     """Generates candidate circuits in parallel using Julia multiprocessing."""
-    Main = julia_helpers.init_julia()
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
-    Main.eval(f"import Random; Random.seed!({seed})")
-    Main.eval("import Logging; Logging.disable_logging(Logging.Warn)")
-    ec = julia_helpers.import_backend(Main)
+    jl.seval(f"import Random; Random.seed!({seed})")
 
     # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
     nprocs = psutil.cpu_count(logical=False)
     # Double the number of workers to buffer for those with slow convergence
     # (don't do this for small iters, otherwise progress bar becomes pointless)
-    nprocs = 2*nprocs if (iters // nprocs) > 10 else nprocs
+    nprocs = 2 * nprocs if (iters // nprocs) > 10 else nprocs
     # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
     iters_chunked = [nprocs] * (iters // nprocs)
     if iters % nprocs:
@@ -414,31 +395,19 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
     circuits = []
 
     with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
-        # HACK: Flush once for progress bar to show up
-        sys.stderr.flush()
         for iters_ in iters_chunked:
             try:
                 circuits_ = ec.circuit_evolution_batch(
-                    impedance, freq, **ec_kwargs, iters=iters_
+                    impedance, freq, **ec_kwargs, iters=iters_, quiet=True
                 )
             except Exception as e:
                 log.error(f"Error generating circuits: {e}")
                 circuits_ = []
             circuits += circuits_
             pbar.update(iters_)
-            # HACK: Flush every iteration to refresh progress bar
-            sys.stderr.flush()
 
-    # Format output as list of strings since Julia objects cannot be pickled
-    circuits_py = []
-    for circuit in circuits:
-        if circuit != Main.nothing:
-            circuits_py.append([circuit.circuitstring, Main.string(circuit.Parameters)])
-
-    # Format circuits as a dataframe with columns "circuitstring" and "Parameters"
-    df = pd.DataFrame(circuits_py, columns=["circuitstring", "Parameters"])
-
-    return df
+    circuits = [str(c) for c in circuits if c is not None]
+    return circuits
 
 
 def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
@@ -703,7 +672,7 @@ def _perform_bayesian_inference_batch(
             _perform_bayesian_inference,
             zip(*bi_kwargs.values()),
             progress_bar=progress_bar,
-            progress_bar_style="notebook",
+            progress_bar_style="notebook" if utils.is_notebook() else "rich",
             iterable_len=len(circuits),
         )
 

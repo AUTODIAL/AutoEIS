@@ -22,6 +22,7 @@ import re
 import signal
 import sys
 from collections.abc import Iterable
+from contextlib import contextmanager
 from functools import partial, wraps
 from typing import Union
 
@@ -36,13 +37,15 @@ from rich.logging import RichHandler
 from scipy import stats
 
 # from tensorflow_probability import distributions as tfdist  # NOQA: F401
-from autoeis import parser
+import __main__
+
+from . import parser
 
 # >>> Logging utils
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a logger with the given name."""
+    """Returns a logger with the given name."""
     logger = logging.getLogger(name)
     if logger.hasHandlers():
         # If logger has handlers, do not add another to avoid duplicate logs
@@ -102,8 +105,9 @@ class _SuppressOutput:
         sys.stderr = self._original_stderr
 
 
-def suppress_output(func):
+def suppress_output_legacy(func):
     """Suppresses the output of a function."""
+    # NOTE: This approach only works when stdout/stderr are managed by Python
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -111,6 +115,28 @@ def suppress_output(func):
             return func(*args, **kwargs)
 
     return wrapped
+
+
+@contextmanager
+def suppress_output():
+    """Suppresses the output of a block of code using file descriptors."""
+    # NOTE: This approach is more system-level than suppress_output
+    # Save the current file descriptors
+    original_stderr_fd = os.dup(2)
+    original_stdout_fd = os.dup(1)
+
+    try:
+        # Use os.devnull to redirect the standard output and standard error
+        with open(os.devnull, "wb") as devnull:
+            os.dup2(devnull.fileno(), 1)
+            os.dup2(devnull.fileno(), 2)
+            yield
+    finally:
+        # Restore the original file descriptors
+        os.dup2(original_stdout_fd, 1)
+        os.dup2(original_stderr_fd, 2)
+        os.close(original_stdout_fd)
+        os.close(original_stderr_fd)
 
 
 class TimeoutException(Exception):
@@ -139,6 +165,36 @@ def timeout(seconds):
         return wrapper
 
     return decorator
+
+
+# Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
+def get_runtime():
+    """Returns the runtime environment."""
+    if "google.colab" in sys.modules:
+        return "Google Colab"
+    elif "ipykernel" in sys.modules:
+        if "jupyter" in sys.modules:
+            return "JupyterLab"
+        else:
+            return "Jupyter Notebook"
+    elif "win32" in sys.platform:
+        if "CMDEXTVERSION" in os.environ:
+            return "Windows Command Prompt"
+        else:
+            return "Windows PowerShell"
+    elif "darwin" in sys.platform:
+        return "MacOS Terminal"
+    else:
+        if hasattr(__main__, "__file__"):
+            return "Linux Terminal"
+        else:
+            return "Interactive Python Shell"
+
+
+def is_notebook():
+    """Returns True if the code is running in a Jupyter notebook."""
+    runtime = get_runtime()
+    return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
 
 
 # <<< General utils

@@ -1,6 +1,6 @@
 import click
 
-from autoeis.julia_helpers import install
+from .julia_helpers import install_backend, install_julia
 
 
 @click.group("autoeis")
@@ -9,30 +9,13 @@ def autoeis_installer(context):
     ctx = context
 
 
-@autoeis_installer.command("install", help="Install Julia dependencies for AutoEIS.")
 @click.option(
-    "-p",
-    "julia_project",
-    "--project",
+    "--ec-path",
     default=None,
     type=str,
-    help="Install in a specific Julia project (e.g., a local copy of EquivalentProject.jl).",
-    metavar="PROJECT_DIRECTORY",
+    help="Installs a local copy of EquivalentCircuits instead of the remote version.",
 )
-@click.option("-q", "--quiet", is_flag=True, default=False, help="Disable logging.")
-@click.option(
-    "--precompile",
-    "precompile",
-    flag_value=True,
-    default=None,
-    help="Force precompilation of Julia libraries.",
-)
-@click.option(
-    "--no-precompile",
-    "precompile",
-    flag_value=False,
-    default=None,
-    help="Disable precompilation.",
-)
-def install_cli(julia_project, quiet, precompile):
-    install(julia_project=julia_project, quiet=quiet, precompile=precompile)
+@autoeis_installer.command("install", help="Install Julia dependencies for AutoEIS.")
+def install_cli(ec_path):
+    install_julia()
+    install_backend(ec_path=ec_path)
