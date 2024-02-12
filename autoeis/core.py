@@ -406,7 +406,7 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
             circuits += circuits_
             pbar.update(iters_)
 
-    circuits = [str(c) for c in circuits if c != jl.nothing]
+    circuits = [str(c) for c in circuits if c is not None]
     return circuits
 
 
