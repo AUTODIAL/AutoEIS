@@ -209,8 +209,10 @@ def fit_circuit_parameters(
     freq: np.ndarray[float],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
     iters: int = 1,
+    maxfev: int = 1000,
 ) -> dict[str, float]:
     """Fits a circuit to impedance data and returns the parameters."""
+    # NOTE: Each circuit eval ~ 1 ms, so 1000 evals ~ 1 s
     # Deal with initial guess
     num_params = parser.count_parameters(circuit)
     if p0 is None:
@@ -221,17 +223,24 @@ def fit_circuit_parameters(
 
     # Fit circuit parameters
     circuit_impy = CustomCircuit(
-        circuit=parser.convert_to_impedance_format(circuit), initial_guess=p0
+        circuit=parser.convert_to_impedance_format(circuit),
+        initial_guess=p0,
     )
     # HACK: Use multiple random initial guesses to avoid local minima
     err_min = np.inf
     for _ in range(iters):
-        circuit_impy.fit(freq, Z)
+        try:
+            circuit_impy.fit(freq, Z, maxfev=maxfev)
+        except RuntimeError:
+            continue
         err = np.mean(np.abs(circuit_impy.predict(freq) - Z) ** 2)
         if err < err_min:
             err_min = err
             p0 = circuit_impy.parameters_
         circuit_impy.initial_guess = np.random.rand(num_params).tolist()
+
+    if err_min == np.inf:
+        raise RuntimeError("Failed to fit the circuit parameters.")
 
     labels = parser.get_parameter_labels(circuit)
     return dict(zip(labels, p0))
