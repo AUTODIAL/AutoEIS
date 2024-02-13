@@ -279,10 +279,7 @@ def fit_circuit_parameters(
 
     # Sanitize initial guess
     num_params = parser.count_parameters(circuit)
-    if p0 is None:
-        p0 = np.random.rand(num_params)
-    elif isinstance(p0, dict):
-        p0 = np.fromiter(p0.values(), dtype=float)
+    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Assemble kwargs for curve_fit
