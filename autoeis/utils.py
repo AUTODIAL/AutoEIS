@@ -32,9 +32,11 @@ import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
 from impedance.models.circuits import CustomCircuit
+from impedance.models.circuits.fitting import set_default_bounds
 from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
 from scipy import stats
+from scipy.optimize import curve_fit
 
 # from tensorflow_probability import distributions as tfdist  # NOQA: F401
 import __main__
