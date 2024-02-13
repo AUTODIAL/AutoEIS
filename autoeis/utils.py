@@ -330,6 +330,8 @@ def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
 # >>> Statistics utils
 
 
+# TODO: Remove variables from input arguments
+# TODO: Refactor inference functions to strip non-variable keys from MCMC samples
 def initialize_priors(
     p0: dict[str, float], variables: list[str]
 ) -> dict[str, dist.Distribution]:
