@@ -251,7 +251,9 @@ if os.name != "nt":
     fit_circuit_parameters = timeout(300)(fit_circuit_parameters)
 
 
-def eval_circuit(circuit: str, x: np.ndarray[float], f: np.ndarray[float]) -> np.ndarray:
+def eval_circuit(
+    circuit: str, p: np.ndarray, f: Union[np.ndarray, float]
+) -> np.ndarray[complex]:
     """Converts a circuit string to a function of (params, freq) and evaluates it."""
     Z_expr = parser.generate_mathematical_expr(circuit)
     return eval(Z_expr)
