@@ -500,7 +500,7 @@ def perform_bayesian_inference(
     num_chains=1,
     seed: Union[int, jax.Array] = None,
     progress_bar: bool = True,
-) -> list[Union[numpyro.infer.mcmc.MCMC, None]]:
+    refine_p0: bool = False,
     # Ensure inputs are lists
     if isinstance(circuits, str):
         circuits = [circuits]
@@ -523,6 +523,12 @@ def perform_bayesian_inference(
         assert isinstance(p0_, valid_p0_types), f"Invalid p0 type: {p0_}"
         num_params = len(parser.get_parameter_labels(circuit))
         assert len(p0_) == num_params, f"Invalid p0 length: {p0_}"
+
+    if refine_p0:
+        for i, (circuit, p0_) in enumerate(zip(circuits, p0)):
+            p0[i] = utils.fit_circuit_parameters(circuit, freq, Z, p0=p0_)
+            # If circuit fitter didn't converge, use the initial guess
+            p0[i] = p0_ if p0[i] is None else p0[i]
 
     # Short-circuit if no circuits are provided
     if len(circuits) == 0:
