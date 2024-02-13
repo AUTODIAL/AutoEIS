@@ -11,7 +11,7 @@ y2 = x2 + np.zeros(10) * 1j
 
 # Simulated EIS data
 circuit_string = "R1-[P2,R3]"
-p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10}
+p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10.0}
 p0_vals = list(p0_dict.values())
 circuit_fn_gt = utils.generate_circuit_fn_impedance_backend(circuit_string)
 freq = np.logspace(-3, 3, 1000)
