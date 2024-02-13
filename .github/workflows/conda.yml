@@ -15,7 +15,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: '3.10'
-          miniforge-version: latest
           installer-url: https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh
       - name: "Install AutoEIS"
         run: |
