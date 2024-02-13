@@ -273,9 +273,14 @@ def fit_circuit_parameters(
     # Define objective function
     Zc = np.hstack([Z.real, Z.imag])
     fn = generate_circuit_fn(circuit, jit=True, concat=True)
+    # Format obj function as f(freq, *p) not f(freq, p) for curve_fit
+    obj_fn = lambda freq, *p: fn(freq, p)  # noqa: E731
 
-    def obj_fn(freq, *p):
-        return fn(freq, np.array(p))
+    # >>> Alternatively, use impedance.py to create the objective function
+    # from impedance.models.circuits.fitting import wrapCircuit
+    # circuit_impy = parser.convert_to_impedance_format(circuit)
+    # obj_fn = wrapCircuit(circuit_impy, constants={})
+    # <<<
 
     # Sanitize initial guess
     num_params = parser.count_parameters(circuit)
@@ -285,25 +290,21 @@ def fit_circuit_parameters(
     # Assemble kwargs for curve_fit
     circuit_impy = parser.convert_to_impedance_format(circuit)
     bounds = set_default_bounds(circuit_impy)
-    kwargs = {
-        "p0": p0,
-        "bounds": bounds,
-        "maxfev": maxfev,
-        "ftol": ftol,
-    }
+    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol}
 
     # Fit circuit parameters by brute force
     err_min = np.inf
     for _ in range(iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-            err = np.mean((obj_fn(freq, *popt) - Zc)**2)
-            if err < err_min:
-                err_min = err
-                p0 = popt
-            kwargs["p0"] = np.random.rand(num_params)
         except RuntimeError:
             continue
+        print(popt)
+        err = np.mean((obj_fn(freq, *popt) - Zc)**2)
+        if err < err_min:
+            err_min = err
+            p0 = popt
+        kwargs["p0"] = np.random.rand(num_params)
 
     if err_min == np.inf:
         raise RuntimeError("Failed to fit the circuit parameters.")
