@@ -497,7 +497,7 @@ def perform_bayesian_inference(
     num_chains=1,
     seed: Union[int, jax.Array] = None,
     progress_bar: bool = True,
-):
+) -> list[Union[numpyro.infer.mcmc.MCMC, None]]:
     # Ensure inputs are lists
     if isinstance(circuits, str):
         circuits = [circuits]
