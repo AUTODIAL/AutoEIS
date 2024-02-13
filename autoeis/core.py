@@ -503,6 +503,10 @@ def perform_bayesian_inference(
         circuits = [circuits]
     if p0 is None:
         p0 = [None] * len(circuits)
+    elif isinstance(p0, (dict, np.ndarray)):
+        p0 = [p0] * len(circuits)
+    elif isinstance(p0, list):
+        assert len(p0) == len(circuits), "Invalid p0 length"
 
     # Validate inputs' types and lengths
     if isinstance(circuits, pd.DataFrame):
@@ -519,20 +523,24 @@ def perform_bayesian_inference(
 
     # Short-circuit if no circuits are provided
     if len(circuits) == 0:
-        log.warning("Circuits' dataframe is empty!")
+        log.warning("'circuits' dataframe is empty!")
         return None
 
-    return _perform_bayesian_inference_batch(
-        circuits=circuits,
-        Z=Z,
-        freq=freq,
-        p0=p0,
-        num_warmup=num_warmup,
-        num_samples=num_samples,
-        num_chains=num_chains,
-        seed=seed,
-        progress_bar=progress_bar,
-    )
+    bi_kwargs = {
+        "Z": Z,
+        "freq": freq,
+        "num_warmup": num_warmup,
+        "num_samples": num_samples,
+        "num_chains": num_chains,
+        "seed": seed,
+        "progress_bar": progress_bar,
+    }
+
+    if len(circuits) == 1:
+        # Single inference gets slowed down by progress bar
+        bi_kwargs["progress_bar"] = False
+        return [_perform_bayesian_inference(circuits[0], p0=p0[0], **bi_kwargs)]
+    return _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
 
 
 def _perform_bayesian_inference(
