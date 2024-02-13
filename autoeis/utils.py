@@ -215,7 +215,7 @@ def parse_initial_guess(
         return np.random.rand(num_params)
     elif isinstance(p0, dict):
         return np.fromiter(p0.values(), dtype=float)
-    elif isinstance(p0, list):
+    elif isinstance(p0, (list, np.ndarray)):
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
