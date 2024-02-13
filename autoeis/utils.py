@@ -24,7 +24,7 @@ import sys
 from collections.abc import Iterable
 from contextlib import contextmanager
 from functools import partial, wraps
-from typing import Union
+from typing import Callable, Union
 
 import jax  # NOQA: F401
 import jax.numpy as jnp
@@ -249,7 +249,8 @@ def eval_circuit(circuit: str, x: np.ndarray[float], f: np.ndarray[float]) -> np
 
 
 def generate_circuit_fn(circuit: str, jit=False):
-    fn = partial(eval_circuit, circuit)
+    T = Callable[[np.ndarray, np.ndarray], np.ndarray]
+    fn: T = partial(eval_circuit, circuit)
     return jax.jit(fn) if jit else fn
 
 
