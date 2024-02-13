@@ -60,6 +60,8 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
+log = get_logger(__name__)
+
 # <<< Logging utils
 
 
@@ -158,7 +160,7 @@ def timeout(seconds):
             try:
                 result = func(*args, **kwargs)
             except TimeoutException:
-                print("Didn't converge in time!")
+                log.warning(f"{func.__name__} didn't converge in time!")
                 result = None
             finally:
                 signal.alarm(0)
@@ -299,8 +301,7 @@ def fit_circuit_parameters(
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
         except RuntimeError:
             continue
-        print(popt)
-        err = np.mean((obj_fn(freq, *popt) - Zc)**2)
+        err = np.mean((obj_fn(freq, *popt) - Zc) ** 2)
         if err < err_min:
             err_min = err
             p0 = popt
@@ -315,7 +316,7 @@ def fit_circuit_parameters(
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
 if os.name != "nt":
-    fit_circuit_parameters = timeout(300)(fit_circuit_parameters)
+    fit_circuit_parameters = timeout(15)(fit_circuit_parameters)
 
 
 def eval_circuit(
