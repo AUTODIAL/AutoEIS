@@ -203,7 +203,22 @@ def is_notebook():
 # >>> Circuit utils
 
 
-def fit_circuit_parameters(
+def parse_initial_guess(
+    p0: Union[np.ndarray, dict[str, float], list[float]],
+    circuit: str,
+) -> np.ndarray:
+    """Parses the initial guess for circuit parameters."""
+    num_params = parser.count_parameters(circuit)
+    if p0 is None:
+        return np.random.rand(num_params)
+    elif isinstance(p0, dict):
+        return np.fromiter(p0.values(), dtype=float)
+    elif isinstance(p0, list):
+        return np.array(p0)
+    raise ValueError(f"Invalid initial guess: {p0}")
+
+
+def fit_circuit_parameters_legacy(
     circuit: str,
     Z: np.ndarray[complex],
     freq: np.ndarray[float],
@@ -215,10 +230,7 @@ def fit_circuit_parameters(
     # NOTE: Each circuit eval ~ 1 ms, so 1000 evals ~ 1 s
     # Deal with initial guess
     num_params = parser.count_parameters(circuit)
-    if p0 is None:
-        p0 = np.random.rand(num_params)
-    elif isinstance(p0, dict):
-        p0 = list(p0.values())
+    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Fit circuit parameters
@@ -244,6 +256,59 @@ def fit_circuit_parameters(
 
     labels = parser.get_parameter_labels(circuit)
     return dict(zip(labels, p0))
+
+
+def fit_circuit_parameters(
+    circuit: str,
+    Z: np.ndarray[complex],
+    freq: np.ndarray[float],
+    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    iters: int = 1,
+    maxfev: int = 1000,
+    ftol: float = 1e-13,
+) -> dict[str, float]:
+    """Fits a circuit to impedance data and returns the parameters."""
+    # Define objective function
+    Zc = np.hstack([Z.real, Z.imag])
+    fn = generate_circuit_fn(circuit, jit=True, concat=True)
+
+    def obj_fn(freq, *p):
+        return np.mean(np.abs(fn(np.array(p), freq) - Zc) ** 2)
+
+    # Sanitize initial guess
+    num_params = parser.count_parameters(circuit)
+    if p0 is None:
+        p0 = np.random.rand(num_params)
+    elif isinstance(p0, dict):
+        p0 = np.fromiter(p0.values(), dtype=float)
+    assert len(p0) == num_params, "Wrong number of parameters in initial guess."
+
+    # Assemble kwargs for curve_fit
+    circuit_impy = parser.convert_to_impedance_format(circuit)
+    bounds = set_default_bounds(circuit_impy)
+    kwargs = {
+        "p0": p0,
+        "bounds": bounds,
+        "maxfev": maxfev,
+        "ftol": ftol,
+    }
+
+    # Fit circuit parameters by brute force
+    err_min = np.inf
+    for _ in range(iters):
+        try:
+            popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
+            err = obj_fn(freq, *popt)
+            err_min = min(err, err_min)
+            kwargs["p0"] = np.random.rand(num_params)
+        except RuntimeError:
+            continue
+
+    if err_min == np.inf:
+        raise RuntimeError("Failed to fit the circuit parameters.")
+
+    variables = parser.get_parameter_labels(circuit)
+    return dict(zip(variables, popt))
 
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
