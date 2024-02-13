@@ -672,15 +672,16 @@ def _perform_bayesian_inference_batch(
         "progress_bar": [False] * N,
     }
 
-    n_cores = psutil.cpu_count(logical=False)
+    n_jobs = min(psutil.cpu_count(logical=False), N)
 
     # Perform Bayesian inference in parallel
-    with WorkerPool(n_jobs=n_cores, use_dill=True) as pool:
+    with WorkerPool(n_jobs=n_jobs, use_dill=True) as pool:
         results = pool.map(
             _perform_bayesian_inference,
             zip(*bi_kwargs.values()),
             progress_bar=progress_bar,
             progress_bar_style="notebook" if utils.is_notebook() else "rich",
+            progress_bar_options={"desc": "Performing Bayesian Inference"},
             iterable_len=len(circuits),
         )
 
