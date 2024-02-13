@@ -23,8 +23,8 @@ import signal
 import sys
 from collections.abc import Iterable
 from contextlib import contextmanager
-from functools import partial, wraps
-from typing import Callable, Union
+from functools import wraps
+from typing import Union
 
 import jax  # NOQA: F401
 import jax.numpy as jnp
