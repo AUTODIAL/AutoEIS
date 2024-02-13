@@ -501,6 +501,38 @@ def perform_bayesian_inference(
     seed: Union[int, jax.Array] = None,
     progress_bar: bool = True,
     refine_p0: bool = False,
+) -> list[tuple[Union[numpyro.infer.mcmc.MCMC, None], int]]:
+    """Performs Bayesian inference on the circuits based on impedance data.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame or list[str]
+        Dataframe containing circuits or list of circuit strings.
+    Z : np.ndarray[complex]
+        Complex impedance data.
+    freq: np.ndarray[float]
+        Frequency data.
+    p0 : Union[np.ndarray[float], dict[str, float]], optional
+        Initial guess for the circuit parameters (default is None).
+    num_warmup : int, optional
+        Number of warmup samples for the MCMC (default is 2500).
+    num_samples : int, optional
+        Number of samples for the MCMC (default is 1000).
+    num_chains : int, optional
+        Number of MCMC chains (default is 1).
+    seed : int, optional
+        Random seed for reproducibility (default is None).
+    progress_bar : bool, optional
+        If True, a progress bar will be displayed (default is True).
+    refine_p0 : bool, optional
+        If True, the initial guess for the circuit parameters will be refined
+        using the circuit fitter (default is False).
+
+    Returns
+    -------
+    list[tuple[numpyro.infer.mcmc.MCMC, int]]
+        List of MCMC objects and exit codes (0 if successful, -1 if failed).
+    """
     # Ensure inputs are lists
     if isinstance(circuits, str):
         circuits = [circuits]
@@ -595,6 +627,7 @@ def _perform_bayesian_inference(
         key = jax.random.PRNGKey(seed)
         key, subkey = jax.random.split(key)
 
+    # TODO: Remove this, circuit fitting must be done in the public API
     # Deal with initial values for the circuit parameters
     if p0 is None:
         p0 = utils.fit_circuit_parameters(circuit, freq, Z)
