@@ -222,8 +222,8 @@ def parse_initial_guess(
 
 def fit_circuit_parameters_legacy(
     circuit: str,
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
     iters: int = 1,
     maxfev: int = 1000,
@@ -262,8 +262,8 @@ def fit_circuit_parameters_legacy(
 
 def fit_circuit_parameters(
     circuit: str,
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
     iters: int = 1,
     maxfev: int = 1000,
@@ -275,7 +275,7 @@ def fit_circuit_parameters(
     fn = generate_circuit_fn(circuit, jit=True, concat=True)
 
     def obj_fn(freq, *p):
-        return fn(np.array(p), freq)
+        return fn(freq, np.array(p))
 
     # Sanitize initial guess
     num_params = parser.count_parameters(circuit)
@@ -297,7 +297,7 @@ def fit_circuit_parameters(
     for _ in range(iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-            err = np.abs(obj_fn(freq, *popt) - Zc).mean()
+            err = np.mean((obj_fn(freq, *popt) - Zc)**2)
             if err < err_min:
                 err_min = err
                 p0 = popt
@@ -318,7 +318,7 @@ if os.name != "nt":
 
 
 def eval_circuit(
-    circuit: str, p: np.ndarray, f: Union[np.ndarray, float]
+    circuit: str, f: Union[np.ndarray, float], p: np.ndarray
 ) -> np.ndarray[complex]:
     """Converts a circuit string to a function of (params, freq) and evaluates it."""
     Z_expr = parser.generate_mathematical_expr(circuit)
@@ -326,11 +326,11 @@ def eval_circuit(
 
 
 def generate_circuit_fn(circuit: str, jit=False, concat=False):
-    def Z_complex(p: Union[np.ndarray, float], freq: np.ndarray) -> np.ndarray[complex]:
-        return eval_circuit(circuit, p, freq)
+    def Z_complex(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray[complex]:
+        return eval_circuit(circuit, freq, p)
 
-    def Z_concat(p: Union[np.ndarray, float], freq: np.ndarray) -> np.ndarray:
-        Z = Z_complex(p, freq)
+    def Z_concat(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray:
+        Z = Z_complex(freq, p)
         return jnp.hstack([Z.real, Z.imag])
 
     fn = Z_concat if concat else Z_complex
@@ -339,7 +339,7 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
     return fn
 
 
-def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
+def generate_circuit_fn_impedance_backend(circuit: str):
     """Converts a circuit string to a function using impedance.py."""
     num_params = parser.count_parameters(circuit)
     # Convert circuit string to impedance.py format
@@ -348,8 +348,8 @@ def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
     p0 = np.full(num_params, np.nan)
     circuit = CustomCircuit(circuit, initial_guess=p0)
 
-    def func(params, freq):
-        circuit.parameters_ = params
+    def func(freq: Union[np.ndarray, float], p: np.ndarray) -> np.ndarray:
+        circuit.parameters_ = p
         return circuit.predict(freq)
 
     return func
@@ -405,8 +405,8 @@ def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
         return np.array(x0)
 
     freq = np.logspace(-3, 3, 10)
-    Z1 = generate_circuit_fn(circuit1)(x0(circuit1), freq)
-    Z2 = generate_circuit_fn(circuit2)(x0(circuit2), freq)
+    Z1 = generate_circuit_fn(circuit1)(freq, x0(circuit1))
+    Z2 = generate_circuit_fn(circuit2)(freq, x0(circuit2))
     return np.allclose(Z1, Z2)
 
 

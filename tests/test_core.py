@@ -12,8 +12,8 @@ def test_compute_ohmic_resistance():
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     freq = np.logspace(-3, 3, 1000)
-    Z = circuit_fn(parameters, freq)
-    R = core.compute_ohmic_resistance(Z, freq)
+    Z = circuit_fn(freq, parameters)
+    R = core.compute_ohmic_resistance(freq, Z)
     np.testing.assert_allclose(R, R1, rtol=0.15)
 
 
@@ -23,8 +23,8 @@ def test_compute_ohmic_resistance_missing_high_freq():
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     freq = np.logspace(-3, 0, 1000)
-    Z = circuit_fn(parameters, freq)
-    R = core.compute_ohmic_resistance(Z, freq)
+    Z = circuit_fn(freq, parameters)
+    R = core.compute_ohmic_resistance(freq, Z)
     # When high frequency measurements are missing, Re(Z) @ max(freq) is good approximation
     Zreal_at_high_freq = Z.real[np.argmax(freq)]
     np.testing.assert_allclose(R, Zreal_at_high_freq)
@@ -82,7 +82,7 @@ def test_bayesian_inference_single():
         "progress_bar": False,
     }
     mcmc, exist_code = core._perform_bayesian_inference(
-        circuit, Z, freq, p0, **kwargs_mcmc
+        circuit, freq, Z, p0, **kwargs_mcmc
     )
     assert exist_code in [-1, 0]
     assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
@@ -91,7 +91,7 @@ def test_bayesian_inference_single():
 def test_bayesian_inference_batch():
     Z, freq = io.load_test_dataset()
     circuits = io.load_test_circuits(filtered=True)
-    mcmc_results = core.perform_bayesian_inference(circuits, Z, freq)
+    mcmc_results = core.perform_bayesian_inference(circuits, freq, Z)
     assert len(mcmc_results) == len(circuits)
     for mcmc, exist_code in mcmc_results:
         assert exist_code in [-1, 0]
@@ -101,7 +101,7 @@ def test_bayesian_inference_batch():
 @pytest.mark.skip(reason="This test is too slow!")
 def test_perform_full_analysis():
     Z, freq = io.load_test_dataset()
-    results = core.perform_full_analysis(Z, freq)
+    results = core.perform_full_analysis(freq, Z)
     required_columns = [
         "circuitstring",
         "Parameters",
