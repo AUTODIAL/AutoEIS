@@ -275,7 +275,7 @@ def fit_circuit_parameters(
     fn = generate_circuit_fn(circuit, jit=True, concat=True)
 
     def obj_fn(freq, *p):
-        return np.mean(np.abs(fn(np.array(p), freq) - Zc) ** 2)
+        return fn(np.array(p), freq)
 
     # Sanitize initial guess
     num_params = parser.count_parameters(circuit)
@@ -297,8 +297,10 @@ def fit_circuit_parameters(
     for _ in range(iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-            err = obj_fn(freq, *popt)
-            err_min = min(err, err_min)
+            err = np.abs(obj_fn(freq, *popt) - Zc).mean()
+            if err < err_min:
+                err_min = err
+                p0 = popt
             kwargs["p0"] = np.random.rand(num_params)
         except RuntimeError:
             continue
@@ -307,7 +309,7 @@ def fit_circuit_parameters(
         raise RuntimeError("Failed to fit the circuit parameters.")
 
     variables = parser.get_parameter_labels(circuit)
-    return dict(zip(variables, popt))
+    return dict(zip(variables, p0))
 
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
