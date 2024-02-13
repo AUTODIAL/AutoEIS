@@ -23,7 +23,7 @@ import signal
 import sys
 from collections.abc import Iterable
 from contextlib import contextmanager
-from functools import partial, wraps
+from functools import wraps
 from typing import Union
 
 import jax  # NOQA: F401
@@ -32,9 +32,11 @@ import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
 from impedance.models.circuits import CustomCircuit
+from impedance.models.circuits.fitting import set_default_bounds
 from numpy import pi  # NOQA: F401
 from rich.logging import RichHandler
 from scipy import stats
+from scipy.optimize import curve_fit
 
 # from tensorflow_probability import distributions as tfdist  # NOQA: F401
 import __main__
@@ -57,6 +59,8 @@ def get_logger(name: str) -> logging.Logger:
     logger.addHandler(handler)
     return logger
 
+
+log = get_logger(__name__)
 
 # <<< Logging utils
 
@@ -156,7 +160,7 @@ def timeout(seconds):
             try:
                 result = func(*args, **kwargs)
             except TimeoutException:
-                print("Didn't converge in time!")
+                log.warning(f"{func.__name__} didn't converge in time!")
                 result = None
             finally:
                 signal.alarm(0)
@@ -203,57 +207,141 @@ def is_notebook():
 # >>> Circuit utils
 
 
-def fit_circuit_parameters(
+def parse_initial_guess(
+    p0: Union[np.ndarray, dict[str, float], list[float]],
     circuit: str,
-    Z: np.ndarray[complex],
-    freq: np.ndarray[float],
-    p0: Union[np.ndarray[float], dict[str, float]] = None,
-    iters: int = 1,
-) -> dict[str, float]:
-    """Fits a circuit to impedance data and returns the parameters."""
-    # Deal with initial guess
+) -> np.ndarray:
+    """Parses the initial guess for circuit parameters."""
     num_params = parser.count_parameters(circuit)
     if p0 is None:
-        p0 = np.random.rand(num_params)
+        return np.random.rand(num_params)
     elif isinstance(p0, dict):
-        p0 = list(p0.values())
+        return np.fromiter(p0.values(), dtype=float)
+    elif isinstance(p0, (list, np.ndarray)):
+        return np.array(p0)
+    raise ValueError(f"Invalid initial guess: {p0}")
+
+
+def fit_circuit_parameters_legacy(
+    circuit: str,
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    iters: int = 1,
+    maxfev: int = 1000,
+) -> dict[str, float]:
+    """Fits a circuit to impedance data and returns the parameters."""
+    # NOTE: Each circuit eval ~ 1 ms, so 1000 evals ~ 1 s
+    # Deal with initial guess
+    num_params = parser.count_parameters(circuit)
+    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Fit circuit parameters
     circuit_impy = CustomCircuit(
-        circuit=parser.convert_to_impedance_format(circuit), initial_guess=p0
+        circuit=parser.convert_to_impedance_format(circuit),
+        initial_guess=p0,
     )
     # HACK: Use multiple random initial guesses to avoid local minima
     err_min = np.inf
     for _ in range(iters):
-        circuit_impy.fit(freq, Z)
+        try:
+            circuit_impy.fit(freq, Z, maxfev=maxfev)
+        except RuntimeError:
+            continue
         err = np.mean(np.abs(circuit_impy.predict(freq) - Z) ** 2)
         if err < err_min:
             err_min = err
             p0 = circuit_impy.parameters_
         circuit_impy.initial_guess = np.random.rand(num_params).tolist()
 
+    if err_min == np.inf:
+        raise RuntimeError("Failed to fit the circuit parameters.")
+
     labels = parser.get_parameter_labels(circuit)
     return dict(zip(labels, p0))
 
 
+def fit_circuit_parameters(
+    circuit: str,
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    iters: int = 1,
+    maxfev: int = 1000,
+    ftol: float = 1e-13,
+) -> dict[str, float]:
+    """Fits a circuit to impedance data and returns the parameters."""
+    # Define objective function
+    Zc = np.hstack([Z.real, Z.imag])
+    fn = generate_circuit_fn(circuit, jit=True, concat=True)
+    # Format obj function as f(freq, *p) not f(freq, p) for curve_fit
+    obj_fn = lambda freq, *p: fn(freq, p)  # noqa: E731
+
+    # >>> Alternatively, use impedance.py to create the objective function
+    # from impedance.models.circuits.fitting import wrapCircuit
+    # circuit_impy = parser.convert_to_impedance_format(circuit)
+    # obj_fn = wrapCircuit(circuit_impy, constants={})
+    # <<<
+
+    # Sanitize initial guess
+    num_params = parser.count_parameters(circuit)
+    p0 = parse_initial_guess(p0, circuit)
+    assert len(p0) == num_params, "Wrong number of parameters in initial guess."
+
+    # Assemble kwargs for curve_fit
+    circuit_impy = parser.convert_to_impedance_format(circuit)
+    bounds = set_default_bounds(circuit_impy)
+    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol}
+
+    # Fit circuit parameters by brute force
+    err_min = np.inf
+    for _ in range(iters):
+        try:
+            popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
+        except RuntimeError:
+            continue
+        err = np.mean((obj_fn(freq, *popt) - Zc) ** 2)
+        if err < err_min:
+            err_min = err
+            p0 = popt
+        kwargs["p0"] = np.random.rand(num_params)
+
+    if err_min == np.inf:
+        raise RuntimeError("Failed to fit the circuit parameters.")
+
+    variables = parser.get_parameter_labels(circuit)
+    return dict(zip(variables, p0))
+
+
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
 if os.name != "nt":
-    fit_circuit_parameters = timeout(300)(fit_circuit_parameters)
+    fit_circuit_parameters = timeout(15)(fit_circuit_parameters)
 
 
-def eval_circuit(circuit: str, x: np.ndarray[float], f: np.ndarray[float]) -> np.ndarray:
+def eval_circuit(
+    circuit: str, f: Union[np.ndarray, float], p: np.ndarray
+) -> np.ndarray[complex]:
     """Converts a circuit string to a function of (params, freq) and evaluates it."""
     Z_expr = parser.generate_mathematical_expr(circuit)
     return eval(Z_expr)
 
 
-def generate_circuit_fn(circuit: str, jit=False):
-    fn = partial(eval_circuit, circuit)
-    return jax.jit(fn) if jit else fn
+def generate_circuit_fn(circuit: str, jit=False, concat=False):
+    def Z_complex(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray[complex]:
+        return eval_circuit(circuit, freq, p)
+
+    def Z_concat(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray:
+        Z = Z_complex(freq, p)
+        return jnp.hstack([Z.real, Z.imag])
+
+    fn = Z_concat if concat else Z_complex
+    fn = jax.jit(fn) if jit else fn
+
+    return fn
 
 
-def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
+def generate_circuit_fn_impedance_backend(circuit: str):
     """Converts a circuit string to a function using impedance.py."""
     num_params = parser.count_parameters(circuit)
     # Convert circuit string to impedance.py format
@@ -262,8 +350,8 @@ def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
     p0 = np.full(num_params, np.nan)
     circuit = CustomCircuit(circuit, initial_guess=p0)
 
-    def func(params, freq):
-        circuit.parameters_ = params
+    def func(freq: Union[np.ndarray, float], p: np.ndarray) -> np.ndarray:
+        circuit.parameters_ = p
         return circuit.predict(freq)
 
     return func
@@ -319,8 +407,8 @@ def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
         return np.array(x0)
 
     freq = np.logspace(-3, 3, 10)
-    Z1 = generate_circuit_fn(circuit1)(x0(circuit1), freq)
-    Z2 = generate_circuit_fn(circuit2)(x0(circuit2), freq)
+    Z1 = generate_circuit_fn(circuit1)(freq, x0(circuit1))
+    Z2 = generate_circuit_fn(circuit2)(freq, x0(circuit2))
     return np.allclose(Z1, Z2)
 
 
@@ -330,6 +418,8 @@ def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
 # >>> Statistics utils
 
 
+# TODO: Remove variables from input arguments
+# TODO: Refactor inference functions to strip non-variable keys from MCMC samples
 def initialize_priors(
     p0: dict[str, float], variables: list[str]
 ) -> dict[str, dist.Distribution]:

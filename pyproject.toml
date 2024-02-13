@@ -7,7 +7,7 @@ name = "autoeis"
 dynamic = ["version"]
 description = "A tool for automated EIS analysis by proposing statistically plausible ECMs."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "Runze Zhang", email = "runzee.zhang@mail.utoronto.ca" },
@@ -35,6 +35,7 @@ dependencies = [
     "dill",
     "impedance",
     "ipython",
+    "ipykernel",
     "ipywidgets",
     "jax",
     "julia",

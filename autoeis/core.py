@@ -25,6 +25,7 @@ import numpyro
 import pandas as pd
 import psutil
 from impedance.validation import linKK
+from jax import config
 from mpire import WorkerPool
 from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
@@ -34,6 +35,8 @@ import autoeis.visualization as viz
 from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
 
+# Enforce double precision, otherwise circuit fitter fails (who knows what else!)
+config.update("jax_enable_x64", True)
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
 
@@ -57,7 +60,7 @@ __all__ = [
 
 
 # TODO: Breaks when data is noisy -> use curve_fit to extrapolate R0
-def compute_ohmic_resistance(Z: np.ndarray[complex], freq: np.ndarray[float]) -> float:
+def compute_ohmic_resistance(freq: np.ndarray[float], Z: np.ndarray[complex]) -> float:
     """Extracts the ohmic resistance from impedance data.
 
     Parameters
@@ -223,7 +226,7 @@ def preprocess_impedance_data(
 
         # Find the ohmic resistance
         try:
-            ohmic_resistance = compute_ohmic_resistance(Z_mask, freq_mask)
+            ohmic_resistance = compute_ohmic_resistance(freq_mask, Z_mask)
             ohmic_resistance_found = True
         except ValueError:
             log.error("Ohmic resistance not found. Check data or increase KK threshold.")
@@ -489,20 +492,56 @@ def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
 
 def perform_bayesian_inference(
     circuits: Union[pd.DataFrame, list[str], str],
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     p0: Union[np.ndarray, dict, list[dict], list[np.ndarray]] = None,
     num_warmup=2500,
     num_samples=1000,
     num_chains=1,
     seed: Union[int, jax.Array] = None,
     progress_bar: bool = True,
-):
+    refine_p0: bool = False,
+) -> list[tuple[Union[numpyro.infer.mcmc.MCMC, None], int]]:
+    """Performs Bayesian inference on the circuits based on impedance data.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame or list[str]
+        Dataframe containing circuits or list of circuit strings.
+    Z : np.ndarray[complex]
+        Complex impedance data.
+    freq: np.ndarray[float]
+        Frequency data.
+    p0 : Union[np.ndarray[float], dict[str, float]], optional
+        Initial guess for the circuit parameters (default is None).
+    num_warmup : int, optional
+        Number of warmup samples for the MCMC (default is 2500).
+    num_samples : int, optional
+        Number of samples for the MCMC (default is 1000).
+    num_chains : int, optional
+        Number of MCMC chains (default is 1).
+    seed : int, optional
+        Random seed for reproducibility (default is None).
+    progress_bar : bool, optional
+        If True, a progress bar will be displayed (default is True).
+    refine_p0 : bool, optional
+        If True, the initial guess for the circuit parameters will be refined
+        using the circuit fitter (default is False).
+
+    Returns
+    -------
+    list[tuple[numpyro.infer.mcmc.MCMC, int]]
+        List of MCMC objects and exit codes (0 if successful, -1 if failed).
+    """
     # Ensure inputs are lists
     if isinstance(circuits, str):
         circuits = [circuits]
     if p0 is None:
         p0 = [None] * len(circuits)
+    elif isinstance(p0, (dict, np.ndarray)):
+        p0 = [p0] * len(circuits)
+    elif isinstance(p0, list):
+        assert len(p0) == len(circuits), "Invalid p0 length"
 
     # Validate inputs' types and lengths
     if isinstance(circuits, pd.DataFrame):
@@ -517,28 +556,38 @@ def perform_bayesian_inference(
         num_params = len(parser.get_parameter_labels(circuit))
         assert len(p0_) == num_params, f"Invalid p0 length: {p0_}"
 
+    if refine_p0:
+        for i, (circuit, p0_) in enumerate(zip(circuits, p0)):
+            p0[i] = utils.fit_circuit_parameters(circuit, freq, Z, p0=p0_)
+            # If circuit fitter didn't converge, use the initial guess
+            p0[i] = p0_ if p0[i] is None else p0[i]
+
     # Short-circuit if no circuits are provided
     if len(circuits) == 0:
-        log.warning("Circuits' dataframe is empty!")
+        log.warning("'circuits' dataframe is empty!")
         return None
 
-    return _perform_bayesian_inference_batch(
-        circuits=circuits,
-        Z=Z,
-        freq=freq,
-        p0=p0,
-        num_warmup=num_warmup,
-        num_samples=num_samples,
-        num_chains=num_chains,
-        seed=seed,
-        progress_bar=progress_bar,
-    )
+    bi_kwargs = {
+        "freq": freq,
+        "Z": Z,
+        "num_warmup": num_warmup,
+        "num_samples": num_samples,
+        "num_chains": num_chains,
+        "seed": seed,
+        "progress_bar": progress_bar,
+    }
+
+    if len(circuits) == 1:
+        # Single inference gets slowed down by progress bar
+        bi_kwargs["progress_bar"] = False
+        return [_perform_bayesian_inference(circuits[0], p0=p0[0], **bi_kwargs)]
+    return _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
 
 
 def _perform_bayesian_inference(
     circuit: str,
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     p0: Union[np.ndarray[float], dict[str, float]] = None,
     num_warmup=2500,
     num_samples=1000,
@@ -578,9 +627,10 @@ def _perform_bayesian_inference(
         key = jax.random.PRNGKey(seed)
         key, subkey = jax.random.split(key)
 
+    # TODO: Remove this, circuit fitting must be done in the public API
     # Deal with initial values for the circuit parameters
     if p0 is None:
-        p0 = utils.fit_circuit_parameters(circuit, Z, freq)
+        p0 = utils.fit_circuit_parameters(circuit, freq, Z)
     assert isinstance(p0, dict), "p0 must be a dictionary"
 
     circuit_fn = utils.generate_circuit_fn(circuit, jit=True)
@@ -599,8 +649,8 @@ def _perform_bayesian_inference(
     }
     mcmc = MCMC(nuts_kernel, **kwargs_mcmc)
     kwargs_inference = {
-        "Z": Z,
         "freq": freq,
+        "Z": Z,
         "priors": priors,
         "circuit_fn": circuit_fn,
     }
@@ -616,8 +666,8 @@ def _perform_bayesian_inference(
 
 def _perform_bayesian_inference_batch(
     circuits: list[str],
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     p0: list[dict[str, float]] = None,
     num_warmup=2500,
     num_samples=1000,
@@ -654,8 +704,8 @@ def _perform_bayesian_inference_batch(
     # Multiprocessing requires all inputs to be iterables of the same length
     bi_kwargs = {
         "circuits": circuits,
-        "Z": [Z] * N,
         "freq": [freq] * N,
+        "Z": [Z] * N,
         "p0": p0 if isinstance(p0, list) else [p0] * N,
         "num_warmup": [num_warmup] * N,
         "num_samples": [num_samples] * N,
@@ -664,15 +714,16 @@ def _perform_bayesian_inference_batch(
         "progress_bar": [False] * N,
     }
 
-    n_cores = psutil.cpu_count(logical=False)
+    n_jobs = min(psutil.cpu_count(logical=False), N)
 
     # Perform Bayesian inference in parallel
-    with WorkerPool(n_jobs=n_cores, use_dill=True) as pool:
+    with WorkerPool(n_jobs=n_jobs, use_dill=True) as pool:
         results = pool.map(
             _perform_bayesian_inference,
             zip(*bi_kwargs.values()),
             progress_bar=progress_bar,
             progress_bar_style="notebook" if utils.is_notebook() else "rich",
+            progress_bar_options={"desc": "Performing Bayesian Inference"},
             iterable_len=len(circuits),
         )
 
@@ -717,8 +768,8 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def perform_full_analysis(
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     iters: int = 100,
     parallel: bool = True,
     linKK_threshold: float = 5e-2,
@@ -765,7 +816,7 @@ def perform_full_analysis(
 
     # Perform Bayesian inference on the filtered ECMs
     kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}
-    mcmcs = perform_bayesian_inference(circuits, Z, freq, **kwargs_mcmc)
+    mcmcs = perform_bayesian_inference(circuits, freq, Z, **kwargs_mcmc)
 
     # Add the results to the circuits dataframe as a new column
     chains, status = zip(*mcmcs)

@@ -190,8 +190,8 @@ def find_ohmic_resistors(circuit: list) -> list[str]:
 
 def generate_mathematical_expr(circuit: str) -> str:
     """Converts a circuit string to a mathematical expression for impedance.
-     
-    The returned string can be evaluated assuming 'x' is an array of
+
+    The returned string can be evaluated assuming 'p' is an array of
     component values and 'f' is the frequency (scalar/array).
     """
     # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
@@ -200,7 +200,7 @@ def generate_mathematical_expr(circuit: str) -> str:
         "[": "((",
         ",": ")**(-1)+(",
         "]": ")**(-1))**(-1)"
-    }
+    }  # fmt: off
     expr = circuit
     for j, k in replacements.items():
         expr = expr.replace(j, k)
@@ -209,16 +209,16 @@ def generate_mathematical_expr(circuit: str) -> str:
     expr = replace_components_with_impedance(expr)
 
     # Replace parameters with array indexing, e.g., R1, P2w, P2n -> x[0], x[1], x[2]
-    parameters = get_parameter_labels(circuit)    
+    parameters = get_parameter_labels(circuit)
     for i, var in enumerate(parameters):
-        expr = expr.replace(var, f"x[{i}]", 1)
-    
+        expr = expr.replace(var, f"p[{i}]", 1)
+
     return expr
 
 
 def replace_components_with_impedance(expr: str) -> str:
     """Updates the circuit expression with the impedance of the components.
-    
+
     Notes
     -----
     The impedance expressions are described 'parameter' labels, not 'component'
