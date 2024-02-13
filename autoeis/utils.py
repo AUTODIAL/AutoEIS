@@ -257,10 +257,18 @@ def eval_circuit(circuit: str, x: np.ndarray[float], f: np.ndarray[float]) -> np
     return eval(Z_expr)
 
 
-def generate_circuit_fn(circuit: str, jit=False):
-    T = Callable[[np.ndarray, np.ndarray], np.ndarray]
-    fn: T = partial(eval_circuit, circuit)
-    return jax.jit(fn) if jit else fn
+def generate_circuit_fn(circuit: str, jit=False, concat=False):
+    def Z_complex(p: Union[np.ndarray, float], freq: np.ndarray) -> np.ndarray[complex]:
+        return eval_circuit(circuit, p, freq)
+
+    def Z_concat(p: Union[np.ndarray, float], freq: np.ndarray) -> np.ndarray:
+        Z = Z_complex(p, freq)
+        return jnp.hstack([Z.real, Z.imag])
+
+    fn = Z_concat if concat else Z_complex
+    fn = jax.jit(fn) if jit else fn
+
+    return fn
 
 
 def generate_circuit_fn_impedance_backend(circuit: str) -> callable:
