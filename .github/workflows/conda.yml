@@ -7,7 +7,7 @@ jobs:
     runs-on: macos-14
     defaults:
       run:
-        shell: bash
+        shell: sh -l {0}
 
     steps:
       - uses: actions/checkout@v4
