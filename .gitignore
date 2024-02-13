@@ -166,6 +166,7 @@ examples/**/*.png
 examples/**/*.csv
 examples/**/*.txt
 results/
+*.pkl
 
 # Local development
 benchmark_jaxfit.py
