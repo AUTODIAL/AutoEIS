@@ -25,6 +25,7 @@ import numpyro
 import pandas as pd
 import psutil
 from impedance.validation import linKK
+from jax import config
 from mpire import WorkerPool
 from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
@@ -34,6 +35,8 @@ import autoeis.visualization as viz
 from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
 
+# Enforce double precision, otherwise circuit fitter fails (who knows what else!)
+config.update("jax_enable_x64", True)
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
 
