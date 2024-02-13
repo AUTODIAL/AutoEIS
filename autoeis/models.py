@@ -27,11 +27,11 @@ def circuit_regression(
 ):
     """NumpyRo model for Bayesian inference of circuit component values."""
     # Sample each element of X separately
-    X = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
+    p = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
     # Predict Z using the model
     circuit_fn = utils.generate_circuit_fn(circuit)
     circuit_fn = jax.jit(circuit_fn)
-    Z_pred = circuit_fn(X, freq)
+    Z_pred = circuit_fn(freq, p)
     # Define observation model for real and imaginary parts of Z
     sigma_real = numpyro.sample("sigma_real", dist.Exponential(rate=1.0))
     numpyro.sample("obs_real", dist.Normal(Z_pred.real, sigma_real), obs=Z.real)
@@ -47,9 +47,9 @@ def circuit_regression_wrapped(
 ):
     """NumpyRo model for Bayesian inference of circuit component values."""
     # Sample each element of X separately
-    X = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
+    p = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
     # Predict Z using the model
-    Z_pred = circuit_fn(X, freq)
+    Z_pred = circuit_fn(freq, p)
     # Define observation model for real and imaginary parts of Z
     sigma_real = numpyro.sample("sigma_real", dist.Exponential(rate=1.0))
     numpyro.sample("obs_real", dist.Normal(Z_pred.real, sigma_real), obs=Z.real)
