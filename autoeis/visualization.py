@@ -24,6 +24,7 @@ import numpy as np
 import numpyro
 import rich
 import seaborn as sns
+from matplotlib.axes import Axes
 from rich.console import Console
 from rich.table import Table
 
@@ -137,6 +138,8 @@ def plot_impedance_combo(
     freq: np.ndarray[float],
     size: int = 10,
     ax: list[plt.Axes] = None,
+    scatter=True,
+    label=None,
 ) -> tuple[plt.Figure, list[plt.Axes]]:
     """Plots EIS data in Nyquist and Bode plots."""
     Re_Z = Z.real
@@ -144,32 +147,39 @@ def plot_impedance_combo(
 
     if ax is None:
         fig, ax = plt.subplots(ncols=2)
-    ax[0].figure.set_size_inches(8, 3)
+    assert not isinstance(ax, Axes), "Incompatible 'ax'. Use plt.subplots(ncols=2)"
+    fig = ax[0].figure
+    fig.set_size_inches(8, 3)
 
     # Nyquist plot
-    ax[0].scatter(Re_Z, -Im_Z, s=size)
+    plot = getattr(ax[0], "scatter" if scatter else "plot")
+    kwargs = {"s": size} if scatter else {}
+    plot(Re_Z, -Im_Z, label=label, **kwargs)
     ax[0].set_xlabel(r"$Re(Z) / \Omega$")
     ax[0].set_ylabel(r"$-Im(Z) / \Omega$")
     ax[0].axis("equal")
+    ax[0].legend()
 
     # Bode plot (magnitude) <- Re(Z)
-    ax1 = ax[1]
-    ax1.scatter(freq, Re_Z, s=size, color="blue", label=r"$Re(Z)$")
-    ax1.set_xscale("log")
-    ax1.set_xlabel("freq (Hz)")
-    ax1.set_ylabel(r"$Re(Z) / \Omega$")
-    ax1.yaxis.label.set_color("blue")
+    if not isinstance(ax[1], list):
+        ax[1] = [ax[1], ax[1].twinx()]
+    plot = getattr(ax[1][0], "scatter" if scatter else "plot")
+    plot(freq, Re_Z, color="blue", label=r"$Re(Z)$", **kwargs)
+    ax[1][0].set_xscale("log")
+    ax[1][0].set_xlabel("freq (Hz)")
+    ax[1][0].set_ylabel(r"$Re(Z) / \Omega$")
+    ax[1][0].yaxis.label.set_color("blue")
 
     # Bode plot (phase) <- Im(Z)
-    ax2 = ax1.twinx()  # instantiate a second y-axis sharing the same x-axis
-    ax2.scatter(freq, -Im_Z, s=size, color="red", label=r"$-Im(Z)$")
-    ax2.set_ylabel(r"$-Im(Z) / \Omega$")
-    ax2.yaxis.label.set_color("red")
-    # Don't show grid lines for the second y-axis (ax1 already has them)
-    ax2.grid(False)
+    plot = getattr(ax[1][1], "scatter" if scatter else "plot")
+    plot(freq, -Im_Z, color="red", label=r"$-Im(Z)$", **kwargs)
+    ax[1][1].set_ylabel(r"$-Im(Z) / \Omega$")
+    ax[1][1].yaxis.label.set_color("red")
+    # Don't show grid lines for the second y-axis (ax[1][0] already has them)
+    ax[1][1].grid(False)
     fig.tight_layout()
 
-    return ax[0].figure, ax
+    return fig, ax
 
 
 def plot_linKK_residuals(
