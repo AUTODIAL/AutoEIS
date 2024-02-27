@@ -151,8 +151,10 @@ def timeout(seconds):
     """Raises a TimeoutException if decorated function doesn't return in time."""
 
     def decorator(func):
+        timeout_msg = f"{func.__name__} didn't converge in time!"
+
         def _handle_timeout(signum, frame):
-            raise TimeoutException("Didn't converge in time!")
+            raise TimeoutException(timeout_msg)
 
         def wrapper(*args, **kwargs):
             signal.signal(signal.SIGALRM, _handle_timeout)
@@ -160,7 +162,7 @@ def timeout(seconds):
             try:
                 result = func(*args, **kwargs)
             except TimeoutException:
-                log.warning(f"{func.__name__} didn't converge in time!")
+                log.warning(timeout_msg)
                 result = None
             finally:
                 signal.alarm(0)
