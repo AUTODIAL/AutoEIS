@@ -158,7 +158,9 @@ def plot_impedance_combo(
     ax[0].set_xlabel(r"$Re(Z) / \Omega$")
     ax[0].set_ylabel(r"$-Im(Z) / \Omega$")
     ax[0].axis("equal")
-    ax[0].legend()
+
+    if label is not None:
+        ax[0].legend()
 
     # Bode plot (magnitude) <- Re(Z)
     if not isinstance(ax[1], list):
