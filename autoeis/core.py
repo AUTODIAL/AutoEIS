@@ -36,7 +36,8 @@ from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
 
 # Enforce double precision, otherwise circuit fitter fails (who knows what else!)
-config.update("jax_enable_x64", True)
+# Tell JAX to use CPUs to avoid the annoying "GPU might be present" warning
+config.update("jax_platforms", "cpu")
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
 
