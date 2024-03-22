@@ -34,27 +34,64 @@ import pandas as pd
 from impedance.models.circuits import CustomCircuit
 from impedance.models.circuits.fitting import set_default_bounds
 from numpy import pi  # NOQA: F401
+from rich.console import Console
 from rich.logging import RichHandler
 from scipy import stats
 from scipy.optimize import curve_fit
 
-# from tensorflow_probability import distributions as tfdist  # NOQA: F401
 import __main__
 
 from . import parser
 
+# Timeout circuit fitter functions after X seconds
+TIMEOUT_AFTER = 15
+
 # >>> Logging utils
 
 
-def get_logger(name: str) -> logging.Logger:
+# Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
+def get_runtime():
+    """Returns the runtime environment."""
+    if "google.colab" in sys.modules:
+        return "Google Colab"
+    elif "ipykernel" in sys.modules:
+        if "jupyter" in sys.modules:
+            return "JupyterLab"
+        else:
+            return "Jupyter Notebook"
+    elif "win32" in sys.platform:
+        if "CMDEXTVERSION" in os.environ:
+            return "Windows Command Prompt"
+        else:
+            return "Windows PowerShell"
+    elif "darwin" in sys.platform:
+        return "MacOS Terminal"
+    else:
+        if hasattr(__main__, "__file__"):
+            return "Linux Terminal"
+        else:
+            return "Interactive Python Shell"
+
+
+def is_notebook():
+    """Returns True if the code is running in a Jupyter notebook."""
+    runtime = get_runtime()
+    return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
+
+
+def get_logger(name: str, level=logging.WARNING) -> logging.Logger:
     """Returns a logger with the given name."""
     logger = logging.getLogger(name)
     if logger.hasHandlers():
-        # If logger has handlers, do not add another to avoid duplicate logs
+        # If logger has handlers, do not add another to avoid duplicate logs, just set level
+        logger.setLevel(level)
         return logger
 
-    logger.setLevel(logging.WARNING)
-    handler = RichHandler(rich_tracebacks=True)
+    logger.setLevel(level)
+    console = Console(force_jupyter=False)
+    handler = RichHandler(
+        rich_tracebacks=True, console=console, show_path=not is_notebook()
+    )
     handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
     logger.addHandler(handler)
     return logger
@@ -151,8 +188,10 @@ def timeout(seconds):
     """Raises a TimeoutException if decorated function doesn't return in time."""
 
     def decorator(func):
+        timeout_msg = f"{func.__name__} didn't converge in time!"
+
         def _handle_timeout(signum, frame):
-            raise TimeoutException("Didn't converge in time!")
+            raise TimeoutException(timeout_msg)
 
         def wrapper(*args, **kwargs):
             signal.signal(signal.SIGALRM, _handle_timeout)
@@ -160,7 +199,7 @@ def timeout(seconds):
             try:
                 result = func(*args, **kwargs)
             except TimeoutException:
-                log.warning(f"{func.__name__} didn't converge in time!")
+                log.warning(timeout_msg)
                 result = None
             finally:
                 signal.alarm(0)
@@ -169,36 +208,6 @@ def timeout(seconds):
         return wrapper
 
     return decorator
-
-
-# Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
-def get_runtime():
-    """Returns the runtime environment."""
-    if "google.colab" in sys.modules:
-        return "Google Colab"
-    elif "ipykernel" in sys.modules:
-        if "jupyter" in sys.modules:
-            return "JupyterLab"
-        else:
-            return "Jupyter Notebook"
-    elif "win32" in sys.platform:
-        if "CMDEXTVERSION" in os.environ:
-            return "Windows Command Prompt"
-        else:
-            return "Windows PowerShell"
-    elif "darwin" in sys.platform:
-        return "MacOS Terminal"
-    else:
-        if hasattr(__main__, "__file__"):
-            return "Linux Terminal"
-        else:
-            return "Interactive Python Shell"
-
-
-def is_notebook():
-    """Returns True if the code is running in a Jupyter notebook."""
-    runtime = get_runtime()
-    return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
 
 
 # <<< General utils
@@ -315,8 +324,9 @@ def fit_circuit_parameters(
 
 
 # FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
-if os.name != "nt":
-    fit_circuit_parameters = timeout(15)(fit_circuit_parameters)
+# if os.name != "nt":
+#     fit_circuit_parameters = timeout(TIMEOUT_AFTER)(fit_circuit_parameters)
+#     fit_circuit_parameters_legacy = timeout(TIMEOUT_AFTER)(fit_circuit_parameters_legacy)
 
 
 def eval_circuit(

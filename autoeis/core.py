@@ -37,6 +37,8 @@ from autoeis.models import circuit_regression, circuit_regression_wrapped  # noq
 
 # Enforce double precision, otherwise circuit fitter fails (who knows what else!)
 config.update("jax_enable_x64", True)
+# Tell JAX to use CPUs to avoid the annoying "GPU might be present" warning
+config.update("jax_platforms", "cpu")
 # AutoEIS datasets are not small-enough that CPU is much faster than GPU
 numpyro.set_platform("cpu")
 
@@ -717,15 +719,18 @@ def _perform_bayesian_inference_batch(
     n_jobs = min(psutil.cpu_count(logical=False), N)
 
     # Perform Bayesian inference in parallel
-    with WorkerPool(n_jobs=n_jobs, use_dill=True) as pool:
-        results = pool.map(
-            _perform_bayesian_inference,
-            zip(*bi_kwargs.values()),
-            progress_bar=progress_bar,
-            progress_bar_style="notebook" if utils.is_notebook() else "rich",
-            progress_bar_options={"desc": "Performing Bayesian Inference"},
-            iterable_len=len(circuits),
-        )
+    with warnings.catch_warnings():
+        # JAX doesn't work well with multiprocessing, but "spawn" should be fine
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*os\.fork\(\).*")
+        with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
+            results = pool.map(
+                _perform_bayesian_inference,
+                zip(*bi_kwargs.values()),
+                progress_bar=progress_bar,
+                progress_bar_style="notebook" if utils.is_notebook() else "rich",
+                progress_bar_options={"desc": "Performing Bayesian Inference"},
+                iterable_len=len(circuits),
+            )
 
     return results
 
