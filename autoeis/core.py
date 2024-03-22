@@ -718,15 +718,18 @@ def _perform_bayesian_inference_batch(
     n_jobs = min(psutil.cpu_count(logical=False), N)
 
     # Perform Bayesian inference in parallel
-    with WorkerPool(n_jobs=n_jobs, use_dill=True) as pool:
-        results = pool.map(
-            _perform_bayesian_inference,
-            zip(*bi_kwargs.values()),
-            progress_bar=progress_bar,
-            progress_bar_style="notebook" if utils.is_notebook() else "rich",
-            progress_bar_options={"desc": "Performing Bayesian Inference"},
-            iterable_len=len(circuits),
-        )
+    with warnings.catch_warnings():
+        # JAX doesn't work well with multiprocessing, but "spawn" should be fine
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*os\.fork\(\).*")
+        with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
+            results = pool.map(
+                _perform_bayesian_inference,
+                zip(*bi_kwargs.values()),
+                progress_bar=progress_bar,
+                progress_bar_style="notebook" if utils.is_notebook() else "rich",
+                progress_bar_options={"desc": "Performing Bayesian Inference"},
+                iterable_len=len(circuits),
+            )
 
     return results
 
