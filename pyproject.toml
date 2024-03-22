@@ -47,11 +47,12 @@ dependencies = [
     "numpyro",
     "pandas",
     "psutil",
-    "pyparsing >= 3",
+    "pyparsing>=3",
     "rich",
-    "scikit-learn >= 1.4",
+    "scikit-learn>=1.4",
     "seaborn",
     "tqdm",
+    "multiprocess==0.70.15",
 ]
 [project.optional-dependencies]
 test = [
