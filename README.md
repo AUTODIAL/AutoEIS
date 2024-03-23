@@ -38,8 +38,14 @@ import autoeis as ae
 Z, freq = ae.io.load_test_dataset()
 
 # Perform automated EIS analysis
-circuits = ae.perform_full_analysis(Z, freq, iters=100, parallel=True)
+circuits = ae.perform_full_analysis(freq, Z, iters=100, parallel=True)
 print(circuits)
+
+# Print summary of the results
+mcmcs, status = circuits["MCMC (chain)"], circuits["MCMC (status)"]
+for mcmc, stat, circuit in zip(mcmcs, status, circuits.circuitstring):
+    if stat == 0:
+        ae.visualization.print_summary_statistics(mcmc, circuit)
 ```
 
 - `Z`: Electrochemical impedance measurements (complex array)
