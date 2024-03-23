@@ -31,7 +31,7 @@ jobs:
     - name: Ensure no mismatch between recent tag and new version
       run: |
         export TAG=$(git describe --tags --abbrev=0)
-        export VERSION=$(hatch version)
+        export VERSION=v$(hatch version)
         if [ "$TAG" != "$VERSION" ]; then
           echo "Tag $TAG does not match version $VERSION"
           exit 1
