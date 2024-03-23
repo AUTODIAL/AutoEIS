@@ -71,13 +71,23 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = ["pytest>=8.1.1", "hatch>=1.9.4"]
+dev-dependencies = [
+    "pytest>=8.1.1",
+    "hatch>=1.9.4",
+    "furo>=2024.1.29",
+    "linkify-it-py>=2.0.3",
+    "myst-parser>=2.0.0",
+    "sphinx>=7.2.6",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-autodoc2>=0.5.0",
+    "nbmake>=1.5.3",
+]
 
 [tool.hatch.version]
-path = "autoeis/version.py"
+path = "src/autoeis/version.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["/autoeis"]
+include = ["src/autoeis"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
