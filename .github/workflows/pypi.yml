@@ -51,9 +51,9 @@ jobs:
         commit_author: GitHub Actions <actions@github.com>
         tagging_message: ${{ env.VERSION }}
 
-    # - name: Build and publish to PyPI 📦
-    #   run: |
-    #     export HATCH_INDEX_USER="__token__"
-    #     export HATCH_INDEX_AUTH="${{ secrets.HATCH_INDEX_AUTH }}"
-    #     hatch build
-    #     hatch publish
+    - name: Build and publish to PyPI 📦
+      run: |
+        export HATCH_INDEX_USER="__token__"
+        export HATCH_INDEX_AUTH="${{ secrets.HATCH_INDEX_AUTH }}"
+        hatch build
+        hatch publish
