@@ -33,7 +33,7 @@ dependencies = [
     "ipywidgets",
     "jax",
     "julia",
-    "juliacall",
+    "juliacall==0.9.18",
     "juliapkg",
     "matplotlib",
     "mpire[dill]",
