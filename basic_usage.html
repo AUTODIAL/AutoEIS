@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Circuit notation" href="circuit.html" /><link rel="prev" title="Installation" href="installation.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
-        <title>Basic usage - AutoEIS 0.0.26 documentation</title>
+        <title>Basic usage - AutoEIS 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -125,7 +125,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">AutoEIS 0.0.26 documentation</div></a>
+      <a href="index.html"><div class="brand">AutoEIS 0.0.27 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -260,9 +260,15 @@
 <span class="n">Z</span><span class="p">,</span> <span class="n">freq</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_test_dataset</span><span class="p">()</span>
 <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
 
-<span class="c1"># Perform the full analysis</span>
-<span class="n">circuits</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">perform_full_analysis</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Perform automated EIS analysis</span>
+<span class="n">circuits</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">perform_full_analysis</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
+
+<span class="c1"># Print summary of the results</span>
+<span class="n">mcmcs</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">circuits</span><span class="p">[</span><span class="s2">&quot;MCMC (chain)&quot;</span><span class="p">],</span> <span class="n">circuits</span><span class="p">[</span><span class="s2">&quot;MCMC (status)&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">mcmc</span><span class="p">,</span> <span class="n">stat</span><span class="p">,</span> <span class="n">circuit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mcmcs</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">circuits</span><span class="o">.</span><span class="n">circuitstring</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">stat</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">print_summary_statistics</span><span class="p">(</span><span class="n">mcmc</span><span class="p">,</span> <span class="n">circuit</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition seealso">
@@ -324,7 +330,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=6a9d8632"></script>
+</div><script src="_static/documentation_options.js?v=cee5022b"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>
