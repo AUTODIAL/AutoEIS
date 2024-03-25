@@ -44,15 +44,16 @@ jobs:
         hatch version ${{ github.event.inputs.version }}
         echo "VERSION=v$(hatch version)" >> $GITHUB_ENV
 
-    - name: Commit files
+    - name: Commit version bump + push tag
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: Bump version to ${{ env.VERSION }}
         commit_author: GitHub Actions <actions@github.com>
+        tagging_message: ${{ env.VERSION }}
 
-    - name: Build and publish to PyPI 📦
-      run: |
-        export HATCH_INDEX_USER="__token__"
-        export HATCH_INDEX_AUTH="${{ secrets.HATCH_INDEX_AUTH }}"
-        hatch build
-        hatch publish
+    # - name: Build and publish to PyPI 📦
+    #   run: |
+    #     export HATCH_INDEX_USER="__token__"
+    #     export HATCH_INDEX_AUTH="${{ secrets.HATCH_INDEX_AUTH }}"
+    #     hatch build
+    #     hatch publish
