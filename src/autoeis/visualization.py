@@ -113,7 +113,30 @@ def plot_nyquist(
     label: str = None,
     ax: plt.Axes = None,
 ) -> tuple[plt.Figure, plt.Axes]:
-    """Plots EIS data in Nyquist plot."""
+    """Plots EIS data in Nyquist plot.
+
+    Parameters
+    ----------
+    Z: np.ndarray[complex]
+        Impedance data.
+    fmt: str, optional
+        Format of the markers in the plot. Default is "o-".
+    size: int, optional
+        Size of the markers in the plot. Default is 4.
+    color: str, optional
+        Color of the markers in the plot. Default is None.
+    alpha: int, optional
+        Transparency of the markers in the plot. Default is 1.
+    label: str, optional
+        Label for the plot. Default is None.
+    ax: plt.Axes, optional
+        Axes to plot on. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, plt.Axes]
+        Figure and axes of the plot.
+    """
     if ax is None:
         fig, ax = plt.subplots()
 
@@ -141,7 +164,28 @@ def plot_impedance_combo(
     scatter=True,
     label=None,
 ) -> tuple[plt.Figure, list[plt.Axes]]:
-    """Plots EIS data in Nyquist and Bode plots."""
+    """Plots EIS data in Nyquist and Bode plots.
+
+    Parameters
+    ----------
+    Z: np.ndarray[complex]
+        Impedance data.
+    freq: np.ndarray[float]
+        Frequencies corresponding to the impedance data.
+    size: int, optional
+        Size of the markers in the plots. Default is 10.
+    ax: list[plt.Axes], optional
+        List of axes (must be of length 2) to plot on. Default is None.
+    scatter: bool, optional
+        If True, plots the data as scatter plots. Default is True.
+    label: str, optional
+        Label for the plot. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, list[plt.Axes]]
+        Figure and axes of the plots.
+    """
     Re_Z = Z.real
     Im_Z = Z.imag
 
@@ -190,7 +234,24 @@ def plot_linKK_residuals(
     res_imag: np.ndarray[float],
     ax: plt.Axes = None,
 ) -> tuple[plt.Figure, plt.Axes]:
-    """Plots the residuals of the linear Kramers-Kronig validation."""
+    """Plots the residuals of the linear Kramers-Kronig validation.
+
+    Parameters
+    ----------
+    freq: np.ndarray[float]
+        Frequencies corresponding to the residuals.
+    res_real: np.ndarray[float]
+        Real part of the residuals.
+    res_imag: np.ndarray[float]
+        Imaginary part of the residuals.
+    ax: plt.Axes, optional
+        Axes to plot on. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, plt.Axes]
+        Figure and axes of the plot.
+    """
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.plot(freq, res_real, label="delta Re")
@@ -288,7 +349,17 @@ def override_mpl_colors(override_named_colors: bool = True):
 def set_plot_style(
     use_arviz: bool = True, use_seaborn: bool = True, use_flexoki: bool = True
 ):
-    """Modifies the default arviz/matplotlib config for prettier plots."""
+    """Modifies the default arviz/matplotlib config for prettier plots.
+
+    Parameters
+    ----------
+    use_arviz: bool, optional
+        If True, use arviz's default plotting style. Default is True.
+    use_seaborn: bool, optional
+        If True, use seaborn's default plotting style. Default is True.
+    use_flexoki: bool, optional
+        If True, use Flexoki's default plotting style. Default is True.
+    """
     # Arviz
     if use_arviz:
         arviz.style.use("arviz-viridish")
@@ -304,13 +375,8 @@ def set_plot_style(
     legend_size = label_size - 1
 
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = [
-        "Helvetica",
-        "Arial",
-        "Verdana",
-        "Tahoma",
-        "DejaVu Sans",
-    ]
+    fonts = ["Helvetica", "Arial", "Verdana", "Tahoma", "DejaVu Sans"]
+    plt.rcParams["font.sans-serif"] = fonts
     plt.rcParams["mathtext.fontset"] = "dejavuserif"
     plt.rcParams["xtick.labelsize"] = tick_size
     plt.rcParams["ytick.labelsize"] = tick_size
@@ -333,7 +399,19 @@ def set_plot_style(
 
 
 def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
-    """In-place modifies Matplotlib axes to show only n ticks."""
+    """In-place modifies Matplotlib axes to show only ``n`` ticks.
+
+    Parameters
+    ----------
+    ax: plt.Axes
+        Axes to modify.
+    x: bool, optional
+        If True, applies the filter to the x-axis. Default is True.
+    y: bool, optional
+        If True, applies the filter to the y-axis. Default is False.
+    n: int, optional
+        Number of ticks to show. Default is 10.
+    """
     if x:
         xticks = ax.xaxis.get_major_ticks()
         if len(xticks) > n:
