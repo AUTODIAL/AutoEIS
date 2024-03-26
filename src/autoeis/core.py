@@ -721,7 +721,8 @@ def _perform_bayesian_inference_batch(
     # Perform Bayesian inference in parallel
     with warnings.catch_warnings():
         # JAX doesn't work well with multiprocessing, but "spawn" should be fine
-        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*os\.fork\(\).*")
+        msg_to_ignore = ".*os\\.fork\\(\\).*"
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=msg_to_ignore)
         with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
             results = pool.map(
                 _perform_bayesian_inference,
