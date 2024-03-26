@@ -33,7 +33,10 @@ import numpyro.distributions as dist
 import pandas as pd
 from impedance.models.circuits import CustomCircuit
 from impedance.models.circuits.fitting import set_default_bounds
+from jax import random
 from numpy import pi  # NOQA: F401
+from numpyro.distributions import Distribution
+from numpyro.infer import MCMC, Predictive
 from rich.console import Console
 from rich.logging import RichHandler
 from scipy import stats
@@ -41,7 +44,7 @@ from scipy.optimize import curve_fit
 
 import __main__
 
-from . import parser
+from . import models, parser
 
 # Timeout circuit fitter functions after X seconds
 TIMEOUT_AFTER = 15
@@ -484,6 +487,37 @@ def initialize_priors_from_posteriors(
             else:
                 raise ValueError(f"Unknown distribution: {dist_type}")
     return priors
+
+
+def eval_posterior_predictive(
+    mcmc: MCMC,
+    circuit: str,
+    freq: np.ndarray[float],
+    priors: dict[str, Distribution] = None,
+    rng_key: random.PRNGKey = None,
+) -> np.ndarray[complex]:
+    """Evaluate the posterior predictive distribution of a MCMC run."""
+    rng_key = rng_key or random.PRNGKey(0)
+    rng_key, rng_key_ = random.split(rng_key)
+    samples = mcmc.get_samples()
+    circuit_fn = generate_circuit_fn(circuit, jit=True)
+
+    # Deal with default arguments
+    if priors is None:
+        variables = parser.get_parameter_labels(circuit)
+        p0 = {var: np.median(samples[var]) for var in variables}
+        priors = initialize_priors(p0, variables)
+
+    # Create a predictive distribution for the circuit parameters
+    model = models.circuit_regression_wrapped
+    predictive = Predictive(model, samples)
+
+    # Evaluate the predictive distribution at the given frequency
+    kwargs = {"freq": freq, "priors": priors, "circuit_fn": circuit_fn}
+    predictions = predictive(rng_key_, **kwargs)
+    Z_pred = predictions["obs_real"] + predictions["obs_imag"] * 1j
+
+    return Z_pred
 
 
 # <<< Statistics utils
