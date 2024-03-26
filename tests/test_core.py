@@ -2,19 +2,7 @@ import numpy as np
 import numpyro
 import pandas as pd
 import pytest
-
 from autoeis import core, io, utils
-
-
-def test_bayesian_inference_batch():
-    Z, freq = io.load_test_dataset()
-    # Only test first three circuits to save time in CI
-    circuits = io.load_test_circuits(filtered=True).iloc[:3]
-    mcmc_results = core.perform_bayesian_inference(circuits, freq, Z, refine_p0=True)
-    assert len(mcmc_results) == len(circuits)
-    for mcmc, exist_code in mcmc_results:
-        assert exist_code in [-1, 0]
-        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 
 
 def test_compute_ohmic_resistance():
@@ -87,25 +75,27 @@ def test_bayesian_inference_single():
     circuits = io.load_test_circuits(filtered=True)
     circuit = circuits.iloc[0].circuitstring
     p0 = circuits.iloc[0].Parameters
-    kwargs_mcmc = {
-        "num_warmup": 2500,
-        "num_samples": 1000,
-        "progress_bar": False,
-    }
-    mcmcs = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
-    mcmc, exit_code = mcmcs[0]
+    kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
+    mcmc_results = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+    mcmc, exit_code = mcmc_results[0]
     assert exit_code in [-1, 0]
     assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
+
+
+def test_bayesian_inference_batch():
+    Z, freq = io.load_test_dataset()
+    # Only test first three circuits to save time in CI
+    circuits = io.load_test_circuits(filtered=True).iloc[:3]
+    mcmc_results = core.perform_bayesian_inference(circuits, freq, Z, refine_p0=False)
+    assert len(mcmc_results) == len(circuits)
+    for mcmc, exist_code in mcmc_results:
+        assert exist_code in [-1, 0]
+        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 
 
 @pytest.mark.skip(reason="This test is too slow!")
 def test_perform_full_analysis():
     Z, freq = io.load_test_dataset()
     results = core.perform_full_analysis(freq, Z)
-    required_columns = [
-        "circuitstring",
-        "Parameters",
-        "MCMC (chains)",
-        "MCMC (status)",
-    ]
+    required_columns = ["circuitstring", "Parameters", "MCMC", "success", "divergences"]
     assert all(col in results.columns for col in required_columns)
