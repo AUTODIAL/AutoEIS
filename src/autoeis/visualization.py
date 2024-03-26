@@ -254,7 +254,8 @@ def override_mpl_colors(override_named_colors: bool = True):
 
     # Override default named colors
     if override_named_colors:
-        mpl.colors._colors_full_map.update(flexoki_light_colors)
+        cdict = mpl.colors.get_named_colors_mapping()
+        cdict.update(flexoki_light_colors)
 
     # Define the Flexoki-Light style
     flexoki_light_style = {
