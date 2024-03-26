@@ -259,7 +259,10 @@ def override_mpl_colors(override_named_colors: bool = True):
 
     # Define the Flexoki-Light style
     flexoki_light_style = {
-        "axes.prop_cycle": mpl.cycler(color=list(flexoki_light_colors.values())),
+        "axes.prop_cycle": mpl.cycler(
+            color=list(flexoki_light_colors.values()),
+            linestyle=["-", "--", "-.", ":"] * 2,
+        ),
         "axes.facecolor": "white",
         "axes.edgecolor": "black",
         "axes.grid": True,
