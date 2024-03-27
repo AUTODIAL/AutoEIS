@@ -1,14 +1,19 @@
 import numpy as np
 import sklearn.metrics as skmetrics
-
 from autoeis import metrics
 
 # Real numbers
 x1 = np.random.rand(10)
 x2 = np.random.rand(10)
+
 # Complex numbers
 y1 = x1 + np.zeros(10) * 1j
 y2 = x2 + np.zeros(10) * 1j
+
+# 2D arrays
+y3 = np.random.rand(5)
+y4 = np.random.rand(10)
+y5 = np.random.rand(5, 10)
 
 
 def test_mse_score_real():
@@ -57,3 +62,15 @@ def test_r2_score_complex():
     r2 = metrics.r2_score(y1, y2)
     r2_gt = skmetrics.r2_score(x1, x2)
     assert np.isclose(r2, r2_gt)
+
+
+def test_r2_score_axis():
+    m, n = y5.shape
+    # axis = 0
+    r2 = metrics.r2_score(y3, y5, axis=0)
+    r2_gt = [skmetrics.r2_score(y3, y5[:, i]) for i in range(n)]
+    np.testing.assert_allclose(r2, r2_gt)
+    # axis = 1
+    r2 = metrics.r2_score(y4, y5, axis=1)
+    r2_gt = [skmetrics.r2_score(y4, y5[i, :]) for i in range(m)]
+    np.testing.assert_allclose(r2, r2_gt)
