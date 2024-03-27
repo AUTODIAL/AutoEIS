@@ -83,30 +83,14 @@ def is_notebook():
     return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
 
 
-def get_logger(name: str, level=logging.WARNING) -> logging.Logger:
-    """Returns a logger with the given name."""
-    logger = logging.getLogger(name)
-    if logger.hasHandlers():
-        # If logger has handlers, do not add another to avoid duplicate logs, just set level
-        logger.setLevel(level)
-        return logger
+@dataclass
+class Settings:
+    """Settings for the AutoEIS package."""
 
-    logger.setLevel(level)
-    console = Console(force_jupyter=False)
-    handler = RichHandler(
-        rich_tracebacks=True, console=console, show_path=not is_notebook()
-    )
-    handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
-    logger.addHandler(handler)
-    return logger
-
-
-log = get_logger(__name__)
-
-# <<< Logging utils
-
-
-# >>> General utils
+    loglevel: int = logging.WARNING
+    ncores: int = psutil.cpu_count(logical=False)
+    notebook: bool = is_notebook()
+    progress_bar: bool = True
 
 
 def flatten(xs: list) -> list:
