@@ -13,6 +13,7 @@ Collection of functions for importing and exporting EIS data/results.
 
 """
 
+import logging
 import os
 import re
 from pathlib import Path
@@ -21,9 +22,8 @@ import numpy as np
 import pandas as pd
 
 import autoeis as ae
-import autoeis.utils as utils
 
-log = utils.get_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def get_assets_path() -> Path:

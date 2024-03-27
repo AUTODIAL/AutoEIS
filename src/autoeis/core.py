@@ -13,6 +13,8 @@ Collection of functions core to AutoEIS functionality.
     preprocess_impedance_data
 
 """
+
+import logging
 import os
 import time
 import warnings
@@ -45,7 +47,7 @@ numpyro.set_platform("cpu")
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output_legacy(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
-log = utils.get_logger(__name__)
+log = logging.getLogger(__name__)
 
 # Initialize Julia runtime
 julia_helpers.ensure_julia_deps_ready()

@@ -20,10 +20,10 @@ Collection of utility functions used throughout the package.
 import logging
 import os
 import re
-import signal
 import sys
 from collections.abc import Iterable
 from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import wraps
 from typing import Union
 
@@ -32,14 +32,13 @@ import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
+import psutil
 from impedance.models.circuits import CustomCircuit
 from impedance.models.circuits.fitting import set_default_bounds
 from jax import random
 from numpy import pi  # NOQA: F401
 from numpyro.distributions import Distribution
 from numpyro.infer import MCMC, Predictive
-from rich.console import Console
-from rich.logging import RichHandler
 from scipy import stats
 from scipy.optimize import curve_fit
 
@@ -47,10 +46,10 @@ import __main__
 
 from . import models, parser
 
-# Timeout circuit fitter functions after X seconds
-TIMEOUT_AFTER = 15
+log = logging.getLogger(__name__)
 
-# >>> Logging utils
+
+# >>> General utils
 
 
 def is_notebook():
@@ -94,7 +93,23 @@ class Settings:
 
 
 def flatten(xs: list) -> list:
-    """Returns a list of all elements in a nested iterable."""
+    """Returns a list of all elements in a nested iterable.
+
+    Parameters
+    ----------
+    xs: list
+        A nested iterable.
+
+    Returns
+    -------
+    list
+        A flattened list.
+
+    Examples
+    --------
+    >>> flatten([1, 2, [3, 4], [5, [6, 7]]])
+    [1, 2, 3, 4, 5, 6, 7]
+    """
 
     def _flatten(xs):
         """Returns a generator that flattens a nested iterable."""
@@ -107,23 +122,36 @@ def flatten(xs: list) -> list:
     return list(_flatten(xs))
 
 
-class _SuppressOutput:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        self._original_stderr = sys.stderr
-        sys.stdout = open(os.devnull, "w")
-        sys.stderr = open(os.devnull, "w")
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stderr.close()
-        sys.stdout = self._original_stdout
-        sys.stderr = self._original_stderr
-
-
 def suppress_output_legacy(func):
-    """Suppresses the output of a function."""
-    # NOTE: This approach only works when stdout/stderr are managed by Python
+    """Suppresses the output of a function.
+
+    Parameters
+    ----------
+    func: callable
+        Input function whose output is to be suppressed.
+
+    Returns
+    -------
+    callable
+        A wrapped function with the output suppressed.
+
+    Notes
+    -----
+    This approach only works when stdout/stderr are managed by Python.
+    """
+
+    class _SuppressOutput:
+        def __enter__(self):
+            self._original_stdout = sys.stdout
+            self._original_stderr = sys.stderr
+            sys.stdout = open(os.devnull, "w")
+            sys.stderr = open(os.devnull, "w")
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            sys.stdout.close()
+            sys.stderr.close()
+            sys.stdout = self._original_stdout
+            sys.stderr = self._original_stderr
 
     @wraps(func)
     def wrapped(*args, **kwargs):
@@ -165,13 +193,36 @@ def parse_initial_guess(
     p0: Union[np.ndarray, dict[str, float], list[float]],
     circuit: str,
 ) -> np.ndarray:
-    """Parses the initial guess for circuit parameters."""
+    """Parses the initial guess for circuit parameters from various formats
+    and returns an array of parameters.
+
+    Parameters
+    ----------
+    p0: Union[np.ndarray, dict[str, float], list[float]]
+        The initial guess for the circuit parameters.
+    circuit: str
+        The circuit string.
+
+    Returns
+    -------
+    np.ndarray
+        The array of initial guesses.
+
+    Raises
+    ------
+    ValueError
+        If the initial guess is not not a dict nor array-like.
+
+    Notes
+    -----
+    If no initial guess is provided, a random array of parameters is returned.
+    """
     num_params = parser.count_parameters(circuit)
     if p0 is None:
         return np.random.rand(num_params)
-    elif isinstance(p0, dict):
+    if isinstance(p0, dict):
         return np.fromiter(p0.values(), dtype=float)
-    elif isinstance(p0, (list, np.ndarray)):
+    if isinstance(p0, (list, np.ndarray)):
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
@@ -184,7 +235,35 @@ def fit_circuit_parameters_legacy(
     iters: int = 1,
     maxfev: int = 1000,
 ) -> dict[str, float]:
-    """Fits a circuit to impedance data and returns the parameters."""
+    """Fits and returns the parameters of a circuit to impedance data.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    freq : np.ndarray[float]
+        Frequencies corresponding to the impedance data.
+    Z : np.ndarray[complex]
+        Impedance data.
+    p0 : Union[np.ndarray[float], dict[str, float]], optional
+        Initial guess for the circuit parameters. Default is None.
+    iters : int, optional
+        Maximum number of iterations for the circuit fitter. Default is 1.
+    maxfev : int, optional
+        Maximum number of function evaluations for the circuit fitter.
+        Default is 1000.
+
+    Returns
+    -------
+    dict[str, float]
+        Fitted parameters as a dictionary of parameter names and values.
+
+    Notes
+    -----
+    This function uses ``impedance.py`` to fit the circuit parameters.
+
+    """
     # NOTE: Each circuit eval ~ 1 ms, so 1000 evals ~ 1 s
     # Deal with initial guess
     num_params = parser.count_parameters(circuit)
@@ -225,7 +304,36 @@ def fit_circuit_parameters(
     maxfev: int = 1000,
     ftol: float = 1e-13,
 ) -> dict[str, float]:
-    """Fits a circuit to impedance data and returns the parameters."""
+    """Fits and returns the parameters of a circuit to impedance data.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    freq : np.ndarray[float]
+        Frequencies corresponding to the impedance data.
+    Z : np.ndarray[complex]
+        Impedance data.
+    p0 : Union[np.ndarray[float], dict[str, float]], optional
+        Initial guess for the circuit parameters. Default is None.
+    iters : int, optional
+        Maximum number of iterations for the circuit fitter. Default is 1.
+    maxfev : int, optional
+        Maximum number of function evaluations for the circuit fitter.
+        Default is 1000.
+    ftol : float, optional
+        Tolerance for the convergence criterion. Default is 1e-13.
+
+    Returns
+    -------
+    dict[str, float]
+        Fitted parameters as a dictionary of parameter names and values.
+
+    Notes
+    -----
+    This function uses SciPy's ``curve_fit`` to fit the circuit parameters.
+    """
     # Define objective function
     Zc = np.hstack([Z.real, Z.imag])
     fn = generate_circuit_fn(circuit, jit=True, concat=True)
@@ -268,27 +376,60 @@ def fit_circuit_parameters(
     return dict(zip(variables, p0))
 
 
-# FIXME: Timeout logic doesn't work on Windows -> module 'signal' has no attribute 'SIGALRM'.
-# if os.name != "nt":
-#     fit_circuit_parameters = timeout(TIMEOUT_AFTER)(fit_circuit_parameters)
-#     fit_circuit_parameters_legacy = timeout(TIMEOUT_AFTER)(fit_circuit_parameters_legacy)
-
-
 def eval_circuit(
     circuit: str, f: Union[np.ndarray, float], p: np.ndarray
 ) -> np.ndarray[complex]:
-    """Converts a circuit string to a function of (params, freq) and evaluates it."""
+    """Returns the impedance of a circuit at a given frequency and parameters.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    f : Union[np.ndarray, float]
+        Frequencies at which to evaluate the circuit.
+    p : np.ndarray
+        Circuit parameters.
+
+    Returns
+    -------
+    np.ndarray[complex]
+        The impedance of the circuit at the given frequency and parameters.
+    """
     Z_expr = parser.generate_mathematical_expr(circuit)
     return eval(Z_expr)
 
 
 def generate_circuit_fn(circuit: str, jit=False, concat=False):
+    """Generates a function to compute the circuit impedance, parameterized
+    by frequency and the circuit parameters.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    jit : bool, optional
+        If True, uses JAX to compile the function. Default is False.
+    concat : bool, optional
+        If True, the generated function returns concatenated real and
+        imaginary parts of the impedance, otherwise it returns the complex
+        impedance. Default is False.
+
+    Returns
+    -------
+    callable
+        A function that takes in frequency and the circuit parameters
+        and returns the impedance.
+    """
+
     def Z_complex(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray[complex]:
         return eval_circuit(circuit, freq, p)
 
     def Z_concat(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray:
         Z = Z_complex(freq, p)
-        return jnp.hstack([Z.real, Z.imag])
+        hstack = jnp.hstack if jit else np.hstack
+        return hstack([Z.real, Z.imag])
 
     fn = Z_concat if concat else Z_complex
     fn = jax.jit(fn) if jit else fn
@@ -297,7 +438,21 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
 
 
 def generate_circuit_fn_impedance_backend(circuit: str):
-    """Converts a circuit string to a function using impedance.py."""
+    """Generates a function to compute the circuit impedance, parameterized
+    by frequency and the circuit parameters, using ``impedance.py``.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+
+    Returns
+    -------
+    callable
+        A function that takes in frequency and the circuit parameters
+        and returns the impedance.
+    """
     num_params = parser.count_parameters(circuit)
     # Convert circuit string to impedance.py format
     circuit = parser.convert_to_impedance_format(circuit)
@@ -313,14 +468,33 @@ def generate_circuit_fn_impedance_backend(circuit: str):
 
 
 def circuit_complexity(circuit: str) -> list[int]:
-    """Computes the component complexity of the circuit."""
+    """Computes the component complexity of the circuit.
+
+    Component complexity is defined as how deep it is nested in the circuit.
+
+    Parameters
+    ----------
+    circuit: str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+
+    Returns
+    -------
+    list[int]
+        A list of component complexity values.
+
+    Examples
+    --------
+    >>> circuit_complexity("R1-[P2,[P3,R4]]-R5")
+    [0, 1, 2, 2, 0]
+    """
 
     def increment(arr):
-        """Add one to each element in a nested list."""
+        """Adds one to each element in a nested list."""
         return [increment(e) if isinstance(e, list) else e + 1 for e in arr]
 
     def depth(arr: list):
-        """Compute the depth of each element in a nested list."""
+        """Computes the depth of each element in a nested list."""
         return [increment(depth(e)) if isinstance(e, list) else 0 for e in arr]
 
     def split(arr: list, chars: list[str]):
@@ -341,8 +515,32 @@ def circuit_complexity(circuit: str) -> list[int]:
     return flatten(complexity)
 
 
-def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
-    """Checks if two circuit strings are equivalent."""
+def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) -> bool:
+    """Checks if two circuit strings are equivalent.
+
+    Parameters
+    ----------
+    circuit1 : str
+        The first circuit string in CDC format. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    circuit2 : str
+        The second circuit string in CDC format. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    rtol : float, optional
+        The relative tolerance for the circuit equivalence check. See the
+        Notes section for more details. Default is 1e-5.
+
+    Returns
+    -------
+    bool
+        True if the circuits are equivalent, False otherwise.
+
+    Notes
+    -----
+    This function uses an approximate heuristic, i.e., it evaluates the
+    circuits at a set of random frequencies and checks if the results are
+    close enough to be considered equivalent.
+    """
 
     def x0(circuit: str) -> np.ndarray[float]:
         """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
@@ -378,7 +576,27 @@ def are_circuits_equivalent(circuit1: str, circuit2: str) -> bool:
 def initialize_priors(
     p0: dict[str, float], variables: list[str]
 ) -> dict[str, dist.Distribution]:
-    """Initializes priors for a given circuit."""
+    """Initializes priors for a given circuit.
+
+    Parameters
+    ----------
+    p0 : dict[str, float]
+        Initial guess for the circuit parameters as a dictionary of parameter
+        names and values.
+    variables : list[str]
+        List of variable names.
+
+    Returns
+    -------
+    dict[str, dist.Distribution]
+        Priors for the circuit parameters as a dictionary of parameter names
+        and distributions.
+
+    Notes
+    -----
+    This function assigns a uniform distribution for the exponent of CPE
+    elements and a log-normal distribution for the rest of the parameters.
+    """
     priors = {}
     for var in variables:
         value = p0[var]
@@ -398,7 +616,33 @@ def initialize_priors_from_posteriors(
     variables: list[str],
     dist_type: str = "lognormal",
 ) -> dict[str, dist.Distribution]:
-    """Creates new priors based on the posterior distributions."""
+    """Creates new priors based on the posterior distributions.
+
+    Parameters
+    ----------
+    posterior : dict[str, np.ndarray[float]]
+        Posterior distributions for the circuit parameters as a dictionary
+        of parameter names and distributions.
+    variables : list[str]
+        List of variable names.
+    dist_type : str, optional
+        Type of prior distribution to use. Default is "lognormal".
+
+    Returns
+    -------
+    dict[str, dist.Distribution]
+        Priors for the circuit parameters as a dictionary of parameter names
+        and distributions.
+
+    Notes
+    -----
+    To create new priors, a log-normal (or as specified) distribution is
+    fitteed to the posterior distributions and the fitted parameters
+    (e.g., mean, std, etc.) are used to generate the priors.
+
+    For the exponent of CPE elements, a truncated normal distribution is
+    used no matter what the ``dist_type`` is.
+    """
     priors = {}
     for var in variables:
         samples = posterior[var]
@@ -438,7 +682,28 @@ def eval_posterior_predictive(
     priors: dict[str, Distribution] = None,
     rng_key: random.PRNGKey = None,
 ) -> np.ndarray[complex]:
-    """Evaluate the posterior predictive distribution of a MCMC run."""
+    """Evaluate the posterior predictive distribution of a MCMC run.
+
+    Parameters
+    ----------
+    mcmc : MCMC
+        MCMC object.
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    freq : np.ndarray[float]
+        Frequencies to evaluate the posterior predictive distribution at.
+    priors : dict[str, Distribution], optional
+        Priors for the circuit parameters as a dictionary of parameter names
+        and distributions. Default is None.
+    rng_key : random.PRNGKey, optional
+        Random key for the MCMC run. Default is None.
+
+    Returns
+    -------
+    np.ndarray[complex]
+        Posterior predictive distribution of the circuit at the given frequencies.
+    """
     rng_key = rng_key or random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
     samples = mcmc.get_samples()
@@ -469,7 +734,24 @@ def eval_posterior_predictive(
 
 
 def validate_circuits_dataframe(circuits: pd.DataFrame):
-    """Validates the circuits dataframe format (columns and dtype)."""
+    """Ensures that the circuits dataframe has the correct format by
+    checking the following:
+
+    - Column names are valid (must be "circuitstring", "Parameters")
+    - Column types are valid
+        - "circuitstring" must be a string
+        - "Parameters" must be a dictionary
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame
+        Dataframe containing the circuits.
+
+    Raises
+    ------
+    ValueError
+        If the dataframe does not have the correct format.
+    """
     # Check if the dataframe has the required columns
     required_columns = ["circuitstring", "Parameters"]
     missing = set(required_columns).difference(circuits.columns)

@@ -15,6 +15,7 @@ Collection of functions for visualizing EIS data and results.
 
 """
 
+import logging
 import re
 
 import arviz
@@ -28,9 +29,8 @@ from matplotlib.axes import Axes
 from rich.console import Console
 from rich.table import Table
 
-import autoeis.utils as utils
+log = logging.getLogger(__name__)
 
-log = utils.get_logger(__name__)
 
 __all__ = [
     "draw_circuit",
