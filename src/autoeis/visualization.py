@@ -73,12 +73,13 @@ def draw_circuit(circuit: str) -> mpl.figure.Figure:
 
     Parameters
     ----------
-    circuit: str
-        The string that stores the circuit configuration
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
 
     Returns
     -------
-    fig: lcapy.figure
+    fig : lcapy.figure
         Handle of the circuit figure
     """
     try:

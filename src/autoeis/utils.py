@@ -16,6 +16,7 @@ Collection of utility functions used throughout the package.
     validate_circuits_dataframe
 
 """
+
 import logging
 import os
 import re
@@ -53,7 +54,7 @@ TIMEOUT_AFTER = 15
 
 
 # Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
-def get_runtime():
+def _get_runtime():
     """Returns the runtime environment."""
     if "google.colab" in sys.modules:
         return "Google Colab"
@@ -78,7 +79,7 @@ def get_runtime():
 
 def is_notebook():
     """Returns True if the code is running in a Jupyter notebook."""
-    runtime = get_runtime()
+    runtime = _get_runtime()
     return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
 
 

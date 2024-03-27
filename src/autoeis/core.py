@@ -602,7 +602,8 @@ def _perform_bayesian_inference(
     Parameters
     ----------
     circuit : str
-        Circuit string.
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
     Z : np.ndarray[complex]
         Complex impedance data.
     freq: np.ndarray[float]
