@@ -53,33 +53,33 @@ TIMEOUT_AFTER = 15
 # >>> Logging utils
 
 
-# Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
-def _get_runtime():
-    """Returns the runtime environment."""
-    if "google.colab" in sys.modules:
-        return "Google Colab"
-    elif "ipykernel" in sys.modules:
-        if "jupyter" in sys.modules:
-            return "JupyterLab"
-        else:
-            return "Jupyter Notebook"
-    elif "win32" in sys.platform:
-        if "CMDEXTVERSION" in os.environ:
-            return "Windows Command Prompt"
-        else:
-            return "Windows PowerShell"
-    elif "darwin" in sys.platform:
-        return "MacOS Terminal"
-    else:
-        if hasattr(__main__, "__file__"):
-            return "Linux Terminal"
-        else:
-            return "Interactive Python Shell"
-
-
 def is_notebook():
     """Returns True if the code is running in a Jupyter notebook."""
-    runtime = _get_runtime()
+
+    # Source: https://discourse.jupyter.org/t/find-out-if-my-code-runs-inside-a-notebook-or-jupyter-lab/6935/21
+    def get_runtime():
+        """Returns the runtime environment."""
+        if "google.colab" in sys.modules:
+            return "Google Colab"
+        elif "ipykernel" in sys.modules:
+            if "jupyter" in sys.modules:
+                return "JupyterLab"
+            else:
+                return "Jupyter Notebook"
+        elif "win32" in sys.platform:
+            if "CMDEXTVERSION" in os.environ:
+                return "Windows Command Prompt"
+            else:
+                return "Windows PowerShell"
+        elif "darwin" in sys.platform:
+            return "MacOS Terminal"
+        else:
+            if hasattr(__main__, "__file__"):
+                return "Linux Terminal"
+            else:
+                return "Interactive Python Shell"
+
+    runtime = get_runtime()
     return runtime in ["Google Colab", "JupyterLab", "Jupyter Notebook"]
 
 
