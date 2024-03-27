@@ -13,6 +13,8 @@ Collection of functions core to AutoEIS functionality.
     preprocess_impedance_data
 
 """
+
+import logging
 import os
 import time
 import warnings
@@ -45,7 +47,7 @@ numpyro.set_platform("cpu")
 # HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output_legacy(linKK)
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
-log = utils.get_logger(__name__)
+log = logging.getLogger(__name__)
 
 # Initialize Julia runtime
 julia_helpers.ensure_julia_deps_ready()
@@ -602,7 +604,8 @@ def _perform_bayesian_inference(
     Parameters
     ----------
     circuit : str
-        Circuit string.
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
     Z : np.ndarray[complex]
         Complex impedance data.
     freq: np.ndarray[float]
@@ -721,7 +724,8 @@ def _perform_bayesian_inference_batch(
     # Perform Bayesian inference in parallel
     with warnings.catch_warnings():
         # JAX doesn't work well with multiprocessing, but "spawn" should be fine
-        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*os\.fork\(\).*")
+        msg_to_ignore = ".*os\\.fork\\(\\).*"
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=msg_to_ignore)
         with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
             results = pool.map(
                 _perform_bayesian_inference,

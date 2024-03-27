@@ -1,11 +1,13 @@
+import logging
+
 import juliapkg
 from juliapkg.deps import can_skip_resolve
 from juliapkg.find_julia import find_julia
 
-from .utils import get_logger, suppress_output
+from .utils import suppress_output
 from .version import __equivalent_circuits_jl_version__
 
-log = get_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def install_julia():

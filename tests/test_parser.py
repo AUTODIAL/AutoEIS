@@ -1,5 +1,4 @@
 import pytest
-
 from autoeis import parser
 
 
@@ -57,7 +56,7 @@ def test_group_parameters_by_component():
     g = {
         "R": ["R1", "R2", "R7"],
         "P": ["P3w", "P3n", "P6w", "P6n"],
-        "L": ["L4", "L5"]
+        "L": ["L4", "L5"],
     }
     assert parser.group_parameters_by_component(circuit) == g
 
@@ -68,7 +67,7 @@ def test_group_parameters_by_type():
         "R": ["R1", "R2", "R7"],
         "Pw": ["P3w", "P6w"],
         "Pn": ["P3n", "P6n"],
-        "L": ["L4", "L5"]
+        "L": ["L4", "L5"],
     }
     assert parser.group_parameters_by_type(circuit) == g
 
@@ -77,7 +76,7 @@ def test_count_parameters():
     d = {
         "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3": 12,
         "": 0,
-        "[P1,P2]-P3-R4": 7
+        "[P1,P2]-P3-R4": 7,
     }
     for circuit, num_params_gt in d.items():
         assert parser.count_parameters(circuit) == num_params_gt
@@ -86,14 +85,14 @@ def test_count_parameters():
 def test_validate_circuit():
     # Valid circuits
     circuits_valid = [
-        "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
+        "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3",
     ]
     for circuit in circuits_valid:
         parser.validate_circuit(circuit)
     # Invalid circuits
     circuits_invalid = [
         "",
-        "[R1,R2]-R1"
+        "[R1,R2]-R1",
     ]
     for circuit in circuits_invalid:
         with pytest.raises(AssertionError):
@@ -119,7 +118,7 @@ def test_parse_component():
         "L12": "L",
         "P1n": "P",
         "P22w": "P",
-        "P4": "P"
+        "P4": "P",
     }
     for k, v in d.items():
         assert parser.parse_component(k) == v
@@ -136,12 +135,13 @@ def test_parse_parameter():
     for k, v in d.items():
         assert parser.parse_parameter(k) == v
 
+
 def test_find_series_elements():
     d = {
         "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3": ["L2", "P3"],
         "[R1,R2-P12]-L2-[R6,C7-[L8,R5],L9]-P3-P4": ["L2", "P3", "P4"],
         "": [],
-        "[P1,P2]-[P3,P4]": []
+        "[P1,P2]-[P3,P4]": [],
     }
     for k, v in d.items():
         assert parser.find_series_elements(k) == v
@@ -163,7 +163,7 @@ def test_find_ohmic_resistors():
     ohmic_gt = ["R9", "R8"]
     ohmic = parser.find_ohmic_resistors(circuit)
     assert ohmic == ohmic_gt
-    
+
 
 def test_convert_to_impedance_format():
     circuit = "R1-[R2,P1-[R5,L8]]-P5"
