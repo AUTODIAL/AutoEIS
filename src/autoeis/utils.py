@@ -107,19 +107,6 @@ def flatten(xs: list) -> list:
     return list(_flatten(xs))
 
 
-def find_identical_rows(a: np.ndarray) -> list[list[int]]:
-    """Finds identical rows in a 2D array."""
-    a = np.asarray(a)
-    idx = []
-    for i in range(a.shape[0]):
-        if i not in flatten(idx):
-            idx.append([i])
-        for j in range(i + 1, a.shape[0]):
-            if np.allclose(a[i, :], a[j, :]):
-                idx[-1].append(j)
-    return idx
-
-
 class _SuppressOutput:
     def __enter__(self):
         self._original_stdout = sys.stdout
