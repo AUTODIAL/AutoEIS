@@ -23,6 +23,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
+import pandas as pd
 import rich
 import seaborn as sns
 from matplotlib.axes import Axes
@@ -38,6 +39,7 @@ __all__ = [
     "plot_linKK_residuals",
     "plot_nyquist",
     "print_summary_statistics",
+    "print_inference_results",
     "rich_print",
     "set_plot_style",
     "show_nticks",
@@ -297,6 +299,64 @@ def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
 
     # Print the table
     console.print(table)
+
+
+def print_inference_results(
+    circuits: pd.DataFrame, return_table=True
+) -> pd.io.formats.style.Styler | Table:
+    """Prints the inference results in a pretty format, excluding unncessary
+    columns, highlighting the best performing circuits.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame
+        Circuits dataframe with inference results
+
+    Returns
+    -------
+    pd.io.formats.style.Styler | Table
+        Styled table with the inference results
+    """
+    cols_to_hide = [
+        "Parameters", "MCMC", "success", "divergences", "Z_pred", "WAIC (sum)",
+        "R^2 (real)", "R^2 (imag)", "MAPE (real)", "MAPE (imag)"
+    ]  # fmt: off
+    df = circuits.style.hide(cols_to_hide, axis=1)
+    fmt = {
+        "WAIC (real)": "{:.2e}",
+        "WAIC (imag)": "{:.2e}",
+        "R^2 (ravg)": "{:.3f}",
+        "R^2 (iavg)": "{:.3f}",
+        "MAPE (ravg)": "{:.2e}",
+        "MAPE (iavg)": "{:.2e}",
+    }
+    df.format(fmt)
+
+    # Create a rich Table to pretty print the results
+    table = Table(title="Inference results", show_header=True, header_style="bold")
+
+    # Add columns to the table
+    columns = [
+        "Circuit", "WAIC (re)", "WAIC (im)", "R2 (re)", "R2 (im)", 
+        "MAPE (re)", "MAPE (im)", "Np"
+    ]  # fmt: off
+    for column in columns:
+        table.add_column(column, justify="right")
+
+    # Fill the table with data
+    for i, row in df.data.iterrows():
+        table.add_row(
+            row["circuitstring"],
+            f"{row['WAIC (real)']:.2e}",
+            f"{row['WAIC (imag)']:.2e}",
+            f"{row['R^2 (ravg)']:.3f}",
+            f"{row['R^2 (iavg)']:.3f}",
+            f"{row['MAPE (ravg)']:.2e}",
+            f"{row['MAPE (iavg)']:.2e}",
+            f"{row['n_params']}",
+        )
+
+    return table if return_table else df
 
 
 def override_mpl_colors(override_named_colors: bool = True):
