@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -17,7 +18,7 @@ from tqdm.auto import tqdm
 import autoeis.visualization as viz
 from autoeis import utils
 
-log = utils.get_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def circuit_to_function(circuit: str, use_jax=True) -> callable:
@@ -26,9 +27,11 @@ def circuit_to_function(circuit: str, use_jax=True) -> callable:
     eqn = generate_mathematical_expression(circuit_df)["Mathematical expressions"][0]
     if use_jax:
         eqn = eqn.replace("np", "jnp")
+
     def _fn(X, F):
         assert utils.count_parameters(circuit) == len(X), "Invalid number of parameters."
         return eval(eqn)
+
     return jax.jit(_fn) if use_jax else _fn
 
 
@@ -72,10 +75,7 @@ def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
             elif test_results[m][0] == "L":
                 circuit = circuit.replace(test_results_2[m], "(2*1j*np.pi*F*X)")
             elif test_results[m][0] == "P":
-                circuit = circuit.replace(
-                    test_results_2[m],
-                    "(1/(X*(2*1j*np.pi*F)**(Y)))"
-                )
+                circuit = circuit.replace(test_results_2[m], "(1/(X*(2*1j*np.pi*F)**(Y)))")
 
         new_temp_circuit = []
         counter = 0
@@ -98,9 +98,7 @@ def generate_mathematical_expression(df_circuits: pd.DataFrame) -> pd.DataFrame:
 
 
 def ohmic_resistance_filter_legacy(
-    circuits: pd.DataFrame,
-    ohmic_resistance: float,
-    rtol=0.5
+    circuits: pd.DataFrame, ohmic_resistance: float, rtol=0.5
 ) -> pd.DataFrame:
     """Filters the circuits whose ohmic resistance doesn't match a desired value."""
     for i in range(len(circuits["circuitstring"])):
@@ -137,7 +135,9 @@ def ohmic_resistance_filter_legacy(
     return circuits
 
 
-def apply_heuristic_rules_legacy(circuits: pd.DataFrame, ohmic_resistance: float) -> pd.DataFrame:
+def apply_heuristic_rules_legacy(
+    circuits: pd.DataFrame, ohmic_resistance: float
+) -> pd.DataFrame:
     """Apply heuristic rules to filter the generated ECMs.
 
     Parameters
@@ -177,7 +177,9 @@ def model_evaluation(results):
 
     # FIXME: Remove next line once confirmed that `loc` is correctly used.
     # evaluation_results["Consistency"] = pd.to_numeric(evaluation_results["Consistency"], errors="coerce")
-    evaluation_results.loc[:, "Consistency"] = pd.to_numeric(evaluation_results["Consistency"], errors="coerce")
+    evaluation_results.loc[:, "Consistency"] = pd.to_numeric(
+        evaluation_results["Consistency"], errors="coerce"
+    )
     evaluation_results.loc[evaluation_results["Consistency"].isna(), "Consistency"] = np.inf
 
     def absdiff(x):
@@ -188,10 +190,14 @@ def model_evaluation(results):
 
     # FIXME: Remove next line once confirmed that `loc` is correctly used.
     # evaluation_results["Consistency"] = evaluation_results["Consistency"].apply(absdiff)
-    evaluation_results.loc[:, "Consistency"] = evaluation_results["Consistency"].apply(absdiff)    
+    evaluation_results.loc[:, "Consistency"] = evaluation_results["Consistency"].apply(
+        absdiff
+    )
     # FIXME: Remove next line once confirmed that `loc` is correctly used.
     # evaluation_results["Posterior_shape"] = evaluation_results["Posterior_shape"].apply(custom_sort)
-    evaluation_results.loc[:, "Posterior_shape"] = evaluation_results["Posterior_shape"].apply(custom_sort)    
+    evaluation_results.loc[:, "Posterior_shape"] = evaluation_results[
+        "Posterior_shape"
+    ].apply(custom_sort)
 
     evaluation_results_sorted = evaluation_results.sort_values(
         by=[
@@ -255,7 +261,7 @@ def perform_bayesian_inference(
     ecms: pd.DataFrame,
     saveto: str = None,
     plot: bool = False,
-    draw_ecm = False,
+    draw_ecm=False,
     seed: int = None,
 ) -> pd.DataFrame:
     """Perform Bayesian inference on the ECMs based on the EIS measurements.
@@ -415,7 +421,7 @@ def perform_bayesian_inference(
         prior_prediction = prior_predictive(rng_subkey)
         rng_key, rng_subkey = random.split(rng_key)
         Prior_predictions.append(prior_prediction)
-        
+
         # ?: Why 10,000?
         # NOTE: use num_chains > 1 to enable parallel sampling
         kernel = NUTS(model_i, target_accept_prob=0.8)
@@ -493,7 +499,9 @@ def perform_bayesian_inference(
             #                         new_lim = np.multiply(posterior_HDI[i][j].get_xlim(),value_i[rc_id])
             #                         posterior_HDI[i][j].set_xlim(new_lim)
             if saveto is not None:
-                posterior_HDI.figure.savefig(f"posterior_predictions_with_HDI_{i}.png", dpi=300)
+                posterior_HDI.figure.savefig(
+                    f"posterior_predictions_with_HDI_{i}.png", dpi=300
+                )
 
         # Posterior trajectories
         posterior_dist = az.plot_trace(trace, var_names=name_i)
@@ -535,8 +543,18 @@ def perform_bayesian_inference(
         Posterior_mape_real.append(avg_mape_real)
 
         if plot:
-            ax.plot(freq, BI_data.real, marker=".", ms=15, color="grey", alpha=0.5, label="predictive")
-            ax.plot(freq, Zreal, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth")
+            ax.plot(
+                freq,
+                BI_data.real,
+                marker=".",
+                ms=15,
+                color="grey",
+                alpha=0.5,
+                label="predictive",
+            )
+            ax.plot(
+                freq, Zreal, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth"
+            )
             ax.set_xscale("log")
             ax.set_xlabel("frequency")
             ax.set_ylabel("Re(Z)")
@@ -575,8 +593,18 @@ def perform_bayesian_inference(
         Posterior_r2_imag.append(avg_r2_imag)
         Posterior_mape_imag.append(avg_mape_imag)
         if plot:
-            ax.plot(freq, -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictive")
-            ax.plot(freq, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth")
+            ax.plot(
+                freq,
+                -BI_data.imag,
+                marker=".",
+                ms=15,
+                color="grey",
+                alpha=0.5,
+                label="predictive",
+            )
+            ax.plot(
+                freq, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="ground truth"
+            )
             ax.set_xscale("log")
             ax.set_xlabel("frequency")
             ax.set_ylabel("-Im(Z)")
@@ -618,8 +646,25 @@ def perform_bayesian_inference(
         Posterior_mape.append(avg_mape)
 
         if plot:
-            ax.plot(BI_data.real, -BI_data.imag, marker=".", ms=15, color="grey", alpha=0.5, label="predictions")
-            ax.plot(Zreal, -Zimag, "--", marker="o", c="b", alpha=0.9, ms=8, label="grount truth")
+            ax.plot(
+                BI_data.real,
+                -BI_data.imag,
+                marker=".",
+                ms=15,
+                color="grey",
+                alpha=0.5,
+                label="predictions",
+            )
+            ax.plot(
+                Zreal,
+                -Zimag,
+                "--",
+                marker="o",
+                c="b",
+                alpha=0.9,
+                ms=8,
+                label="grount truth",
+            )
             ax.set_xlabel("Re(Z)")
             ax.set_ylabel("Im(Z)")
             ax.set_title("Posterior predictive checks")
@@ -635,7 +680,9 @@ def perform_bayesian_inference(
 
         # Estimate posterior distribution
         # NOTE: We're making sure the figure is not blank!
-        if any(len(result[0].lines[0].get_xydata().T[0]) == 2 for result in posterior_dist[:]):
+        if any(
+            len(result[0].lines[0].get_xydata().T[0]) == 2 for result in posterior_dist[:]
+        ):
             posterior_mark = "F"
         else:
             # NOTE: What other criteria can we use to evaluate the posterior distribution?
@@ -646,11 +693,9 @@ def perform_bayesian_inference(
         r_hats = []
         for i in range(len(name_i)):
             r_hats.append(
-                summary(
-                    mcmc_i.get_samples(),
-                    prob=0.94,
-                    group_by_chain=False
-                )[f"{name_i[i]}"]["r_hat"]
+                summary(mcmc_i.get_samples(), prob=0.94, group_by_chain=False)[
+                    f"{name_i[i]}"
+                ]["r_hat"]
             )
         posterior_rhat = np.mean(r_hats)
         consistency.append(posterior_rhat)
