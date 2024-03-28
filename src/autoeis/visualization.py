@@ -27,6 +27,7 @@ import pandas as pd
 import rich
 import seaborn as sns
 from matplotlib.axes import Axes
+from pandas.io.formats.style import Styler
 from rich.console import Console
 from rich.table import Table
 
@@ -301,9 +302,7 @@ def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
     console.print(table)
 
 
-def print_inference_results(
-    circuits: pd.DataFrame, return_table=True
-) -> pd.io.formats.style.Styler | Table:
+def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler | Table:
     """Prints the inference results in a pretty format, excluding unncessary
     columns, highlighting the best performing circuits.
 
