@@ -47,6 +47,7 @@ dependencies = [
     "seaborn",
     "tqdm",
     "multiprocess",
+    "jinja2>=3.1.2",
 ]
 [project.optional-dependencies]
 build = ["hatch"]
