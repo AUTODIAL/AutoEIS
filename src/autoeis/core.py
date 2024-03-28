@@ -20,6 +20,7 @@ import time
 import warnings
 from typing import Union
 
+import arviz as az
 import jax
 import jax.numpy as jnp  # noqa: F401
 import numpy as np
@@ -494,6 +495,67 @@ def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     return circuits
 
 
+def compute_fitness_metrics(
+    circuits: pd.DataFrame, freq: np.ndarray[float], Z: np.ndarray[complex]
+) -> pd.DataFrame:
+    """Computes various fitness metrics and returns an augmented dataframe.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame
+        Circuits dataframe with inference results
+    freq : np.ndarray[float]
+        Frequencies corresponding to the impedance data
+    Z : np.ndarray[complex]
+        Complex impedance data
+
+    Returns
+    -------
+    circuits : pd.DataFrame
+        Circuits dataframe with fitness metrics
+    """
+    circuits = circuits.copy()
+    mcmcs = circuits["MCMC"]
+
+    # Compute WAIC and add to the dataframe
+    waic_re = [az.waic(x, var_name="obs_real", scale="deviance") for x in mcmcs]
+    waic_im = [az.waic(x, var_name="obs_imag", scale="deviance") for x in mcmcs]
+    circuits["WAIC (real)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_re]
+    circuits["WAIC (imag)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_im]
+
+    # Compute the posterior predictive and add to the dataframe
+    # NOTE: axis=1 because posterior is of shape (num_samples, num_obs)
+    _fn = lambda r: utils.eval_posterior_predictive(r.MCMC, r.circuitstring, freq)
+    circuits["Z_pred"] = circuits.apply(_fn, axis=1)
+
+    # Compute R^2 and add to the dataframe
+    _fn = lambda r: metrics.r2_score(Z.real, r.Z_pred.real, axis=1)
+    circuits["R^2 (real)"] = circuits.apply(_fn, axis=1)
+    _fn = lambda r: metrics.r2_score(Z.imag, r.Z_pred.imag, axis=1)
+    circuits["R^2 (imag)"] = circuits.apply(_fn, axis=1)
+    # Since R^2 is a vector (num_samples), also compute its mean for convenience
+    circuits["R^2 (ravg)"] = circuits["R^2 (real)"].apply(np.mean)
+    circuits["R^2 (iavg)"] = circuits["R^2 (imag)"].apply(np.mean)
+
+    # Compute MAPE and add to the dataframe
+    _fn = lambda r: metrics.mape_score(Z.real, r.Z_pred.real, axis=1)
+    circuits["MAPE (real)"] = circuits.apply(_fn, axis=1)
+    _fn = lambda r: metrics.mape_score(Z.imag, r.Z_pred.imag, axis=1)
+    circuits["MAPE (imag)"] = circuits.apply(_fn, axis=1)
+    # Since MAPE is a vector (num_samples), also compute its mean for convenience
+    circuits["MAPE (ravg)"] = circuits["MAPE (real)"].apply(np.mean)
+    circuits["MAPE (iavg)"] = circuits["MAPE (imag)"].apply(np.mean)
+
+    # Add number of parameters to the dataframe
+    circuits["n_params"] = circuits.apply(lambda r: len(r.Parameters), axis=1)
+
+    # Rank the circuits based on WAIC
+    circuits["WAIC (sum)"] = (circuits["WAIC (real)"] * circuits["WAIC (imag)"]) ** 0.5
+    circuits.sort_values(by=["WAIC (sum)"], ascending=True, inplace=True, ignore_index=True)
+
+    return circuits
+
+
 def perform_bayesian_inference(
     circuits: Union[pd.DataFrame, list[str], str],
     freq: np.ndarray[float],
@@ -582,10 +644,13 @@ def perform_bayesian_inference(
     }
 
     if len(circuits) == 1:
-        # Single inference gets slowed down by progress bar
+        # NOTE: Single inference gets slowed down by progress bar
         bi_kwargs["progress_bar"] = False
-        return [_perform_bayesian_inference(circuits[0], p0=p0[0], **bi_kwargs)]
-    return _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
+        # ?: For single inference, DON'T return a list -> crashes multiprocessing
+        results = [_perform_bayesian_inference(circuits[0], p0=p0[0], **bi_kwargs)]
+    results = _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
+
+    return results
 
 
 def _perform_bayesian_inference(
