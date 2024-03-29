@@ -36,17 +36,18 @@ from tqdm.auto import tqdm
 
 import autoeis.visualization as viz
 from autoeis import io, julia_helpers, metrics, parser, utils
-from autoeis.models import circuit_regression, circuit_regression_wrapped  # noqa: F401
+from autoeis.models import circuit_regression_complex
 
-# Enforce double precision, otherwise circuit fitter fails (who knows what else!)
+# Enforce FP64, otherwise circuit fitter fails (because FP32 gradients not sufficient?)
 config.update("jax_enable_x64", True)
 # Tell JAX to use CPUs to avoid the annoying "GPU might be present" warning
 config.update("jax_platforms", "cpu")
-# AutoEIS datasets are not small-enough that CPU is much faster than GPU
+# EIS datasets are not big-enough -> CPU much faster than GPU
 numpyro.set_platform("cpu")
 
-# HACK: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
+# TODO: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
 linKK = utils.suppress_output_legacy(linKK)
+
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = logging.getLogger(__name__)
 
