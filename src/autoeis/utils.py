@@ -21,11 +21,10 @@ import logging
 import os
 import re
 import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import wraps
-from typing import Union
 
 import jax  # NOQA: F401
 import jax.numpy as jnp
@@ -92,7 +91,7 @@ class Settings:
     progress_bar: bool = True
 
 
-def flatten(xs: list) -> list:
+def flatten(xs: Iterable) -> list:
     """Returns a list of all elements in a nested iterable.
 
     Parameters
@@ -122,7 +121,7 @@ def flatten(xs: list) -> list:
     return list(_flatten(xs))
 
 
-def suppress_output_legacy(func):
+def suppress_output_legacy(func: Callable) -> Callable:
     """Suppresses the output of a function.
 
     Parameters
@@ -190,7 +189,7 @@ def suppress_output():
 
 
 def parse_initial_guess(
-    p0: Union[np.ndarray, dict[str, float], list[float]],
+    p0: np.ndarray | dict[str, float] | list[float],
     circuit: str,
 ) -> np.ndarray:
     """Parses the initial guess for circuit parameters from various formats
@@ -198,7 +197,7 @@ def parse_initial_guess(
 
     Parameters
     ----------
-    p0: Union[np.ndarray, dict[str, float], list[float]]
+    p0: np.ndarray | dict[str, float] | list[float]
         The initial guess for the circuit parameters.
     circuit: str
         The circuit string.
@@ -231,7 +230,7 @@ def fit_circuit_parameters_legacy(
     circuit: str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    p0: np.ndarray[float] | dict[str, float] = None,
     iters: int = 1,
     maxfev: int = 1000,
 ) -> dict[str, float]:
@@ -246,7 +245,7 @@ def fit_circuit_parameters_legacy(
         Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Impedance data.
-    p0 : Union[np.ndarray[float], dict[str, float]], optional
+    p0 : np.ndarray[float] | dict[str, float], optional
         Initial guess for the circuit parameters. Default is None.
     iters : int, optional
         Maximum number of iterations for the circuit fitter. Default is 1.
@@ -299,7 +298,7 @@ def fit_circuit_parameters(
     circuit: str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    p0: np.ndarray[float] | dict[str, float] = None,
     iters: int = 1,
     maxfev: int = 1000,
     ftol: float = 1e-13,
@@ -315,7 +314,7 @@ def fit_circuit_parameters(
         Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Impedance data.
-    p0 : Union[np.ndarray[float], dict[str, float]], optional
+    p0 : np.ndarray[float] | dict[str, float], optional
         Initial guess for the circuit parameters. Default is None.
     iters : int, optional
         Maximum number of iterations for the circuit fitter. Default is 1.
@@ -376,9 +375,7 @@ def fit_circuit_parameters(
     return dict(zip(variables, p0))
 
 
-def eval_circuit(
-    circuit: str, f: Union[np.ndarray, float], p: np.ndarray
-) -> np.ndarray[complex]:
+def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarray[complex]:
     """Returns the impedance of a circuit at a given frequency and parameters.
 
     Parameters
@@ -386,7 +383,7 @@ def eval_circuit(
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    f : Union[np.ndarray, float]
+    f : np.ndarray | float
         Frequencies at which to evaluate the circuit.
     p : np.ndarray
         Circuit parameters.
@@ -423,10 +420,10 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
         and returns the impedance.
     """
 
-    def Z_complex(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray[complex]:
+    def Z_complex(freq: np.ndarray, p: np.ndarray | float) -> np.ndarray[complex]:
         return eval_circuit(circuit, freq, p)
 
-    def Z_concat(freq: np.ndarray, p: Union[np.ndarray, float]) -> np.ndarray:
+    def Z_concat(freq: np.ndarray, p: np.ndarray | float) -> np.ndarray[complex]:
         Z = Z_complex(freq, p)
         hstack = jnp.hstack if jit else np.hstack
         return hstack([Z.real, Z.imag])
@@ -456,11 +453,11 @@ def generate_circuit_fn_impedance_backend(circuit: str):
     num_params = parser.count_parameters(circuit)
     # Convert circuit string to impedance.py format
     circuit = parser.convert_to_impedance_format(circuit)
-    # Convert circuit string to function
+    # Generate circuit function
     p0 = np.full(num_params, np.nan)
     circuit = CustomCircuit(circuit, initial_guess=p0)
 
-    def func(freq: Union[np.ndarray, float], p: np.ndarray) -> np.ndarray:
+    def func(freq: np.ndarray | float, p: np.ndarray) -> np.ndarray:
         circuit.parameters_ = p
         return circuit.predict(freq)
 
@@ -574,21 +571,21 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
 # TODO: Remove variables from input arguments
 # TODO: Refactor inference functions to strip non-variable keys from MCMC samples
 def initialize_priors(
-    p0: dict[str, float], variables: list[str]
-) -> dict[str, dist.Distribution]:
+    p0: Mapping[str, float], variables: Iterable[str]
+) -> dict[str, Distribution]:
     """Initializes priors for a given circuit.
 
     Parameters
     ----------
-    p0 : dict[str, float]
+    p0 : Mapping[str, float]
         Initial guess for the circuit parameters as a dictionary of parameter
         names and values.
-    variables : list[str]
+    variables : Iterable[str]
         List of variable names.
 
     Returns
     -------
-    dict[str, dist.Distribution]
+    dict[str, Distribution]
         Priors for the circuit parameters as a dictionary of parameter names
         and distributions.
 
@@ -612,25 +609,25 @@ def initialize_priors(
 
 
 def initialize_priors_from_posteriors(
-    posterior: dict[str, np.ndarray[float]],
-    variables: list[str],
+    posterior: Mapping[str, np.ndarray[float]],
+    variables: Iterable[str],
     dist_type: str = "lognormal",
-) -> dict[str, dist.Distribution]:
+) -> dict[str, Distribution]:
     """Creates new priors based on the posterior distributions.
 
     Parameters
     ----------
-    posterior : dict[str, np.ndarray[float]]
+    posterior : Mapping[str, np.ndarray[float]]
         Posterior distributions for the circuit parameters as a dictionary
         of parameter names and distributions.
-    variables : list[str]
+    variables : Iterable[str]
         List of variable names.
     dist_type : str, optional
         Type of prior distribution to use. Default is "lognormal".
 
     Returns
     -------
-    dict[str, dist.Distribution]
+    dict[str, Distribution]
         Priors for the circuit parameters as a dictionary of parameter names
         and distributions.
 
@@ -679,7 +676,7 @@ def eval_posterior_predictive(
     mcmc: MCMC,
     circuit: str,
     freq: np.ndarray[float],
-    priors: dict[str, Distribution] = None,
+    priors: Mapping[str, Distribution] = None,
     rng_key: random.PRNGKey = None,
 ) -> np.ndarray[complex]:
     """Evaluate the posterior predictive distribution of a MCMC run.
@@ -693,7 +690,7 @@ def eval_posterior_predictive(
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
     freq : np.ndarray[float]
         Frequencies to evaluate the posterior predictive distribution at.
-    priors : dict[str, Distribution], optional
+    priors : Mapping[str, Distribution], optional
         Priors for the circuit parameters as a dictionary of parameter names
         and distributions. Default is None.
     rng_key : random.PRNGKey, optional
