@@ -31,17 +31,20 @@ def test_compute_ohmic_resistance_missing_high_freq():
 
 def test_preprocess_impedance_data():
     freq, Z = io.load_test_dataset()
-    freq_prep, Z_prep, rmse = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    freq_prep, Z_prep = results.freq, results.Z
     assert len(Z_prep) == len(freq_prep)
     assert len(Z_prep) == 60
-    freq_prep, Z_prep, rmse = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
+    freq_prep, Z_prep = results.freq, results.Z
     assert len(Z_prep) == len(freq_prep)
     assert len(Z_prep) == 50
 
 
 def test_gep_serial():
     freq, Z = io.load_test_dataset()
-    freq, Z, rmse = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    freq, Z = results.freq, results.Z
     kwargs = {
         "iters": 2,
         "complexity": 12,
@@ -57,7 +60,8 @@ def test_gep_serial():
 
 def test_gep_parallel():
     freq, Z = io.load_test_dataset()
-    freq, Z, rmse = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    freq, Z = results.freq, results.Z
     kwargs = {
         "iters": 2,
         "complexity": 12,
