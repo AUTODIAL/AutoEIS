@@ -27,6 +27,7 @@ import numpy as np
 import numpyro
 import pandas as pd
 import psutil
+from deprecated import deprecated
 from impedance.validation import linKK
 from jax import config
 from mpire import WorkerPool
@@ -339,9 +340,17 @@ def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed) -> list[str]:
     return circuits
 
 
-# TODO: This function is deprecated, use _generate_ecm_parallel_julia instead
-def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
-    """Generates candidate circuits in parallel via Python multiprocessing."""
+@deprecated(reason="This function is deprecated, use _generate_ecm_parallel_julia instead")
+def _generate_ecm_parallel_mpire(
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    iters: int,
+    ec_kwargs: dict,
+    seed: int,
+):
+    """Generates candidate circuits that fit the impedance data, in parallel
+    via Python multiprocessing.
+    """
 
     def circuit_evolution(seed: int):
         """Closure to generate a single circuit to be used with multiprocessing."""
@@ -350,12 +359,10 @@ def _generate_ecm_parallel_mpire(impedance, freq, iters, ec_kwargs, seed):
         # Set random seed for reproducibility
         jl.seval(f"import Random; Random.seed!({seed})")
         try:
-            circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
+            circuit = ec.circuit_evolution(Z, freq, **ec_kwargs)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             return None
-        # # Format output as list of strings since Julia objects cannot be pickled
-        # return [circuit.circuitstring, jl.string(circuit.Parameters)]
         return circuit
 
     nproc = os.cpu_count()
