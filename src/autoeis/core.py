@@ -120,8 +120,8 @@ def compute_ohmic_resistance(freq: np.ndarray[float], Z: np.ndarray[complex]) ->
 
 # TODO: Needs heavy refactoring
 def preprocess_impedance_data(
-    impedance: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     threshold: float = 5e-2,
     plot: bool = False,
 ) -> tuple[np.ndarray[complex], np.ndarray[float], float]:
@@ -131,11 +131,11 @@ def preprocess_impedance_data(
     Parameters
     ----------
     impedance : np.ndarray[complex]
-        Impedance measurements.
+        Impedance measurements as a complex array.
     freq : np.ndarray[float]
         Frequencies corresponding to impedance measurements.
     threshold : float
-        Controls the filtering effect during KK validation.
+        Controls the strictness of the filtering effect during KK validation.
     plot : bool, optional
         If True, a plot of the processed data will be generated. Default is False.
 
@@ -149,8 +149,8 @@ def preprocess_impedance_data(
     log.info("Pre-processing impedance data using KK filter.")
 
     # Fetch the real and imaginary part of the impedance data
-    Re_Z = impedance.real
-    Im_Z = impedance.imag
+    Re_Z = Z.real
+    Im_Z = Z.imag
 
     # Filter 1 - High Frequency Region
     # Find index where phase_Zwe == minimum, remove all high frequency imag values below zero
@@ -169,7 +169,7 @@ def preprocess_impedance_data(
             mask_phase[i] = False
 
     freq = freq[index[0] :]
-    Z = impedance[index[0] :]
+    Z = Z[index[0] :]
     Re_Z = Re_Z[index[0] :]
     Im_Z = Im_Z[index[0] :]
 
@@ -259,8 +259,8 @@ def preprocess_impedance_data(
 
 
 def generate_equivalent_circuits(
-    impedance: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     iters: int = 100,
     complexity: int = 12,
     tol: float = 1e-2,
@@ -269,14 +269,15 @@ def generate_equivalent_circuits(
     population_size: int = 100,
     seed: int = None,
 ) -> pd.DataFrame:
-    """Generates candidate circuits that fit impedance data using genetic algorithm.
+    """Generates candidate circuits that fit the impedance data using
+    evolutionary algorithms.
 
     Parameters
     ----------
-    Z : np.ndarray[complex]
-        Impedance measurements.
     freq : np.ndarray[float]
         Frequencies corresponding to impedance measurements.
+    Z : np.ndarray[complex]
+        Impedance measurements as a complex array.
     iters : int, optional
         Number of ECM generation iterations (default is 100).
     complexity : int, optional
@@ -311,7 +312,7 @@ def generate_equivalent_circuits(
     }
 
     ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
-    circuits = ecm_generator(impedance, freq, iters, ec_kwargs, seed)
+    circuits = ecm_generator(Z, freq, iters, ec_kwargs, seed)
 
     # Convert output to DataFrame with columns ("circuitstring", "Parameters")
     circuits = io.parse_ec_output(circuits)
@@ -322,15 +323,21 @@ def generate_equivalent_circuits(
     return circuits
 
 
-def _generate_ecm_serial(impedance, freq, iters, ec_kwargs, seed) -> list[str]:
-    """Generates candidate circuits in serial."""
+def _generate_ecm_serial(
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    iters: int,
+    ec_kwargs: dict,
+    seed: int,
+) -> list[str]:
+    """Generates candidate circuits that fit the impedance data, in serial."""
     # Set random seed for reproducibility
     jl.seval(f"import Random; Random.seed!({seed})")
 
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
         try:
-            circuit = ec.circuit_evolution(impedance, freq, **ec_kwargs)
+            circuit = ec.circuit_evolution(Z, freq, **ec_kwargs)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
@@ -392,8 +399,12 @@ def _generate_ecm_parallel_mpire(
     return circuits
 
 
-def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
-    """Generates candidate circuits in parallel using Julia multiprocessing."""
+def _generate_ecm_parallel_julia(
+    freq: np.ndarray[float], Z: np.ndarray[complex], iters: int, ec_kwargs: dict, seed: int
+):
+    """Generates candidate circuits that fit the impedance data, in parallel
+    via Julia multiprocessing.
+    """
     # Set random seed for reproducibility (Python and Julia)
     # FIXME: This doesn't work when multiprocessing, use @everywhere instead
     jl.seval(f"import Random; Random.seed!({seed})")
@@ -415,7 +426,7 @@ def _generate_ecm_parallel_julia(impedance, freq, iters, ec_kwargs, seed):
         for iters_ in iters_chunked:
             try:
                 circuits_ = ec.circuit_evolution_batch(
-                    impedance, freq, **ec_kwargs, iters=iters_, quiet=True
+                    Z, freq, **ec_kwargs, iters=iters_, quiet=True
                 )
             except Exception as e:
                 log.error(f"Error generating circuits: {e}")
@@ -586,10 +597,10 @@ def perform_bayesian_inference(
     ----------
     circuits : pd.DataFrame | Iterable[str] | str
         Dataframe containing circuits or list of circuit strings.
-    Z : np.ndarray[complex]
-        Complex impedance data.
     freq: np.ndarray[float]
-        Frequency data.
+        Frequency data corresponding to the impedance data.
+    Z : np.ndarray[complex]
+        Impedance data as a complex array.
     p0 : Iterable[float] | Mapping[str, float] | Iterable[Iterable[float]] | Iterable[Mapping[str, float]], optional
         Initial guess for the circuit parameters (default is None).
     num_warmup : int, optional
@@ -846,7 +857,7 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     circuits : pd.DataFrame
-        Dataframe containing circuits (filtered for plausibility)
+        Dataframe containing the filtered circuits.
     """
     log.info("Filtering the circuits using heuristic rules.")
 
@@ -888,7 +899,7 @@ def perform_full_analysis(
     freq : np.ndarray[float]
         Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
-        Impedance data.
+        Impedance data as a complex array.
     iters : int, optional
         Number of iterations for ECM generation. Default is 100.
     parallel : bool, optional
@@ -908,7 +919,7 @@ def perform_full_analysis(
         Dataframe containing circuits, parameters, and MCMC results.
     """
     # Filter out bad impedance data
-    Z, freq, rmse = preprocess_impedance_data(Z, freq, threshold=linKK_threshold)
+    Z, freq, rmse = preprocess_impedance_data(freq, Z, threshold=linKK_threshold)
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
