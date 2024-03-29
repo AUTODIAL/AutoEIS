@@ -31,10 +31,10 @@ from pyparsing import nested_expr
 def validate_circuit(circuit: str) -> bool:
     """Checks if a circuit string is valid.
 
-    Currently, this function checks for the following:
-    - Non-empty circuit string
-    - Valid element names (R, C, L, P)
-    - No duplicate elements, e.g., R1-[P2,P2]
+    This function ensures that the circuit string:
+        - is not empty,
+        - contains valid element names (``R``, ``C``, ``L``, ``P``),
+        - and, doesn't contain duplicate elements, e.g., ``R1-[P2,P2]``.
 
     Parameters
     ----------

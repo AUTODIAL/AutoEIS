@@ -731,13 +731,12 @@ def eval_posterior_predictive(
 
 
 def validate_circuits_dataframe(circuits: pd.DataFrame):
-    """Ensures that the circuits dataframe has the correct format by
-    checking the following:
+    """Ensures that the circuits dataframe if properly formatted/typed.
 
-    - Column names are valid (must be "circuitstring", "Parameters")
-    - Column types are valid
-        - "circuitstring" must be a string
-        - "Parameters" must be a dictionary
+    Specifically, this function ensures that:
+        - column names are valid (must be ``circuitstring``, ``Parameters``),
+        - column data types are valid, i.e., ``circuitstring`` and
+          ``Parameters`` must contain strings and dictionaries, respectively.
 
     Parameters
     ----------
