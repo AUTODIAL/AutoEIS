@@ -18,7 +18,7 @@ import logging
 import os
 import time
 import warnings
-from typing import Union
+from collections.abc import Iterable, Mapping
 
 import arviz as az
 import jax
@@ -61,6 +61,7 @@ __all__ = [
     "generate_equivalent_circuits",
     "filter_implausible_circuits",
     "perform_bayesian_inference",
+    "compute_fitness_metrics",
 ]
 
 
@@ -557,28 +558,31 @@ def compute_fitness_metrics(
 
 
 def perform_bayesian_inference(
-    circuits: Union[pd.DataFrame, list[str], str],
+    circuits: pd.DataFrame | Iterable[str] | str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: Union[np.ndarray, dict, list[dict], list[np.ndarray]] = None,
+    p0: Iterable[float]
+    | Mapping[str, float]
+    | Iterable[Iterable[float]]
+    | Iterable[Mapping[str, float]] = None,
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
-    seed: Union[int, jax.Array] = None,
+    seed: int | jax.Array = None,
     progress_bar: bool = True,
     refine_p0: bool = False,
-) -> list[tuple[Union[numpyro.infer.mcmc.MCMC, None], int]]:
+) -> list[tuple[MCMC, int]]:
     """Performs Bayesian inference on the circuits based on impedance data.
 
     Parameters
     ----------
-    circuits : pd.DataFrame or list[str]
+    circuits : pd.DataFrame | Iterable[str] | str
         Dataframe containing circuits or list of circuit strings.
     Z : np.ndarray[complex]
         Complex impedance data.
     freq: np.ndarray[float]
         Frequency data.
-    p0 : Union[np.ndarray[float], dict[str, float]], optional
+    p0 : Iterable[float] | Mapping[str, float] | Iterable[Iterable[float]] | Iterable[Mapping[str, float]], optional
         Initial guess for the circuit parameters (default is None).
     num_warmup : int, optional
         Number of warmup samples for the MCMC (default is 2500).
@@ -657,11 +661,11 @@ def _perform_bayesian_inference(
     circuit: str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: Union[np.ndarray[float], dict[str, float]] = None,
+    p0: Iterable[float] | Mapping[str, float] = None,
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
-    seed: Union[int, jax.Array] = None,
+    seed: int | jax.Array = None,
     progress_bar: bool = True,
 ) -> tuple[numpyro.infer.mcmc.MCMC, int]:
     """Performs Bayesian inference on the circuit based on impedance data.
@@ -671,18 +675,26 @@ def _perform_bayesian_inference(
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    freq : np.ndarray[float]
+        Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Complex impedance data.
-    freq: np.ndarray[float]
-        Frequency data.
-    p0 : Union[np.ndarray[float], dict[str, float]], optional
+    p0 : Iterable[float] | Mapping[str, float], optional
         Initial guess for the circuit parameters (default is None).
-    seed : Union[int, jax.Array], optional
+    num_warmup : int, optional
+        Number of warmup samples for the MCMC (default is 2500).
+    num_samples : int, optional
+        Number of samples for the MCMC (default is 1000).
+    num_chains : int, optional
+        Number of MCMC chains (default is 1).
+    seed : int | jax.Array, optional
         Random seed for reproducibility (default is None).
+    progress_bar : bool, optional
+        If True, a progress bar will be displayed (default is True).
 
     Returns
     -------
-    tuple(numpyro.infer.mcmc.MCMC, int)
+    tuple[MCMC, int]
         MCMC object and exit code (0 if successful, -1 if failed).
     """
     log.info("Performing Bayesian inference on the circuit {circuit}.")
@@ -735,14 +747,14 @@ def _perform_bayesian_inference(
 
 
 def _perform_bayesian_inference_batch(
-    circuits: list[str],
+    circuits: Iterable[str],
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: list[dict[str, float]] = None,
+    p0: Iterable[Mapping[str, float]] = None,
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
-    seed: Union[int, jax.Array] = None,
+    seed: int | jax.Array = None,
     progress_bar=True,
 ):
     """Performs Bayesian inference on a list of circuits in parallel.
@@ -751,18 +763,28 @@ def _perform_bayesian_inference_batch(
     ----------
     circuits : pd.DataFrame or list[str]
         Dataframe containing circuits or list of circuit strings.
+    freq : np.ndarray[float]
+        Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Complex impedance data.
-    freq: np.ndarray[float]
-        Frequency data.
-    p0 : list[dict[str, float]], optional
+    p0 : Iterable[Mapping[str, float]], optional
         Initial guess for the circuit parameters (default is None).
-    seed : int, optional
+    priors : Iterable[Mapping[str, Distribution]], optional
+        Priors for the circuit parameters (default is None).
+    num_warmup : int, optional
+        Number of warmup samples for the MCMC (default is 2500).
+    num_samples : int, optional
+        Number of samples for the MCMC (default is 1000).
+    num_chains : int, optional
+        Number of MCMC chains (default is 1).
+    seed : int | jax.Array, optional
         Random seed for reproducibility (default is None).
+    progress_bar : bool, optional
+        If True, a progress bar will be displayed (default is True).
 
     Returns
     -------
-    list[tuple[numpyro.infer.mcmc.MCMC, int]]
+    list[tuple[MCMC, int]]
         List of MCMC objects and exit codes (0 if successful, -1 if failed).
     """
     # Generate a random seed for each circuit
@@ -805,7 +827,7 @@ def _perform_bayesian_inference_batch(
 
 
 def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
-    """Apply heuristic rules to filter the generated ECMs.
+    """Applies heuristic rules to exclude implausible circuits.
 
     Parameters
     ----------
@@ -833,10 +855,8 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     circuits = circuits.drop(columns=["Resistors", "Capacitors", "Inductors", "CPEs"])
 
     if len(circuits) == 0:
-        log.warning(
-            "No plausible circuits found. Increase `iters` or `tol` and rerun"
-            " `generate_equivalent_circuits`"
-        )
+        log.warning("No plausible circuits found. Increase `iters` or `tol` and rerun "
+                    "`generate_equivalent_circuits`")  # fmt: skip
 
     return circuits
 
@@ -856,10 +876,10 @@ def perform_full_analysis(
 
     Parameters
     ----------
-    Z : np.ndarray[complex]
-        Impedance data.
     freq : np.ndarray[float]
         Frequencies corresponding to the impedance data.
+    Z : np.ndarray[complex]
+        Impedance data.
     iters : int, optional
         Number of iterations for ECM generation. Default is 100.
     parallel : bool, optional
