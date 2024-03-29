@@ -917,4 +917,7 @@ def perform_full_analysis(
     circuits["MCMC (chain)"] = mcmcs
     circuits["MCMC (status)"] = status
 
+    # Compute fitness metrics and add to the dataframe
+    circuits = compute_fitness_metrics(circuits, freq, Z)
+
     return circuits
