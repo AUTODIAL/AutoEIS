@@ -27,6 +27,7 @@ import numpy as np
 import numpyro
 import pandas as pd
 import psutil
+from box import Box
 from deprecated import deprecated
 from impedance.validation import linKK
 from jax import config
@@ -144,10 +145,14 @@ def preprocess_impedance_data(
 
     Returns
     -------
-    tuple[np.ndarray[complex], np.ndarray[float], float]
-        - Z: Filtered impedance data.
-        - freq: Frequencies corresponding to the filtered measurements.
-        - rmse: Root mean square error of KK validated data vs. measurements.
+    Box
+        Dictionary containing the preprocessed data with the following keys:
+            - freq: Frequencies corresponding to the impedance data.
+            - Z: Filtered impedance data.
+            - linKK: Box containing the Lin-KK validation results with keys:
+                - res_real: Real part of the residuals.
+                - res_imag: Imaginary part of the residuals.
+                - rmse: Root mean square error of KK validated data vs. measurements.
     """
     log.info("Preprocessing/cleaning up impedance data.")
     n0 = len(freq)
@@ -182,7 +187,10 @@ def preprocess_impedance_data(
     if (n0 - len(freq)) / n0 > 0.1:
         log.warning("More than 10% of the data was filtered out.")
 
-    return freq, Z, rmse
+    results = Box(freq=freq, Z=Z)
+    results.linKK = Box(res_real=res_real, res_imag=res_imag, rmse=rmse)
+
+    return results
 
 
 def generate_equivalent_circuits(
@@ -813,7 +821,7 @@ def perform_full_analysis(
     Z: np.ndarray[complex],
     iters: int = 100,
     parallel: bool = True,
-    linKK_threshold: float = 5e-2,
+    tol_linKK: float = 5e-2,
     tol: float = 1e-2,
     num_warmup: int = 2500,
     num_samples: int = 1000,
@@ -831,8 +839,8 @@ def perform_full_analysis(
         Number of iterations for ECM generation. Default is 100.
     parallel : bool, optional
         If True, the ECM generation will be done in parallel. Default is True.
-    linKK_threshold : float, optional
-        Threshold for the Lin-KK validation. Default is 5e-2.
+    tol_linKK : float, optional
+        Tolerance for acceptable measurements based on linKK residuals.
     tol : float, optional
         Convergence threshold for the ECM generation. Default is 1e-2.
     num_warmup : int, optional
@@ -846,7 +854,8 @@ def perform_full_analysis(
         Dataframe containing circuits, parameters, and MCMC results.
     """
     # Filter out bad impedance data
-    Z, freq, rmse = preprocess_impedance_data(freq, Z, threshold=linKK_threshold)
+    results = preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
+    freq, Z = results.freq, results.Z
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
