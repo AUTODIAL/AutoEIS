@@ -16,6 +16,7 @@ Collection of functions for importing and exporting EIS data/results.
 import logging
 import os
 import re
+from collections.abc import Iterable
 from pathlib import Path
 
 import numpy as np
@@ -48,7 +49,7 @@ def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
     return Z, freq
 
 
-def load_test_circuits(filtered=False) -> pd.DataFrame:
+def load_test_circuits(filtered: bool = False) -> pd.DataFrame:
     """Returns candidate ECMs fitted to test dataset for testing.
 
     Parameters
@@ -71,12 +72,12 @@ def load_test_circuits(filtered=False) -> pd.DataFrame:
     return circuits
 
 
-def parse_ec_output(circuits: list[str]) -> list[tuple[str, dict[str, float]]]:
+def parse_ec_output(circuits: Iterable[str] | str) -> pd.DataFrame:
     """Parses the output of EquivalentCircuits.jl's ``circuit_evolution``.
 
     Parameters
     ----------
-    circuits: list[str]
+    circuits: Iterable[str] | str
         List of stringified output of EquivalentCircuits.jl's ``circuit_evolution``.
 
     Returns
