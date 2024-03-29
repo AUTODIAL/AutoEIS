@@ -713,7 +713,7 @@ def eval_posterior_predictive(
         priors = initialize_priors(p0, variables)
 
     # Create a predictive distribution for the circuit parameters
-    model = models.circuit_regression_wrapped
+    model = models.circuit_regression_complex
     predictive = Predictive(model, samples)
 
     # Evaluate the predictive distribution at the given frequency
