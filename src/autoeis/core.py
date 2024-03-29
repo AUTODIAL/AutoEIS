@@ -118,144 +118,71 @@ def compute_ohmic_resistance(freq: np.ndarray[float], Z: np.ndarray[complex]) ->
     return R
 
 
-# TODO: Needs heavy refactoring
 def preprocess_impedance_data(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    threshold: float = 5e-2,
-    plot: bool = False,
+    tol_linKK: float = 5e-2,
+    high_freq_threshold: float = 1e3,
 ) -> tuple[np.ndarray[complex], np.ndarray[float], float]:
-    """Preprocess impedance data, filtering out data with a positive
-    imaginary part in high frequencies and applying KK validation.
+    """Preprocesses/cleans up impedance measurements.
+
+    The preprocessing does the following steps:
+        - Discard invalid high frequency measurements (see Notes section)
+        - Filter out data with a positive imaginary part in high frequencies
+        - Enforce the Kramers-Kronig validation (aka Lin-KK)
 
     Parameters
     ----------
-    impedance : np.ndarray[complex]
-        Impedance measurements as a complex array.
     freq : np.ndarray[float]
         Frequencies corresponding to impedance measurements.
-    threshold : float
-        Controls the strictness of the filtering effect during KK validation.
-    plot : bool, optional
-        If True, a plot of the processed data will be generated. Default is False.
+    Z : np.ndarray[complex]
+        Impedance measurements as a complex array.
+    tol_linKK : float
+        Tolerance for acceptable measurements based on linKK residuals.
+    high_freq_threshold : float
+        Lower bound for what is considered a high frequency measurement.
 
     Returns
     -------
-    tuple
+    tuple[np.ndarray[complex], np.ndarray[float], float]
         - Z: Filtered impedance data.
         - freq: Frequencies corresponding to the filtered measurements.
         - rmse: Root mean square error of KK validated data vs. measurements.
     """
-    log.info("Pre-processing impedance data using KK filter.")
+    log.info("Preprocessing/cleaning up impedance data.")
+    n0 = len(freq)
 
-    # Fetch the real and imaginary part of the impedance data
-    Re_Z = Z.real
-    Im_Z = Z.imag
+    # Make sure frequency is sorted in descending order
+    Z = Z[np.argsort(freq)[::-1]]
+    freq = freq[np.argsort(freq)[::-1]]
 
-    # Filter 1 - High Frequency Region
-    # Find index where phase_Zwe == minimum, remove all high frequency imag values below zero
-    # Find index: 10khz - 100khz
-    # ?: What's the logic behind this?
-    # BUG: ???
-    try:
-        pos = np.where((1000 <= freq) & (freq <= 1000000))
-        # Find minimum phase value, note returns as a tuple
-        (index,) = np.where(abs(Im_Z[pos]) == abs(Im_Z[pos]).min())
-    except ValueError:
-        index = [0]
-    mask_phase = [True] * len(Im_Z)
-    for i in range(len(Im_Z)):
-        if i < index:
-            mask_phase[i] = False
+    # Heuristic 1: @freq->∞: |Z.im|->0 => highest_valid_freq = freq @ np.argmin(|Z.im|)
+    high_freq = freq > high_freq_threshold
+    idx_highest_valid_freq = np.argmin(np.abs(Z.imag[high_freq]))
+    # Filter out frequencies above the highest valid frequency (only works if freq is sorted)
+    freq = freq[idx_highest_valid_freq:]
+    Z = Z[idx_highest_valid_freq:]
 
-    freq = freq[index[0] :]
-    Z = Z[index[0] :]
-    Re_Z = Re_Z[index[0] :]
-    Im_Z = Im_Z[index[0] :]
+    # Heuristic 2: Remove the data whose Z.imag is positive at high frequencies
+    high_freq = freq > high_freq_threshold
+    positive_im = Z.imag > 0
+    mask = high_freq & positive_im
+    Z = Z[~mask]
+    freq = freq[~mask]
 
-    # Filter 1.2: Delete all impedance points with positive im impedance at high frequency
-    pos2 = np.where(Im_Z > 0)
-    positive_im = pos2[0][np.where(pos2[0] <= len(pos[0]))]
-    freq = np.delete(freq, positive_im)
-    Re_Z = np.delete(Re_Z, positive_im)
-    Im_Z = np.delete(Im_Z, positive_im)
-    Z = np.delete(Z, positive_im)
-
-    # Filter 2 - Low Frequency Region
-    # Lin-KK data validation to remove 'noisy' data
-    # For Lin-KK, the residuals of Re(Z) and Im(Z) are what will be used as a filter.
-    # I have found based on the data set that somewhere ~0.05% works the best
-    M, mu, Z_linKK, res_real, res_imag = linKK(
-        freq, Z, c=0.5, max_M=100, fit_type="complex", add_cap=True
-    )
+    # Heuristic 3: Kramers-Kronig validation (aka Lin-KK)
+    linKK_kwargs = {"c": 0.5, "max_M": 100, "fit_type": "complex", "add_cap": True}
+    M, mu, Z_linKK, res_real, res_imag = linKK(freq, Z, **linKK_kwargs)
     rmse = metrics.rmse_score(Z, Z_linKK)
 
-    # Plot residuals of Lin-KK validation
-    if plot:
-        viz.plot_linKK_residuals(freq, res_real, res_imag)
+    mask = (np.abs(res_real) < tol_linKK) & (np.abs(res_imag) < tol_linKK)
+    freq = freq[mask]
+    Z = Z[mask]
 
-    # Need to set a threshold limit for when to filter out the noisy data
-    # of the residuals threshold = 0.05 !!! USER DEFINED !!!
+    if (n0 - len(freq)) / n0 > 0.1:
+        log.warning("More than 10% of the data was filtered out.")
 
-    # NOTE: 2023/05/03 modification by Runze Zhang
-    # ?: What's the logic behind this?
-    Zdf_mask = np.arange(1)
-
-    # Keep track of the initial threshold value
-    threshold_init = threshold
-    step = 0.01
-
-    while len(Zdf_mask) <= 0.7 * len(Z):
-        # Filter the data according to imaginary residuals
-        mask = [False] * (len(res_imag))
-        for i in range(len(res_imag)):
-            if res_imag[i] < threshold:
-                mask[i] = True
-            else:
-                break
-
-        freq_mask = freq[mask]
-        Z_mask = Z[mask]
-        Re_Z_mask = Re_Z[mask]
-        Im_Z_mask = Im_Z[mask]
-
-        # Filter the data according to real residuals
-        mask = [False] * (len(res_real))
-        for i in range(len(res_real)):
-            if res_real[i] < threshold:
-                mask[i] = True
-            else:
-                break
-
-        freq_mask = freq[mask]
-        Z_mask = Z[mask]
-        Re_Z_mask = Re_Z[mask]
-        Im_Z_mask = Im_Z[mask]
-
-        # Find the ohmic resistance
-        try:
-            ohmic_resistance = compute_ohmic_resistance(freq_mask, Z_mask)
-            ohmic_resistance_found = True
-        except ValueError:
-            log.error("Ohmic resistance not found. Check data or increase KK threshold.")
-            ohmic_resistance_found = False
-
-        # Convert the data to a dataframe for easier manipulation
-        values_mask = np.array([freq_mask, Re_Z_mask, Im_Z_mask])
-        labels = ["freq", "Zreal", "Zimag"]
-        Zdf_mask = pd.DataFrame(values_mask.transpose(), columns=labels)
-        threshold += step
-
-    if ohmic_resistance_found:
-        log.info(f"Ohmic resistance = {ohmic_resistance}")
-
-    if not np.isclose(threshold - step, threshold_init):
-        log.warning(f"Default threshold ({threshold_init}) dropped too many points.")
-
-    Z = Zdf_mask["Zreal"].to_numpy() + 1j * Zdf_mask["Zimag"].to_numpy()
-    freq = Zdf_mask["freq"].to_numpy()
-
-    return Z, freq, rmse
+    return freq, Z, rmse
 
 
 def generate_equivalent_circuits(
