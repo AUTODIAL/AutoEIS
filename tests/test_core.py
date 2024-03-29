@@ -41,7 +41,7 @@ def test_preprocess_impedance_data():
 
 def test_gep_serial():
     freq, Z = io.load_test_dataset()
-    freq, Z, rmse = core.preprocess_impedance_data(freq, Z, threshold=5e-2)
+    freq, Z, rmse = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
     kwargs = {
         "iters": 2,
         "complexity": 12,
@@ -57,7 +57,7 @@ def test_gep_serial():
 
 def test_gep_parallel():
     freq, Z = io.load_test_dataset()
-    freq, Z, rmse = core.preprocess_impedance_data(freq, Z, threshold=5e-2)
+    freq, Z, rmse = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
     kwargs = {
         "iters": 2,
         "complexity": 12,
