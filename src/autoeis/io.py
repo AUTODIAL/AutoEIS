@@ -34,19 +34,19 @@ def get_assets_path() -> Path:
 
 
 def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
-    """Returns a test dataset as a tuple of impedance and frequency arrays.
+    """Returns a test dataset as a tuple of frequency and impedance arrays.
 
     Returns
     -------
-    tuple[np.ndarray[complex], np.ndarray[float]]
-        The impedance and frequency arrays.
+    tuple[np.ndarray[float], np.ndarray[complex]]
+        Tuple of frequency and impedance data.
     """
     PATH = get_assets_path()
     fpath = os.path.join(PATH, "test_data.txt")
     freq, Zreal, Zimag = np.loadtxt(fpath, skiprows=1, unpack=True, usecols=(0, 1, 2))
     # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
     Z = Zreal - 1j * Zimag
-    return Z, freq
+    return freq, Z
 
 
 def load_test_circuits(filtered: bool = False) -> pd.DataFrame:

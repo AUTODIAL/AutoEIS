@@ -161,8 +161,8 @@ def plot_nyquist(
 
 
 def plot_impedance_combo(
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     size: int = 10,
     ax: list[plt.Axes] = None,
     scatter=True,
@@ -172,10 +172,10 @@ def plot_impedance_combo(
 
     Parameters
     ----------
-    Z: np.ndarray[complex]
-        Impedance data.
     freq: np.ndarray[float]
         Frequencies corresponding to the impedance data.
+    Z: np.ndarray[complex]
+        Impedance data.
     size: int, optional
         Size of the markers in the plots. Default is 10.
     ax: list[plt.Axes], optional

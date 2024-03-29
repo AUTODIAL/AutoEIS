@@ -73,7 +73,7 @@ def test_are_circuits_equivalent():
 
 def test_eval_posterior_predictive():
     # Load test dataset
-    Z, freq = io.load_test_dataset()
+    freq, Z = io.load_test_dataset()
     circuits = io.load_test_circuits(filtered=True)
     circuit = circuits.iloc[0].circuitstring
     p0 = circuits.iloc[0].Parameters

@@ -740,7 +740,7 @@ def _perform_bayesian_inference(
     # Compute prior predictive distribution using the initial guess
     priors = utils.initialize_priors(p0, variables=p0.keys())
     nuts_kernel = NUTS(
-        model=circuit_regression_wrapped,
+        model=circuit_regression_complex,
         init_strategy=numpyro.infer.init_to_median,
     )
     kwargs_mcmc = {
