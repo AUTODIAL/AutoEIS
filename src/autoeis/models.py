@@ -6,7 +6,7 @@ Collection of functions to be used as models for Bayesian inference.
 .. autosummary::
    :toctree: generated/
 
-    circuit_regression
+    circuit_regression_complex
 
 """
 
