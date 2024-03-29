@@ -49,6 +49,7 @@ dependencies = [
     "multiprocess",
     "jinja2>=3.1.2",
     "deprecated",
+    "python-box",
 ]
 [project.optional-dependencies]
 build = ["hatch"]
@@ -83,6 +84,7 @@ dev-dependencies = [
     "sphinx-copybutton>=0.5.2",
     "sphinx-autodoc2>=0.5.0",
     "nbmake>=1.5.3",
+    "jupyterlab>=4.1.5",
 ]
 
 [tool.hatch.version]
