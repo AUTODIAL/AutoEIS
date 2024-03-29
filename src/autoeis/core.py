@@ -650,9 +650,10 @@ def perform_bayesian_inference(
     if len(circuits) == 1:
         # NOTE: Single inference gets slowed down by progress bar
         bi_kwargs["progress_bar"] = False
-        # ?: For single inference, DON'T return a list -> crashes multiprocessing
+        # ?: For single inference, DON'T return a list -> crashes multiprocessing (maybe not?)
         results = [_perform_bayesian_inference(circuits[0], p0=p0[0], **bi_kwargs)]
-    results = _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
+    else:
+        results = _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
 
     return results
 
