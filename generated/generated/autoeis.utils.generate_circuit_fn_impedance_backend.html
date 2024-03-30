@@ -256,7 +256,21 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="autoeis.utils.generate_circuit_fn_impedance_backend">
 <span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">generate_circuit_fn_impedance_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#autoeis.utils.generate_circuit_fn_impedance_backend" title="Link to this definition">#</a></dt>
-<dd><p>Converts a circuit string to a function using impedance.py.</p>
+<dd><p>Generates a function to compute the circuit impedance, parameterized
+by frequency and the circuit parameters, using <code class="docutils literal notranslate"><span class="pre">impedance.py</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>circuit</strong> (<em>str</em>) – CDC string representation of the input circuit. See
+<a class="reference external" href="https://autodial.github.io/AutoEIS/circuit.html">here</a> for details.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A function that takes in frequency and the circuit parameters
+and returns the impedance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

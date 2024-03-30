@@ -255,8 +255,27 @@
 <h1>initialize_priors<a class="headerlink" href="#initialize-priors" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="autoeis.utils.initialize_priors">
-<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">initialize_priors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Distribution</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#autoeis.utils.initialize_priors" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">initialize_priors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Distribution</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#autoeis.utils.initialize_priors" title="Link to this definition">#</a></dt>
 <dd><p>Initializes priors for a given circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p0</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – Initial guess for the circuit parameters as a dictionary of parameter
+names and values.</p></li>
+<li><p><strong>variables</strong> (<em>Iterable</em><em>[</em><em>str</em><em>]</em>) – List of variable names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Priors for the circuit parameters as a dictionary of parameter names
+and distributions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Distribution]</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function assigns a uniform distribution for the exponent of CPE
+elements and a log-normal distribution for the rest of the parameters.</p>
 </dd></dl>
 
 </section>

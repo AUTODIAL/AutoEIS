@@ -261,13 +261,13 @@
 <td><p>Computes the component complexity of the circuit.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn.html#autoeis.utils.generate_circuit_fn" title="autoeis.utils.generate_circuit_fn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn</span></code></a>(circuit[, jit, concat])</p></td>
-<td><p></p></td>
+<td><p>Generates a function to compute the circuit impedance, parameterized by frequency and the circuit parameters.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn_impedance_backend.html#autoeis.utils.generate_circuit_fn_impedance_backend" title="autoeis.utils.generate_circuit_fn_impedance_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn_impedance_backend</span></code></a>(circuit)</p></td>
-<td><p>Converts a circuit string to a function using impedance.py.</p></td>
+<td><p>Generates a function to compute the circuit impedance, parameterized by frequency and the circuit parameters, using <code class="docutils literal notranslate"><span class="pre">impedance.py</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.fit_circuit_parameters.html#autoeis.utils.fit_circuit_parameters" title="autoeis.utils.fit_circuit_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_circuit_parameters</span></code></a>(circuit, freq, Z[, ...])</p></td>
-<td><p>Fits a circuit to impedance data and returns the parameters.</p></td>
+<td><p>Fits and returns the parameters of a circuit to impedance data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html#autoeis.utils.are_circuits_equivalent" title="autoeis.utils.are_circuits_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">are_circuits_equivalent</span></code></a>(circuit1, circuit2)</p></td>
 <td><p>Checks if two circuit strings are equivalent.</p></td>
@@ -279,7 +279,7 @@
 <td><p>Creates new priors based on the posterior distributions.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.validate_circuits_dataframe.html#autoeis.utils.validate_circuits_dataframe" title="autoeis.utils.validate_circuits_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_circuits_dataframe</span></code></a>(circuits)</p></td>
-<td><p>Validates the circuits dataframe format (columns and dtype).</p></td>
+<td><p>Ensures that the circuits dataframe if properly formatted/typed.</p></td>
 </tr>
 </tbody>
 </table>

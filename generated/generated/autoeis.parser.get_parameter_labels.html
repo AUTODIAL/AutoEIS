@@ -257,6 +257,28 @@
 <dt class="sig sig-object py" id="autoeis.parser.get_parameter_labels">
 <span class="sig-prename descclassname"><span class="pre">autoeis.parser.</span></span><span class="sig-name descname"><span class="pre">get_parameter_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#autoeis.parser.get_parameter_labels" title="Link to this definition">#</a></dt>
 <dd><p>Returns a list of labels for all parameters in a circuit string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>circuit</strong> (<em>str</em>) – CDC string representation of the input circuit. See
+<a class="reference external" href="https://autodial.github.io/AutoEIS/circuit.html">here</a> for details.</p></li>
+<li><p><strong>types</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of parameter types to filter by. Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of parameter labels.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_parameter_labels</span><span class="p">(</span><span class="s2">&quot;R1-[R2,P4]&quot;</span><span class="p">)</span>
+<span class="go">[&#39;R1&#39;, &#39;R2&#39;, &#39;P4w&#39;, &#39;P4n&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_parameter_labels</span><span class="p">(</span><span class="s2">&quot;R1-[R2,P4]&quot;</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">])</span>
+<span class="go">[&#39;R1&#39;, &#39;R2&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

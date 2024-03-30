@@ -255,8 +255,31 @@
 <h1>are_circuits_equivalent<a class="headerlink" href="#are-circuits-equivalent" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="autoeis.utils.are_circuits_equivalent">
-<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">are_circuits_equivalent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circuit2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#autoeis.utils.are_circuits_equivalent" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">are_circuits_equivalent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circuit2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#autoeis.utils.are_circuits_equivalent" title="Link to this definition">#</a></dt>
 <dd><p>Checks if two circuit strings are equivalent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>circuit1</strong> (<em>str</em>) – The first circuit string in CDC format. See
+<a class="reference external" href="https://autodial.github.io/AutoEIS/circuit.html">here</a> for details.</p></li>
+<li><p><strong>circuit2</strong> (<em>str</em>) – <p>The second circuit string in CDC format. See
+<a class="reference external" href="https://autodial.github.io/AutoEIS/circuit.html">here</a> for details.</p>
+</p></li>
+<li><p><strong>rtol</strong> (<em>float</em><em>, </em><em>optional</em>) – The relative tolerance for the circuit equivalence check. See the
+Notes section for more details. Default is 1e-5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the circuits are equivalent, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function uses an approximate heuristic, i.e., it evaluates the
+circuits at a set of random frequencies and checks if the results are
+close enough to be considered equivalent.</p>
 </dd></dl>
 
 </section>

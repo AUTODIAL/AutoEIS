@@ -256,7 +256,23 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="autoeis.utils.validate_circuits_dataframe">
 <span class="sig-prename descclassname"><span class="pre">autoeis.utils.</span></span><span class="sig-name descname"><span class="pre">validate_circuits_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#autoeis.utils.validate_circuits_dataframe" title="Link to this definition">#</a></dt>
-<dd><p>Validates the circuits dataframe format (columns and dtype).</p>
+<dd><p>Ensures that the circuits dataframe if properly formatted/typed.</p>
+<dl class="simple">
+<dt>Specifically, this function ensures that:</dt><dd><ul class="simple">
+<li><p>column names are valid (must be <code class="docutils literal notranslate"><span class="pre">circuitstring</span></code>, <code class="docutils literal notranslate"><span class="pre">Parameters</span></code>),</p></li>
+<li><p>column data types are valid, i.e., <code class="docutils literal notranslate"><span class="pre">circuitstring</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Parameters</span></code> must contain strings and dictionaries, respectively.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>circuits</strong> (<em>pd.DataFrame</em>) – Dataframe containing the circuits.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the dataframe does not have the correct format.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
