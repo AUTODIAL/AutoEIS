@@ -46,17 +46,16 @@ freq, Z = ae.io.load_test_dataset()
 
 # Perform automated EIS analysis
 circuits = ae.perform_full_analysis(freq, Z, iters=100, parallel=True)
-ae.visualization.pretty_print_inference_results(circuits)
+ae.visualization.print_inference_results(circuits)
 
 # Print summary of the results
-mcmcs, status = circuits["MCMC (chain)"], circuits["MCMC (status)"]
-for mcmc, stat, circuit in zip(mcmcs, status, circuits.circuitstring):
-    if stat == 0:
-        ae.visualization.print_summary_statistics(mcmc, circuit)
+for i, row in circuits.iterrows():
+    if row["success"]:
+        ae.visualization.print_summary_statistics(row["MCMC"], row["circuitstring"])
 ```
 
-- `Z`: Electrochemical impedance measurements (complex array)
 - `freq`: Frequencies corresponding to the impedance measurements
+- `Z`: Electrochemical impedance measurements (complex array)
 - `iters`: Numbers of equivalent circuit generation to be performed
 - `tol`: Tolerance for the evolutionary algorithm for generating equivalent circuits
 - `parallel`: Whether to use parallel processing to speed up the analysis
