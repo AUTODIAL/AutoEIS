@@ -6,14 +6,13 @@
 # Commit reference: 976f8d8 dated 2023-09-16.
 
 import importlib
+import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 from julia.api import JuliaError
-
-import autoeis.utils as utils
 
 from .version import __equivalent_circuits_jl_version__, __version__
 
@@ -23,10 +22,10 @@ julia_initialized = False
 julia_kwargs_at_initialization = None
 julia_activated_env = None
 
-log = utils.get_logger(__name__)
+log = logging.getLogger(__name__)
+
+
 # TODO: For virtualenvs see https://github.com/JuliaPy/PyCall.jl?tab=readme-ov-file#python-virtual-environments
-
-
 def install(
     julia_project=None, quiet=False, precompile=None, offline=False
 ):  # pragma: no cover

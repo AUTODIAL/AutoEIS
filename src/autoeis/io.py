@@ -12,17 +12,19 @@ Collection of functions for importing and exporting EIS data/results.
     parse_ec_output
 
 """
+
+import logging
 import os
 import re
+from collections.abc import Iterable
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 import autoeis as ae
-import autoeis.utils as utils
 
-log = utils.get_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def get_assets_path() -> Path:
@@ -32,17 +34,35 @@ def get_assets_path() -> Path:
 
 
 def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
-    """Returns a test dataset as a tuple of impedance and frequency arrays."""
+    """Returns a test dataset as a tuple of frequency and impedance arrays.
+
+    Returns
+    -------
+    tuple[np.ndarray[float], np.ndarray[complex]]
+        Tuple of frequency and impedance data.
+    """
     PATH = get_assets_path()
     fpath = os.path.join(PATH, "test_data.txt")
     freq, Zreal, Zimag = np.loadtxt(fpath, skiprows=1, unpack=True, usecols=(0, 1, 2))
     # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
     Z = Zreal - 1j * Zimag
-    return Z, freq
+    return freq, Z
 
 
-def load_test_circuits(filtered=False) -> pd.DataFrame:
-    """Returns equivalent circuits fitted to test dataset for testing."""
+def load_test_circuits(filtered: bool = False) -> pd.DataFrame:
+    """Returns candidate ECMs fitted to test dataset for testing.
+
+    Parameters
+    ----------
+    filtered: bool, optional
+        If True, only physically plausible circuits are returned. Default is False.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing the ECMs.
+
+    """
     PATH = get_assets_path()
     fname = "circuits_filtered.csv" if filtered else "circuits_unfiltered.csv"
     fpath = os.path.join(PATH, fname)
@@ -52,8 +72,19 @@ def load_test_circuits(filtered=False) -> pd.DataFrame:
     return circuits
 
 
-def parse_ec_output(circuits: list[str]) -> list[tuple[str, dict[str, float]]]:
-    """Parses the output of EquivalentCircuits.jl's ``circuit_evolution``."""
+def parse_ec_output(circuits: Iterable[str] | str) -> pd.DataFrame:
+    """Parses the output of EquivalentCircuits.jl's ``circuit_evolution``.
+
+    Parameters
+    ----------
+    circuits: Iterable[str] | str
+        List of stringified output of EquivalentCircuits.jl's ``circuit_evolution``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing ECMs (cols: "circuitstring" and "Parameters")
+    """
     # Example: 'EquivalentCircuit("R1", (R1 = 1.0,))' -> ('R1', {'R1': 1.0})
     circuits = [circuits] if isinstance(circuits, str) else circuits
     parsed = []

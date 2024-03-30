@@ -2,19 +2,7 @@ import numpy as np
 import numpyro
 import pandas as pd
 import pytest
-
 from autoeis import core, io, utils
-
-
-def test_bayesian_inference_batch():
-    Z, freq = io.load_test_dataset()
-    # Only test first three circuits to save time in CI
-    circuits = io.load_test_circuits(filtered=True).iloc[:3]
-    mcmc_results = core.perform_bayesian_inference(circuits, freq, Z, refine_p0=True)
-    assert len(mcmc_results) == len(circuits)
-    for mcmc, exist_code in mcmc_results:
-        assert exist_code in [-1, 0]
-        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 
 
 def test_compute_ohmic_resistance():
@@ -41,9 +29,22 @@ def test_compute_ohmic_resistance_missing_high_freq():
     np.testing.assert_allclose(R, Zreal_at_high_freq)
 
 
+def test_preprocess_impedance_data():
+    freq, Z = io.load_test_dataset()
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    freq_prep, Z_prep = results.freq, results.Z
+    assert len(Z_prep) == len(freq_prep)
+    assert len(Z_prep) == 60
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
+    freq_prep, Z_prep = results.freq, results.Z
+    assert len(Z_prep) == len(freq_prep)
+    assert len(Z_prep) == 50
+
+
 def test_gep_serial():
-    Z, freq = io.load_test_dataset()
-    Z, freq, rmse = core.preprocess_impedance_data(Z, freq, threshold=5e-2)
+    freq, Z = io.load_test_dataset()
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    freq, Z = results.freq, results.Z
     kwargs = {
         "iters": 2,
         "complexity": 12,
@@ -52,14 +53,15 @@ def test_gep_serial():
         "tol": 1e10,
         "parallel": False,
     }
-    circuits = core.generate_equivalent_circuits(Z, freq, **kwargs)
+    circuits = core.generate_equivalent_circuits(freq, Z, **kwargs)
     assert len(circuits) == kwargs["iters"]
     assert isinstance(circuits, pd.DataFrame)
 
 
 def test_gep_parallel():
-    Z, freq = io.load_test_dataset()
-    Z, freq, rmse = core.preprocess_impedance_data(Z, freq, threshold=5e-2)
+    freq, Z = io.load_test_dataset()
+    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    freq, Z = results.freq, results.Z
     kwargs = {
         "iters": 2,
         "complexity": 12,
@@ -68,13 +70,13 @@ def test_gep_parallel():
         "tol": 1e10,
         "parallel": True,
     }
-    circuits = core.generate_equivalent_circuits(Z, freq, **kwargs)
+    circuits = core.generate_equivalent_circuits(freq, Z, **kwargs)
     assert len(circuits) == kwargs["iters"]
     assert isinstance(circuits, pd.DataFrame)
 
 
 def test_filter_implausible_circuits():
-    Z, freq = io.load_test_dataset()
+    freq, Z = io.load_test_dataset()
     circuits_unfiltered = io.load_test_circuits()
     N1 = len(circuits_unfiltered)
     circuits = core.filter_implausible_circuits(circuits_unfiltered)
@@ -83,29 +85,31 @@ def test_filter_implausible_circuits():
 
 
 def test_bayesian_inference_single():
-    Z, freq = io.load_test_dataset()
+    freq, Z = io.load_test_dataset()
     circuits = io.load_test_circuits(filtered=True)
     circuit = circuits.iloc[0].circuitstring
     p0 = circuits.iloc[0].Parameters
-    kwargs_mcmc = {
-        "num_warmup": 2500,
-        "num_samples": 1000,
-        "progress_bar": False,
-    }
-    mcmcs = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
-    mcmc, exit_code = mcmcs[0]
+    kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
+    mcmc_results = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+    mcmc, exit_code = mcmc_results[0]
     assert exit_code in [-1, 0]
     assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 
 
+def test_bayesian_inference_batch():
+    freq, Z = io.load_test_dataset()
+    # Only test first three circuits to save time in CI
+    circuits = io.load_test_circuits(filtered=True).iloc[:3]
+    mcmc_results = core.perform_bayesian_inference(circuits, freq, Z, refine_p0=False)
+    assert len(mcmc_results) == len(circuits)
+    for mcmc, exist_code in mcmc_results:
+        assert exist_code in [-1, 0]
+        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
+
+
 @pytest.mark.skip(reason="This test is too slow!")
 def test_perform_full_analysis():
-    Z, freq = io.load_test_dataset()
+    freq, Z = io.load_test_dataset()
     results = core.perform_full_analysis(freq, Z)
-    required_columns = [
-        "circuitstring",
-        "Parameters",
-        "MCMC (chains)",
-        "MCMC (status)",
-    ]
+    required_columns = ["circuitstring", "Parameters", "MCMC", "success", "divergences"]
     assert all(col in results.columns for col in required_columns)

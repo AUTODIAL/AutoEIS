@@ -1,6 +1,6 @@
 import numpy as np
-
-from autoeis import julia_helpers, parser, utils
+import numpyro
+from autoeis import core, io, julia_helpers, parser, utils
 
 # Real numbers
 x1 = np.random.rand(10)
@@ -69,3 +69,27 @@ def test_are_circuits_equivalent():
     for row in testset:
         c1, c2, eq = row
         assert utils.are_circuits_equivalent(c1, c2) == eq
+
+
+def test_eval_posterior_predictive():
+    # Load test dataset
+    freq, Z = io.load_test_dataset()
+    circuits = io.load_test_circuits(filtered=True)
+    circuit = circuits.iloc[0].circuitstring
+    p0 = circuits.iloc[0].Parameters
+
+    # Perform Bayesian inference on a single ECM
+    kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
+    mcmc_results = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+    mcmc, exit_code = mcmc_results[0]
+    assert exit_code in [-1, 0]
+    assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
+
+    # Evaluate the posterior predictive distribution with priors
+    priors = utils.initialize_priors(p0, variables=p0.keys())
+    Z_pred = utils.eval_posterior_predictive(mcmc, circuit, freq, priors)
+    assert Z_pred.shape == (1000, len(freq))
+
+    # Evaluate the posterior predictive distribution without priors
+    Z_pred = utils.eval_posterior_predictive(mcmc, circuit, freq)
+    assert Z_pred.shape == (1000, len(freq))

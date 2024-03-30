@@ -15,6 +15,7 @@ Collection of functions for visualizing EIS data and results.
 
 """
 
+import logging
 import re
 
 import arviz
@@ -22,15 +23,16 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
+import pandas as pd
 import rich
 import seaborn as sns
 from matplotlib.axes import Axes
+from pandas.io.formats.style import Styler
 from rich.console import Console
 from rich.table import Table
 
-import autoeis.utils as utils
+log = logging.getLogger(__name__)
 
-log = utils.get_logger(__name__)
 
 __all__ = [
     "draw_circuit",
@@ -38,6 +40,7 @@ __all__ = [
     "plot_linKK_residuals",
     "plot_nyquist",
     "print_summary_statistics",
+    "print_inference_results",
     "rich_print",
     "set_plot_style",
     "show_nticks",
@@ -73,12 +76,13 @@ def draw_circuit(circuit: str) -> mpl.figure.Figure:
 
     Parameters
     ----------
-    circuit: str
-        The string that stores the circuit configuration
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
 
     Returns
     -------
-    fig: lcapy.figure
+    fig : lcapy.figure
         Handle of the circuit figure
     """
     try:
@@ -113,7 +117,30 @@ def plot_nyquist(
     label: str = None,
     ax: plt.Axes = None,
 ) -> tuple[plt.Figure, plt.Axes]:
-    """Plots EIS data in Nyquist plot."""
+    """Plots EIS data in Nyquist plot.
+
+    Parameters
+    ----------
+    Z: np.ndarray[complex]
+        Impedance data.
+    fmt: str, optional
+        Format of the markers in the plot. Default is "o-".
+    size: int, optional
+        Size of the markers in the plot. Default is 4.
+    color: str, optional
+        Color of the markers in the plot. Default is None.
+    alpha: int, optional
+        Transparency of the markers in the plot. Default is 1.
+    label: str, optional
+        Label for the plot. Default is None.
+    ax: plt.Axes, optional
+        Axes to plot on. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, plt.Axes]
+        Figure and axes of the plot.
+    """
     if ax is None:
         fig, ax = plt.subplots()
 
@@ -134,14 +161,35 @@ def plot_nyquist(
 
 
 def plot_impedance_combo(
-    Z: np.ndarray[complex],
     freq: np.ndarray[float],
+    Z: np.ndarray[complex],
     size: int = 10,
     ax: list[plt.Axes] = None,
     scatter=True,
     label=None,
 ) -> tuple[plt.Figure, list[plt.Axes]]:
-    """Plots EIS data in Nyquist and Bode plots."""
+    """Plots EIS data in Nyquist and Bode plots.
+
+    Parameters
+    ----------
+    freq: np.ndarray[float]
+        Frequencies corresponding to the impedance data.
+    Z: np.ndarray[complex]
+        Impedance data.
+    size: int, optional
+        Size of the markers in the plots. Default is 10.
+    ax: list[plt.Axes], optional
+        List of axes (must be of length 2) to plot on. Default is None.
+    scatter: bool, optional
+        If True, plots the data as scatter plots. Default is True.
+    label: str, optional
+        Label for the plot. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, list[plt.Axes]]
+        Figure and axes of the plots.
+    """
     Re_Z = Z.real
     Im_Z = Z.imag
 
@@ -190,7 +238,24 @@ def plot_linKK_residuals(
     res_imag: np.ndarray[float],
     ax: plt.Axes = None,
 ) -> tuple[plt.Figure, plt.Axes]:
-    """Plots the residuals of the linear Kramers-Kronig validation."""
+    """Plots the residuals of the linear Kramers-Kronig validation.
+
+    Parameters
+    ----------
+    freq: np.ndarray[float]
+        Frequencies corresponding to the residuals.
+    res_real: np.ndarray[float]
+        Real part of the residuals.
+    res_imag: np.ndarray[float]
+        Imaginary part of the residuals.
+    ax: plt.Axes, optional
+        Axes to plot on. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, plt.Axes]
+        Figure and axes of the plot.
+    """
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.plot(freq, res_real, label="delta Re")
@@ -237,6 +302,62 @@ def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
     console.print(table)
 
 
+def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler | Table:
+    """Prints the inference results in a pretty format, excluding unncessary
+    columns, highlighting the best performing circuits.
+
+    Parameters
+    ----------
+    circuits : pd.DataFrame
+        Circuits dataframe with inference results
+
+    Returns
+    -------
+    pd.io.formats.style.Styler | Table
+        Styled table with the inference results
+    """
+    cols_to_hide = [
+        "Parameters", "MCMC", "success", "divergences", "Z_pred", "WAIC (sum)",
+        "R^2 (real)", "R^2 (imag)", "MAPE (real)", "MAPE (imag)"
+    ]  # fmt: off
+    df = circuits.style.hide(cols_to_hide, axis=1)
+    fmt = {
+        "WAIC (real)": "{:.2e}",
+        "WAIC (imag)": "{:.2e}",
+        "R^2 (ravg)": "{:.3f}",
+        "R^2 (iavg)": "{:.3f}",
+        "MAPE (ravg)": "{:.2e}",
+        "MAPE (iavg)": "{:.2e}",
+    }
+    df.format(fmt)
+
+    # Create a rich Table to pretty print the results
+    table = Table(title="Inference results", show_header=True, header_style="bold")
+
+    # Add columns to the table
+    columns = [
+        "Circuit", "WAIC (re)", "WAIC (im)", "R2 (re)", "R2 (im)", 
+        "MAPE (re)", "MAPE (im)", "Np"
+    ]  # fmt: off
+    for column in columns:
+        table.add_column(column, justify="right")
+
+    # Fill the table with data
+    for i, row in df.data.iterrows():
+        table.add_row(
+            row["circuitstring"],
+            f"{row['WAIC (real)']:.2e}",
+            f"{row['WAIC (imag)']:.2e}",
+            f"{row['R^2 (ravg)']:.3f}",
+            f"{row['R^2 (iavg)']:.3f}",
+            f"{row['MAPE (ravg)']:.2e}",
+            f"{row['MAPE (iavg)']:.2e}",
+            f"{row['n_params']}",
+        )
+
+    return table if return_table else df
+
+
 def override_mpl_colors(override_named_colors: bool = True):
     """Override matplotlib's default colors with Flexoki colors."""
     # Define the Flexoki-Light color scheme based on the provided table
@@ -254,11 +375,15 @@ def override_mpl_colors(override_named_colors: bool = True):
 
     # Override default named colors
     if override_named_colors:
-        mpl.colors._colors_full_map.update(flexoki_light_colors)
+        cdict = mpl.colors.get_named_colors_mapping()
+        cdict.update(flexoki_light_colors)
 
     # Define the Flexoki-Light style
     flexoki_light_style = {
-        "axes.prop_cycle": mpl.cycler(color=list(flexoki_light_colors.values())),
+        "axes.prop_cycle": mpl.cycler(
+            color=list(flexoki_light_colors.values()),
+            linestyle=["-", "--", "-.", ":"] * 2,
+        ),
         "axes.facecolor": "white",
         "axes.edgecolor": "black",
         "axes.grid": True,
@@ -284,7 +409,17 @@ def override_mpl_colors(override_named_colors: bool = True):
 def set_plot_style(
     use_arviz: bool = True, use_seaborn: bool = True, use_flexoki: bool = True
 ):
-    """Modifies the default arviz/matplotlib config for prettier plots."""
+    """Modifies the default arviz/matplotlib config for prettier plots.
+
+    Parameters
+    ----------
+    use_arviz: bool, optional
+        If True, use arviz's default plotting style. Default is True.
+    use_seaborn: bool, optional
+        If True, use seaborn's default plotting style. Default is True.
+    use_flexoki: bool, optional
+        If True, use Flexoki's default plotting style. Default is True.
+    """
     # Arviz
     if use_arviz:
         arviz.style.use("arviz-viridish")
@@ -300,13 +435,8 @@ def set_plot_style(
     legend_size = label_size - 1
 
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = [
-        "Helvetica",
-        "Arial",
-        "Verdana",
-        "Tahoma",
-        "DejaVu Sans",
-    ]
+    fonts = ["Helvetica", "Arial", "Verdana", "Tahoma", "DejaVu Sans"]
+    plt.rcParams["font.sans-serif"] = fonts
     plt.rcParams["mathtext.fontset"] = "dejavuserif"
     plt.rcParams["xtick.labelsize"] = tick_size
     plt.rcParams["ytick.labelsize"] = tick_size
@@ -329,7 +459,19 @@ def set_plot_style(
 
 
 def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
-    """In-place modifies Matplotlib axes to show only n ticks."""
+    """In-place modifies Matplotlib axes to show only ``n`` ticks.
+
+    Parameters
+    ----------
+    ax: plt.Axes
+        Axes to modify.
+    x: bool, optional
+        If True, applies the filter to the x-axis. Default is True.
+    y: bool, optional
+        If True, applies the filter to the y-axis. Default is False.
+    n: int, optional
+        Number of ticks to show. Default is 10.
+    """
     if x:
         xticks = ax.xaxis.get_major_ticks()
         if len(xticks) > n:

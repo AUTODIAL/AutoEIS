@@ -1,12 +1,13 @@
 # Basic usage
+
 To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is a minimal example of how to use the `perform_full_analysis` function.
 
 ```python
 import autoeis as ae
 
 # Load and visualize the test dataset
-Z, freq = ae.io.load_test_dataset()
-ae.visualization.plot_impedance_combo(Z, freq)
+freq, Z = ae.io.load_test_dataset()
+ae.visualization.plot_impedance_combo(freq, Z)
 
 # Perform automated EIS analysis
 circuits = ae.perform_full_analysis(freq, Z, iters=24, parallel=True)
