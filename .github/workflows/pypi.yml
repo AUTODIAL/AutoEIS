@@ -19,6 +19,7 @@ jobs:
         ref: main
         fetch-depth: 0
         fetch-tags: true
+        token: ${{ secrets.PAT }}        
 
     - name: Set up Python
       uses: actions/setup-python@v5
