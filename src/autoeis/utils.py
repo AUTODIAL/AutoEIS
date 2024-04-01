@@ -164,46 +164,46 @@ def suppress_output_legacy(func: Callable) -> Callable:
 @contextmanager
 def suppress_output():
     """Suppresses stdout and stderr for both Unix and Windows systems."""
+    # Save the original high-level streams
+    saved_stderr = sys.stderr
+    saved_stdout = sys.stdout
+
     try:
-        # Attempt to save the current file descriptors
+        # Try to save the current file descriptors
         original_stderr_fd = sys.stderr.fileno()
         original_stdout_fd = sys.stdout.fileno()
         saved_stderr_fd = os.dup(original_stderr_fd)
         saved_stdout_fd = os.dup(original_stdout_fd)
 
         with open(os.devnull, "wb") as devnull:
+            # Redirect the lower-level file descriptors
             os.dup2(devnull.fileno(), original_stderr_fd)
             os.dup2(devnull.fileno(), original_stdout_fd)
-            # Temporarily replace sys.stdout and sys.stderr
-            sys.stderr = open(os.devnull, "w")
-            sys.stdout = open(os.devnull, "w")
-            yield
 
-    except io.UnsupportedOperation:
-        # In environments like Jupyter, fall back to this method
-        old_stderr = sys.stderr
-        old_stdout = sys.stdout
+        # Redirect the higher-level Python streams
         sys.stderr = open(os.devnull, "w")
         sys.stdout = open(os.devnull, "w")
-        yield
 
+    except (io.UnsupportedOperation, AttributeError):
+        # If fileno is not supported, just replace the Python streams
+        sys.stderr = open(os.devnull, "w")
+        sys.stdout = open(os.devnull, "w")
+
+    try:
+        yield
     finally:
-        # Attempt to restore the original file descriptors and file objects
+        # Restore the high-level Python streams
+        sys.stderr.close()
+        sys.stdout.close()
+        sys.stderr = saved_stderr
+        sys.stdout = saved_stdout
+
+        # Restore the original file descriptors if they were saved
         if "saved_stderr_fd" in locals() and "saved_stdout_fd" in locals():
-            sys.stderr.close()
-            sys.stdout.close()
             os.dup2(saved_stderr_fd, original_stderr_fd)
             os.dup2(saved_stdout_fd, original_stdout_fd)
             os.close(saved_stderr_fd)
             os.close(saved_stdout_fd)
-            sys.stderr = old_stderr
-            sys.stdout = old_stdout
-        else:
-            # Close the redirected file objects if the exception was raised
-            sys.stderr.close()
-            sys.stdout.close()
-            sys.stderr = old_stderr
-            sys.stdout = old_stdout
 
 
 # <<< General utils
