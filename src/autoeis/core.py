@@ -123,7 +123,8 @@ def preprocess_impedance_data(
     Z: np.ndarray[complex],
     tol_linKK: float = 5e-2,
     high_freq_threshold: float = 1e3,
-) -> tuple[np.ndarray[complex], np.ndarray[float], float]:
+    return_aux: bool = False,
+) -> tuple[np.ndarray[float], np.ndarray[complex], Box]:
     """Preprocesses/cleans up impedance measurements.
 
     The preprocessing does the following steps:
@@ -141,16 +142,19 @@ def preprocess_impedance_data(
         Tolerance for acceptable measurements based on linKK residuals.
     high_freq_threshold : float
         Lower bound for what is considered a high frequency measurement.
+    return_aux : bool, optional
+        If True, returns the preprocessed data along with auxiliary
+        information. Default is False.
 
     Returns
     -------
-    Box
-        Dictionary containing the preprocessed data with the following keys:
+    tuple[np.ndarray[float], np.ndarray[complex], Box]
+        Tuple containing the preprocessed data with the following elements:
             - freq: Frequencies corresponding to the impedance data.
             - Z: Filtered impedance data.
-            - linKK: Box containing the Lin-KK validation results with keys:
-                - res_real: Real part of the residuals.
-                - res_imag: Imaginary part of the residuals.
+            - aux: Box containing the Lin-KK validation results with keys:
+                - res.real: Residual array for real part of the impedance data.
+                - res.imag: Residual array for imaginary part of the impedance data.
                 - rmse: Root mean square error of KK validated data vs. measurements.
     """
     log.info("Preprocessing/cleaning up impedance data.")
@@ -186,10 +190,9 @@ def preprocess_impedance_data(
     if (n0 - len(freq)) / n0 > 0.1:
         log.warning("More than 10% of the data was filtered out.")
 
-    results = Box(freq=freq, Z=Z)
-    results.linKK = Box(res_real=res_real, res_imag=res_imag, rmse=rmse)
+    aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
 
-    return results
+    return (freq, Z, aux) if return_aux else (freq, Z)
 
 
 def generate_equivalent_circuits(
@@ -853,8 +856,7 @@ def perform_full_analysis(
         Dataframe containing circuits, parameters, and MCMC results.
     """
     # Filter out bad impedance data
-    results = preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
-    freq, Z = results.freq, results.Z
+    freq, Z = preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
