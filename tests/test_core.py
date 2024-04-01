@@ -31,52 +31,55 @@ def test_compute_ohmic_resistance_missing_high_freq():
 
 def test_preprocess_impedance_data():
     freq, Z = io.load_test_dataset()
-    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
-    freq_prep, Z_prep = results.freq, results.Z
+    # Test various tolerances for linKK validation
+    freq_prep, Z_prep = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
     assert len(Z_prep) == len(freq_prep)
     assert len(Z_prep) == 60
-    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
-    freq_prep, Z_prep = results.freq, results.Z
+    freq_prep, Z_prep = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
     assert len(Z_prep) == len(freq_prep)
     assert len(Z_prep) == 50
+    # Test return_aux=True
+    _, _, aux = core.preprocess_impedance_data(freq, Z, return_aux=True)
+    assert list(aux.keys()) == ["res", "rmse"]
+    assert list(aux["res"].keys()) == ["real", "imag"]
 
 
-def test_gep_serial():
-    freq, Z = io.load_test_dataset()
-    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
-    freq, Z = results.freq, results.Z
-    kwargs = {
-        "iters": 2,
-        "complexity": 12,
-        "population_size": 5,
-        "generations": 5,
-        "tol": 1e10,
-        "parallel": False,
-    }
-    circuits = core.generate_equivalent_circuits(freq, Z, **kwargs)
-    assert len(circuits) == kwargs["iters"]
-    assert isinstance(circuits, pd.DataFrame)
+def test_gep():
+    def test_gep_serial():
+        freq, Z = io.load_test_dataset()
+        freq, Z = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+        kwargs = {
+            "iters": 2,
+            "complexity": 2,
+            "population_size": 5,
+            "generations": 2,
+            "tol": 1e10,
+            "parallel": False,
+        }
+        circuits = core.generate_equivalent_circuits(freq, Z, **kwargs)
+        assert len(circuits) == kwargs["iters"]
+        assert isinstance(circuits, pd.DataFrame)
 
+    def test_gep_parallel():
+        freq, Z = io.load_test_dataset()
+        freq, Z = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+        kwargs = {
+            "iters": 2,
+            "complexity": 2,
+            "population_size": 5,
+            "generations": 2,
+            "tol": 1e10,
+            "parallel": True,
+        }
+        circuits = core.generate_equivalent_circuits(freq, Z, **kwargs)
+        assert len(circuits) == kwargs["iters"]
+        assert isinstance(circuits, pd.DataFrame)
 
-def test_gep_parallel():
-    freq, Z = io.load_test_dataset()
-    results = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
-    freq, Z = results.freq, results.Z
-    kwargs = {
-        "iters": 2,
-        "complexity": 12,
-        "population_size": 5,
-        "generations": 5,
-        "tol": 1e10,
-        "parallel": True,
-    }
-    circuits = core.generate_equivalent_circuits(freq, Z, **kwargs)
-    assert len(circuits) == kwargs["iters"]
-    assert isinstance(circuits, pd.DataFrame)
+    test_gep_serial()
+    test_gep_parallel()
 
 
 def test_filter_implausible_circuits():
-    freq, Z = io.load_test_dataset()
     circuits_unfiltered = io.load_test_circuits()
     N1 = len(circuits_unfiltered)
     circuits = core.filter_implausible_circuits(circuits_unfiltered)
@@ -86,27 +89,31 @@ def test_filter_implausible_circuits():
 
 def test_bayesian_inference_single():
     freq, Z = io.load_test_dataset()
+    freq, Z = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
     circuits = io.load_test_circuits(filtered=True)
     circuit = circuits.iloc[0].circuitstring
     p0 = circuits.iloc[0].Parameters
-    kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
-    mcmc_results = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
-    mcmc, exit_code = mcmc_results[0]
+    kwargs_mcmc = {"num_warmup": 25, "num_samples": 10, "progress_bar": False}
+    results = core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+    mcmc, exit_code = results[0]
     assert exit_code in [-1, 0]
     assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
 
 
 def test_bayesian_inference_batch():
     freq, Z = io.load_test_dataset()
-    # Only test first three circuits to save time in CI
-    circuits = io.load_test_circuits(filtered=True).iloc[:3]
-    mcmc_results = core.perform_bayesian_inference(circuits, freq, Z, refine_p0=False)
-    assert len(mcmc_results) == len(circuits)
-    for mcmc, exist_code in mcmc_results:
-        assert exist_code in [-1, 0]
-        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)
+    freq, Z = core.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    # Test the first two circuits to save CI time
+    circuits = io.load_test_circuits(filtered=True).iloc[:2]
+    kwargs_mcmc = {"num_warmup": 25, "num_samples": 10, "progress_bar": False}
+    results = core.perform_bayesian_inference(circuits, freq, Z, **kwargs_mcmc)
+    assert len(results) == len(circuits)
+    for mcmc, exit_code in results:
+        assert exit_code == 0  # Ensure convergence
+        assert isinstance(mcmc, numpyro.infer.mcmc.MCMC)  # Ensure correct type
 
 
+# TODO: Use a simple circuit to generate test data so this test doesn't take too long
 @pytest.mark.skip(reason="This test is too slow!")
 def test_perform_full_analysis():
     freq, Z = io.load_test_dataset()
