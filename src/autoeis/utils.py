@@ -83,7 +83,7 @@ def is_notebook():
 
 @dataclass
 class Settings:
-    """Settings for the AutoEIS package."""
+    """Global settings, e.g., logging, parallelism, etc."""
 
     loglevel: int = logging.WARNING
     ncores: int = psutil.cpu_count(logical=False)
