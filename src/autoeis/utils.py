@@ -162,24 +162,33 @@ def suppress_output_legacy(func: Callable) -> Callable:
 
 @contextmanager
 def suppress_output():
-    """Suppresses the output of a block of code using file descriptors."""
-    # NOTE: This approach is more system-level than suppress_output
-    # Save the current file descriptors
-    original_stderr_fd = os.dup(2)
-    original_stdout_fd = os.dup(1)
+    """Suppresses stdout and stderr for both Unix and Windows systems."""
+    # Save the current file descriptors and the corresponding file objects
+    original_stderr_fd = sys.stderr.fileno()
+    original_stdout_fd = sys.stdout.fileno()
+    saved_stderr_fd = os.dup(original_stderr_fd)
+    saved_stdout_fd = os.dup(original_stdout_fd)
+    saved_stderr = sys.stderr
+    saved_stdout = sys.stdout
 
     try:
-        # Use os.devnull to redirect the standard output and standard error
         with open(os.devnull, "wb") as devnull:
-            os.dup2(devnull.fileno(), 1)
-            os.dup2(devnull.fileno(), 2)
+            os.dup2(devnull.fileno(), original_stderr_fd)
+            os.dup2(devnull.fileno(), original_stdout_fd)
+            # Temporarily replace sys.stdout and sys.stderr
+            sys.stderr = open(os.devnull, "w")
+            sys.stdout = open(os.devnull, "w")
             yield
     finally:
-        # Restore the original file descriptors
-        os.dup2(original_stdout_fd, 1)
-        os.dup2(original_stderr_fd, 2)
-        os.close(original_stdout_fd)
-        os.close(original_stderr_fd)
+        # Restore the original file descriptors and file objects
+        sys.stderr.close()
+        sys.stdout.close()
+        os.dup2(saved_stderr_fd, original_stderr_fd)
+        os.dup2(saved_stdout_fd, original_stdout_fd)
+        os.close(saved_stderr_fd)
+        os.close(saved_stdout_fd)
+        sys.stderr = saved_stderr
+        sys.stdout = saved_stdout
 
 
 # <<< General utils
