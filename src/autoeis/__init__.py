@@ -3,15 +3,10 @@ import logging
 from rich.console import Console
 from rich.logging import RichHandler
 
-from . import core, io, metrics, parser, utils, visualization  # noqa: F401, E402
-from .core import *  # noqa: E402
-from .version import __equivalent_circuits_jl_version__, __version__  # noqa: F401, E402
-from .visualization import rich_print  # noqa: F401, E402
-
-settings = utils.Settings()
+from .utils import Settings as _Settings
 
 
-def _setup_logger_rich():
+def _setup_logger():
     """Sets up logging using ``rich``."""
     log = logging.getLogger("autoeis")
 
@@ -22,10 +17,16 @@ def _setup_logger_rich():
     log.setLevel(logging.WARNING)
     console = Console(force_jupyter=False)
     handler = RichHandler(
-        rich_tracebacks=True, console=console, show_path=not settings.notebook
+        rich_tracebacks=True, console=console, show_path=not config.notebook
     )
     handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
     log.addHandler(handler)
 
 
-_setup_logger_rich()
+config = _Settings()
+_setup_logger()
+
+from . import core, io, metrics, parser, utils, visualization  # noqa: F401, E402
+from .core import *  # noqa: E402
+from .version import __equivalent_circuits_jl_version__, __version__  # noqa: F401, E402
+from .visualization import rich_print  # noqa: F401, E402
