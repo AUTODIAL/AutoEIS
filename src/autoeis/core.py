@@ -36,7 +36,6 @@ from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
-import autoeis.visualization as viz
 from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression_complex
 
