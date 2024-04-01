@@ -274,11 +274,54 @@ def _generate_ecm_serial(
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
         try:
-            circuit = ec.circuit_evolution(Z, freq, **ec_kwargs)
+            circuit = ec.circuit_evolution(Z, freq, **ec_kwargs, quiet=True)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
         circuits.append(circuit)
+
+    circuits = [str(c) for c in circuits if c is not None]
+    return circuits
+
+
+def _generate_ecm_parallel_julia(
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    iters: int,
+    ec_kwargs: dict,
+    seed: int,
+):
+    """Generates candidate circuits that fit the impedance data, in parallel
+    via Julia multiprocessing.
+    """
+    # Set random seed for reproducibility (Python and Julia)
+    # FIXME: This doesn't work when multiprocessing, use @everywhere instead
+    jl.seval(f"import Random; Random.seed!({seed})")
+
+    # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
+    nprocs = psutil.cpu_count(logical=False)
+    # Double the number of workers to buffer for those with slow convergence
+    # (don't do this for small iters, otherwise progress bar becomes pointless)
+    nprocs = 2 * nprocs if (iters // nprocs) > 10 else nprocs
+    # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
+    iters_chunked = [nprocs] * (iters // nprocs)
+    if iters % nprocs:
+        iters_chunked.append(iters % nprocs)
+
+    # Perform parallelized GEP in chunks
+    circuits = []
+
+    with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
+        for iters_ in iters_chunked:
+            try:
+                circuits_ = ec.circuit_evolution_batch(
+                    Z, freq, **ec_kwargs, iters=iters_, quiet=True
+                )
+            except Exception as e:
+                log.error(f"Error generating circuits: {e}")
+                circuits_ = []
+            circuits += circuits_
+            pbar.update(iters_)
 
     circuits = [str(c) for c in circuits if c is not None]
     return circuits
@@ -331,45 +374,6 @@ def _generate_ecm_parallel_mpire(
 
     if runtime_error:
         raise RuntimeError("Julia must not be manually initialized, restart the kernel.")
-
-    circuits = [str(c) for c in circuits if c is not None]
-    return circuits
-
-
-def _generate_ecm_parallel_julia(
-    freq: np.ndarray[float], Z: np.ndarray[complex], iters: int, ec_kwargs: dict, seed: int
-):
-    """Generates candidate circuits that fit the impedance data, in parallel
-    via Julia multiprocessing.
-    """
-    # Set random seed for reproducibility (Python and Julia)
-    # FIXME: This doesn't work when multiprocessing, use @everywhere instead
-    jl.seval(f"import Random; Random.seed!({seed})")
-
-    # HACK: To get a progress bar, chunk the iterations -> call Julia repeatedly
-    nprocs = psutil.cpu_count(logical=False)
-    # Double the number of workers to buffer for those with slow convergence
-    # (don't do this for small iters, otherwise progress bar becomes pointless)
-    nprocs = 2 * nprocs if (iters // nprocs) > 10 else nprocs
-    # NOTE: e.g., iters = 11, nprocs = 4 -> iters_chunked = [4, 4, 3]
-    iters_chunked = [nprocs] * (iters // nprocs)
-    if iters % nprocs:
-        iters_chunked.append(iters % nprocs)
-
-    # Perform parallelized GEP in chunks
-    circuits = []
-
-    with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
-        for iters_ in iters_chunked:
-            try:
-                circuits_ = ec.circuit_evolution_batch(
-                    Z, freq, **ec_kwargs, iters=iters_, quiet=True
-                )
-            except Exception as e:
-                log.error(f"Error generating circuits: {e}")
-                circuits_ = []
-            circuits += circuits_
-            pbar.update(iters_)
 
     circuits = [str(c) for c in circuits if c is not None]
     return circuits
