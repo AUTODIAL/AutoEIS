@@ -10,13 +10,17 @@ from .version import __equivalent_circuits_jl_version__
 log = logging.getLogger(__name__)
 
 
-def install_julia():
+def install_julia(quiet=True):
     """Installs Julia using juliapkg."""
     # Importing juliacall automatically installs Julia using juliapkg
-    import juliacall
+    if quiet:
+        with suppress_output():
+            import juliacall
+    else:
+        import juliacall
 
 
-def install_backend(ec_path=None):
+def install_backend(ec_path=None, quiet=True):
     """Installs Julia dependencies for AutoEIS."""
     is_julia_installed(error=True)
 
@@ -32,13 +36,21 @@ def install_backend(ec_path=None):
             kwargs["url"] = "https://github.com/ma-sadeghi/EquivalentCircuits.jl"
     pkg_spec = juliapkg.PkgSpec(**kwargs)
     juliapkg.add(pkg_spec)
-    juliapkg.resolve()
+    if quiet:
+        with suppress_output():
+            juliapkg.resolve()
+    else:
+        juliapkg.resolve()
 
 
-def init_julia():
+def init_julia(quiet=False):
     """Initializes Julia and returns the Main module."""
-    is_julia_installed(error=True, install=False)
-    from juliacall import Main
+    is_julia_installed(error=True)
+    if quiet:
+        with suppress_output():
+            from juliacall import Main
+    else:
+        from juliacall import Main
 
     return Main
 
@@ -59,11 +71,11 @@ def import_package(package_name, Main, error=False):
 def import_backend(Main=None):
     """Imports EquivalentCircuits package from Julia."""
     Main = init_julia() if Main is None else Main
-    is_backend_installed(error=True, install=False)
+    is_backend_installed(Main=Main, error=True)
     return import_package("EquivalentCircuits", Main)
 
 
-def is_julia_installed(error=False, install=False):
+def is_julia_installed(error=False):
     """Asserts that Julia is installed."""
     # Look for system-wide Julia executable
     try:
@@ -74,26 +86,16 @@ def is_julia_installed(error=False, install=False):
     # Look for local Julia executable (e.g., installed by juliapkg)
     if can_skip_resolve():
         return True
-    if install:
-        log.warning("Julia not found, installing Julia...")
-        with suppress_output():
-            install_julia()
-        return True
     msg = "Julia not found. Visit https://github.com/JuliaLang/juliaup and install Julia."
     if error:
         raise ImportError(msg)
     return False
 
 
-def is_backend_installed(Main=None, error=False, install=False):
+def is_backend_installed(Main=None, error=False):
     """Asserts that EquivalentCircuits.jl is installed."""
     Main = init_julia() if Main is None else Main
     if import_package("EquivalentCircuits", Main, error=False) is not None:
-        return True
-    if install:
-        log.warning("EquivalentCircuits.jl not found, installing...")
-        with suppress_output():
-            install_backend()
         return True
     msg = "EquivalentCircuits.jl not found, run 'python -m autoeis install'"
     if error:
@@ -101,7 +103,12 @@ def is_backend_installed(Main=None, error=False, install=False):
     return False
 
 
-def ensure_julia_deps_ready():
+def ensure_julia_deps_ready(quiet=True):
     """Ensures Julia and EquivalentCircuits.jl are installed."""
-    is_julia_installed(error=True, install=True)
-    is_backend_installed(error=True, install=True)
+    if not is_julia_installed(error=False):
+        log.warning("Julia not found, installing Julia...")
+        install_julia(quiet=quiet)
+    Main = init_julia(quiet=quiet)
+    if not is_backend_installed(Main=Main, error=False):
+        log.warning("Julia dependencies not found, installing EquivalentCircuits.jl...")
+        install_backend(quiet=quiet)
