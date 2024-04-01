@@ -20,7 +20,7 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             pip install -e .[test]
-            # Test that Julia + deps are automatically installed on first import
+            # Install Julia dependencies at first import
             python -c "import autoeis"
       - name: "Run tests"
         run: |
