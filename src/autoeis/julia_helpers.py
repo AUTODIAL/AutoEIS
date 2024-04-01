@@ -60,6 +60,8 @@ def init_julia(quiet=False):
         If Julia is not installed.
     """
     is_julia_installed(error=True)
+    if not can_skip_resolve():
+        log.warning("Julia is installed, but needs to be resolved...")
     if quiet:
         with suppress_output():
             from juliacall import Main
