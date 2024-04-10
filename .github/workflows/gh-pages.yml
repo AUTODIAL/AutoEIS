@@ -18,8 +18,11 @@ jobs:
         with:
           python-version: '3.10'
           cache: pip
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
       - name: "Install AutoEIS"
         run: |
+            brew install pandoc  # Required by nbsphinx
             python -m pip install --upgrade pip
             pip install -e .[doc]
             # Install Julia dependencies at first import
