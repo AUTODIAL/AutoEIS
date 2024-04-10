@@ -23,9 +23,11 @@ Contents
 ########
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
 
    installation.md
    basic_usage.md
    circuit.md
+   examples
    modules.rst
