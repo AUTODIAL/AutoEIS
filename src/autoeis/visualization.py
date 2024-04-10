@@ -257,7 +257,7 @@ def plot_linKK_residuals(
         Figure and axes of the plot.
     """
     if ax is None:
-        fig, ax = plt.subplots(figsize=(5, 3.5))
+        fig, ax = plt.subplots(figsize=(5.5, 3.5))
     ax.plot(freq, res_real, label="delta Re")
     ax.plot(freq, res_imag, label="delta Im")
     ax.set_xlabel("freq (Hz)")

@@ -1,6 +1,11 @@
+import shutil
 from datetime import date
 
 from autoeis.version import __version__
+
+# Copy notebooks to the root of the documentation
+shutil.rmtree("examples", ignore_errors=True)
+shutil.copytree("../examples", "examples", dirs_exist_ok=True)
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -21,8 +26,10 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
-    "myst_parser",
+    "myst_parser",  # already activated by myst_nb
+    # "myst_nb",  # overrides nbsphinx
     "sphinx_copybutton",
+    "nbsphinx",
     # 'autodoc2',
     # 'numpydoc',
 ]
@@ -50,6 +57,19 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 autodoc2_packages = [
     "../autoeis",
 ]
+
+# myst_nb config
+# nb_execution_timeout = 600
+# nb_execution_mode = "cache"
+
+# nbsphinx config
+nbsphinx_execute_arguments = [
+    "--InlineBackend.figure_formats={'svg', 'pdf'}",
+    "--InlineBackend.rc=figure.dpi=96",
+]
+nbsphinx_execute = "always"
+nbsphinx_prompt_width = "0"
+nbsphinx_allow_errors = False
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

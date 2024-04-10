@@ -165,6 +165,7 @@ cython_debug/
 examples/**/*.png
 examples/**/*.csv
 examples/**/*.txt
+doc/examples/**
 results/
 *.pkl
 
