@@ -57,13 +57,13 @@ test = ["pytest", "nbmake"]
 doc = [
     "furo",
     "linkify-it-py",
+    "myst-nb>=1.0.0",
     "myst-parser",
     "sphinx",
     "sphinx-copybutton",
     "sphinx-autodoc2",
-    "nbsphinx>=0.9.3",
     "sphinx-autobuild>=2024.2.4",
-    "myst-nb>=1.0.0",
+    "nbsphinx>=0.9.3",
 ]
 [project.urls]
 "Homepage" = "https://github.com/AUTODIAL/AutoEIS"
@@ -78,17 +78,18 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = [
-    "pytest>=8.1.1",
     "hatch>=1.9.4",
+    "pytest>=8.1.1",
+    "nbmake>=1.5.3",
     "furo>=2024.1.29",
     "linkify-it-py>=2.0.3",
+    "myst-nb>=1.0.0",
     "myst-parser>=2.0.0",
     "sphinx>=7.2.6",
     "sphinx-copybutton>=0.5.2",
     "sphinx-autodoc2>=0.5.0",
-    "nbmake>=1.5.3",
+    "sphinx-autobuild>=2024.2.4",
     "jupyterlab>=4.1.5",
-    "myst-nb>=1.0.0",
 ]
 
 [tool.hatch.version]
