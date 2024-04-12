@@ -161,12 +161,12 @@ def plot_nyquist(
 
 
 def plot_impedance_combo(
-    freq: np.ndarray[float],
-    Z: np.ndarray[complex],
+    freq: np.ndarray,
+    Z: np.ndarray,
     size: int = 10,
     ax: list[plt.Axes] = None,
-    scatter=True,
-    label=None,
+    scatter: bool = True,
+    label: str = None
 ) -> tuple[plt.Figure, list[plt.Axes]]:
     """Plots EIS data in Nyquist and Bode plots.
 
@@ -190,23 +190,19 @@ def plot_impedance_combo(
     tuple[plt.Figure, list[plt.Axes]]
         Figure and axes of the plots.
     """
-    Re_Z = Z.real
-    Im_Z = Z.imag
-
     if ax is None:
-        fig, ax = plt.subplots(ncols=2)
-    assert not isinstance(ax, Axes), "Incompatible 'ax'. Use plt.subplots(ncols=2)"
-    fig = ax[0].figure
-    fig.set_size_inches(8, 3)
+        fig, ax = plt.subplots(ncols=2, figsize=(8, 3))
+    else:
+        assert len(ax) == 2 and all(isinstance(a, Axes) for a in ax), "Incompatible 'ax'. Use plt.subplots(ncols=2)"
+        fig = ax[0].figure
 
     # Nyquist plot
     plot = getattr(ax[0], "scatter" if scatter else "plot")
     kwargs = {"s": size} if scatter else {}
-    plot(Re_Z, -Im_Z, label=label, **kwargs)
+    plot(Z.real, -Z.imag, label=label, **kwargs)
     ax[0].set_xlabel(r"$Re(Z) / \Omega$")
     ax[0].set_ylabel(r"$-Im(Z) / \Omega$")
     ax[0].axis("equal")
-
     if label is not None:
         ax[0].legend()
 
@@ -214,7 +210,7 @@ def plot_impedance_combo(
     if not isinstance(ax[1], list):
         ax[1] = [ax[1], ax[1].twinx()]  # Create a twin axis if not already present
     plot_magnitude = getattr(ax[1][0], "scatter" if scatter else "plot")
-    magnitude_Z = np.sqrt(Re_Z**2 + Im_Z**2)  # Calculate magnitude of Z
+    magnitude_Z = np.abs(Z)  # Calculate magnitude of Z using np.abs
     plot_magnitude(freq, magnitude_Z, color="blue", label=r"$|Z|$", **kwargs)
     ax[1][0].set_xscale("log")
     ax[1][0].set_xlabel("Frequency (Hz)")
@@ -223,15 +219,15 @@ def plot_impedance_combo(
 
     # Bode plot (phase) Phase(Z)
     plot_phase = getattr(ax[1][1], "scatter" if scatter else "plot")
-    phase_Z = np.degrees(np.arctan2(Im_Z, Re_Z))  # Calculate phase of Z in degrees
+    phase_Z = np.degrees(np.angle(Z))  # Calculate phase of Z in degrees using np.angle
     plot_phase(freq, phase_Z, color="red", label=r"$\text{Phase}(Z)$", **kwargs)
     ax[1][1].set_ylabel(r"$\text{Phase}(Z) \, (\degree)$")
     ax[1][1].yaxis.label.set_color("red")
-    # No grid lines for the second y-axis as the primary y-axis already has them
     ax[1][1].grid(False)
     fig.tight_layout()
 
     return fig, ax
+
 
 
 def plot_linKK_residuals(
