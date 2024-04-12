@@ -210,22 +210,24 @@ def plot_impedance_combo(
     if label is not None:
         ax[0].legend()
 
-    # Bode plot (magnitude) <- Re(Z)
+    # Bode plot (magnitude) |Z|
     if not isinstance(ax[1], list):
-        ax[1] = [ax[1], ax[1].twinx()]
-    plot = getattr(ax[1][0], "scatter" if scatter else "plot")
-    plot(freq, Re_Z, color="blue", label=r"$Re(Z)$", **kwargs)
+        ax[1] = [ax[1], ax[1].twinx()]  # Create a twin axis if not already present
+    plot_magnitude = getattr(ax[1][0], "scatter" if scatter else "plot")
+    magnitude_Z = np.sqrt(Re_Z**2 + Im_Z**2)  # Calculate magnitude of Z
+    plot_magnitude(freq, magnitude_Z, color="blue", label=r"$|Z|$", **kwargs)
     ax[1][0].set_xscale("log")
-    ax[1][0].set_xlabel("freq (Hz)")
-    ax[1][0].set_ylabel(r"$Re(Z) / \Omega$")
+    ax[1][0].set_xlabel("Frequency (Hz)")
+    ax[1][0].set_ylabel(r"$|Z| / \Omega$")
     ax[1][0].yaxis.label.set_color("blue")
 
-    # Bode plot (phase) <- Im(Z)
-    plot = getattr(ax[1][1], "scatter" if scatter else "plot")
-    plot(freq, -Im_Z, color="red", label=r"$-Im(Z)$", **kwargs)
-    ax[1][1].set_ylabel(r"$-Im(Z) / \Omega$")
+    # Bode plot (phase) Phase(Z)
+    plot_phase = getattr(ax[1][1], "scatter" if scatter else "plot")
+    phase_Z = np.degrees(np.arctan2(Im_Z, Re_Z))  # Calculate phase of Z in degrees
+    plot_phase(freq, phase_Z, color="red", label=r"$\text{Phase}(Z)$", **kwargs)
+    ax[1][1].set_ylabel(r"$\text{Phase}(Z) \, (\degree)$")
     ax[1][1].yaxis.label.set_color("red")
-    # Don't show grid lines for the second y-axis (ax[1][0] already has them)
+    # No grid lines for the second y-axis as the primary y-axis already has them
     ax[1][1].grid(False)
     fig.tight_layout()
 
