@@ -45,5 +45,13 @@ div.input_area {
 }
 
 pre {
-    padding: 10px !important;
+    margin: 10px !important;
+}
+
+.widget-dropdown > select {
+    border-radius: 5px !important;
+}
+
+div.input_area {
+    margin-bottom: 10px !important;
 }
