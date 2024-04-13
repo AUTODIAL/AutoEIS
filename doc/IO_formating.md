@@ -38,4 +38,4 @@ for eis_data in parse_data("path/to/your/data.dta"):
 
     # Extract frequency and complex impedance data
     freq = loaded_eis["f (Hz)"].values
-    impedance = loaded_eis["Re(Z) (ohm)"].values + loaded_eis["Im(Z) (ohm)"].values * 1j
+    Z = loaded_eis["Re(Z) (ohm)"].values + loaded_eis["Im(Z) (ohm)"].values * 1j
