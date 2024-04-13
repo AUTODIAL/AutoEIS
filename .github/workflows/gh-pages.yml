@@ -26,7 +26,9 @@ jobs:
             python -m pip install --upgrade pip
             pip install -e .[doc]
             # Install Julia dependencies at first import
-            python -c "import autoeis"            
+            python -c "import autoeis"
+            # Install TexLive for lcapy to work
+            brew install texlive
 
       # Build the documentation
       - name: Build the documentation
