@@ -46,6 +46,7 @@ div.input_area {
 
 pre {
     margin: 10px !important;
+    font-size: var(--code-font-size);
 }
 
 .widget-dropdown > select {
