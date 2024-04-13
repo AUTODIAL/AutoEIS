@@ -11,4 +11,4 @@ AutoEIS is still under development, and we will add more examples as we make pro
     :maxdepth: 1
 
     examples/circuit_basics
-    examples/test
+    examples/basic_workflow
