@@ -170,12 +170,7 @@ results/
 *.pkl
 
 # Local development
-benchmark_jaxfit.py
-dump.py
-sandbox.py
-sandbox.jl
-scratchpad.py
-test.py
+tmp/*
 
 # macOS
 .DS_Store

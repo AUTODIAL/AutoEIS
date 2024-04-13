@@ -31,6 +31,7 @@ jobs:
       # Build the documentation
       - name: Build the documentation
         run: |
+          jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb
           cd doc
           make html
 
