@@ -29,9 +29,30 @@ a.reference.internal {
     white-space: nowrap;    
 }
 
+img {
+    height: auto !important;
+}
+
 img.fig-ecm {
     width: 600px;
     padding: 25px;
     background-color: white;
     border-radius: 10px;
+}
+
+div.input_area {
+    border-radius: 5px !important;
+}
+
+pre {
+    margin: 10px !important;
+    font-size: var(--code-font-size);
+}
+
+.widget-dropdown > select {
+    border-radius: 5px !important;
+}
+
+div.input_area {
+    margin-bottom: 10px !important;
 }
