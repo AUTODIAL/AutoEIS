@@ -7,6 +7,8 @@ Collection of functions for visualizing EIS data and results.
    :toctree: generated/
 
     draw_circuit
+    plot_bode
+    plot_nyquist
     plot_impedance_combo
     plot_linKK_residuals
     plot_nyquist
@@ -36,6 +38,8 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "draw_circuit",
+    "plot_bode",
+    "plot_nyquist",
     "plot_impedance_combo",
     "plot_linKK_residuals",
     "plot_nyquist",
@@ -111,7 +115,7 @@ def draw_circuit(circuit: str) -> mpl.figure.Figure:
 def plot_nyquist(
     Z: np.ndarray[complex],
     fmt: str = "o-",
-    size: int = 4,
+    markersize: int = 6,
     color: str = None,
     alpha: int = 1,
     label: str = None,
@@ -125,8 +129,8 @@ def plot_nyquist(
         Impedance data.
     fmt: str, optional
         Format of the markers in the plot. Default is "o-".
-    size: int, optional
-        Size of the markers in the plot. Default is 4.
+    markersize: int, optional
+        Size of the markers in the plot. Default is 6.
     color: str, optional
         Color of the markers in the plot. Default is None.
     alpha: int, optional
@@ -149,7 +153,7 @@ def plot_nyquist(
         color = fmt[0]
         fmt = fmt[1:]
 
-    ax.plot(Z.real, -Z.imag, fmt, c=color, markersize=size, label=label, alpha=alpha)
+    ax.plot(Z.real, -Z.imag, fmt, c=color, markersize=markersize, label=label, alpha=alpha)
     ax.set_xlabel("Re(Z)")
     ax.set_ylabel("-Im(Z)")
     ax.axis("equal")
@@ -160,13 +164,73 @@ def plot_nyquist(
     return ax.figure, ax
 
 
-def plot_impedance_combo(
+def plot_bode(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    size: int = 10,
+    fmt=".-",
+    markersize=6,
+    deg: bool = True,
+    ax: plt.Axes = None,
+) -> tuple[plt.Figure, plt.Axes]:
+    """Plots the Bode plot for the impedance data.
+
+    Parameters
+    ----------
+    freq: np.ndarray[float]
+        Frequencies corresponding to the impedance data.
+    Z: np.ndarray[complex]
+        Impedance data.
+    fmt: str, optional
+        Format of the markers in the plot. Default is ".-".
+    markersize: int, optional
+        Size of the markers in the plot. Default is 6.
+    deg: bool, optional
+        If True, plots the Bode plot in degrees. Default is True.
+    ax: plt.Axes, optional
+        Axes to plot on. Default is None.
+
+    Returns
+    -------
+    tuple[plt.Figure, plt.Axes]
+        Figure and axes of the plot.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5.5, 3.5))
+
+    ax.plot(freq, np.abs(Z), fmt, label=r"$|Z|$", markersize=markersize)
+    ax.set_xscale("log")
+    ax2 = ax.twinx()
+    ax2.plot(
+        freq, np.angle(Z, deg=deg), fmt, markersize=markersize, color="b", label=r"$\phi$"
+    )
+    ax.set_xlabel("frequency (Hz)")
+    ax.set_ylabel(r"$|Z|$")
+    ax2.set_ylabel(rf"$\phi$ ({('deg' if deg else 'rad')})")
+
+    # Color y-axes for better visibility
+    ax2.yaxis.label.set_color("b")
+    for label in ax2.get_yticklabels():
+        label.set_color("b")
+    ax.yaxis.label.set_color("r")
+    for label in ax.get_yticklabels():
+        label.set_color("r")
+    # Avoid overlapping tick labels from ax2 on top of ax
+    ax2.grid(False)
+    # Combine legends
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, loc="upper center")
+
+    return ax.figure, [ax, ax2]
+
+
+def plot_impedance_combo(
+    freq: np.ndarray,
+    Z: np.ndarray,
+    fmt: str = ".-",
+    markersize: int = 6,
     ax: list[plt.Axes] = None,
-    scatter=True,
-    label=None,
+    label: str = None,
 ) -> tuple[plt.Figure, list[plt.Axes]]:
     """Plots EIS data in Nyquist and Bode plots.
 
@@ -176,12 +240,12 @@ def plot_impedance_combo(
         Frequencies corresponding to the impedance data.
     Z: np.ndarray[complex]
         Impedance data.
-    size: int, optional
+    fmt: str, optional
+        Format of the markers in the plot. Default is ".-".
+    markersize: int, optional
         Size of the markers in the plots. Default is 10.
     ax: list[plt.Axes], optional
         List of axes (must be of length 2) to plot on. Default is None.
-    scatter: bool, optional
-        If True, plots the data as scatter plots. Default is True.
     label: str, optional
         Label for the plot. Default is None.
 
@@ -190,43 +254,17 @@ def plot_impedance_combo(
     tuple[plt.Figure, list[plt.Axes]]
         Figure and axes of the plots.
     """
-    Re_Z = Z.real
-    Im_Z = Z.imag
-
     if ax is None:
-        fig, ax = plt.subplots(ncols=2)
-    assert not isinstance(ax, Axes), "Incompatible 'ax'. Use plt.subplots(ncols=2)"
-    fig = ax[0].figure
-    fig.set_size_inches(8, 3)
+        fig, ax = plt.subplots(ncols=2, figsize=(9, 3.5))
+    else:
+        msg = "Incompatible 'ax'. Use plt.subplots(ncols=2)"
+        assert len(ax) == 2 and all(isinstance(a, Axes) for a in ax), msg
+        fig = ax[0].figure
 
-    # Nyquist plot
-    plot = getattr(ax[0], "scatter" if scatter else "plot")
-    kwargs = {"s": size} if scatter else {}
-    plot(Re_Z, -Im_Z, label=label, **kwargs)
-    ax[0].set_xlabel(r"$Re(Z) / \Omega$")
-    ax[0].set_ylabel(r"$-Im(Z) / \Omega$")
-    ax[0].axis("equal")
-
-    if label is not None:
-        ax[0].legend()
-
-    # Bode plot (magnitude) <- Re(Z)
-    if not isinstance(ax[1], list):
-        ax[1] = [ax[1], ax[1].twinx()]
-    plot = getattr(ax[1][0], "scatter" if scatter else "plot")
-    plot(freq, Re_Z, color="blue", label=r"$Re(Z)$", **kwargs)
-    ax[1][0].set_xscale("log")
-    ax[1][0].set_xlabel("freq (Hz)")
-    ax[1][0].set_ylabel(r"$Re(Z) / \Omega$")
-    ax[1][0].yaxis.label.set_color("blue")
-
-    # Bode plot (phase) <- Im(Z)
-    plot = getattr(ax[1][1], "scatter" if scatter else "plot")
-    plot(freq, -Im_Z, color="red", label=r"$-Im(Z)$", **kwargs)
-    ax[1][1].set_ylabel(r"$-Im(Z) / \Omega$")
-    ax[1][1].yaxis.label.set_color("red")
-    # Don't show grid lines for the second y-axis (ax[1][0] already has them)
-    ax[1][1].grid(False)
+    plot_nyquist(Z=Z, label=label, ax=ax[0], fmt=fmt, markersize=markersize)
+    plot_bode(freq, Z, ax=ax[1], fmt=fmt, markersize=markersize)
+    ax[0].set_title("Nyquist plot")
+    ax[1].set_title("Bode plot")
     fig.tight_layout()
 
     return fig, ax
@@ -260,7 +298,7 @@ def plot_linKK_residuals(
         fig, ax = plt.subplots(figsize=(5.5, 3.5))
     ax.plot(freq, res_real, label="delta Re")
     ax.plot(freq, res_imag, label="delta Im")
-    ax.set_xlabel("freq (Hz)")
+    ax.set_xlabel("frequency (Hz)")
     ax.set_ylabel("delta %")
     ax.set_xscale("log")
     ax.set_title("Lin-KK validation")
