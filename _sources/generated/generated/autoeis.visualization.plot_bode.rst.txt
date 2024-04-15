@@ -1,0 +1,6 @@
+plot\_bode
+==========
+
+.. currentmodule:: autoeis.visualization
+
+.. autofunction:: plot_bode

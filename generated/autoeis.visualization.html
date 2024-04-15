@@ -186,6 +186,8 @@
 </li>
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">visualization</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_bode.html">plot_bode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_impedance_combo.html">plot_impedance_combo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_linKK_residuals.html">plot_linKK_residuals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
@@ -265,13 +267,19 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.visualization.draw_circuit.html#autoeis.visualization.draw_circuit" title="autoeis.visualization.draw_circuit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">draw_circuit</span></code></a>(circuit)</p></td>
 <td><p>Draws the circuit model using lcapy.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_impedance_combo.html#autoeis.visualization.plot_impedance_combo" title="autoeis.visualization.plot_impedance_combo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_impedance_combo</span></code></a>(freq, Z[, size, ax, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_bode.html#autoeis.visualization.plot_bode" title="autoeis.visualization.plot_bode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_bode</span></code></a>(freq, Z[, fmt, markersize, deg, ax])</p></td>
+<td><p>Plots the Bode plot for the impedance data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_nyquist.html#autoeis.visualization.plot_nyquist" title="autoeis.visualization.plot_nyquist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_nyquist</span></code></a>(Z[, fmt, markersize, color, ...])</p></td>
+<td><p>Plots EIS data in Nyquist plot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_impedance_combo.html#autoeis.visualization.plot_impedance_combo" title="autoeis.visualization.plot_impedance_combo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_impedance_combo</span></code></a>(freq, Z[, fmt, ...])</p></td>
 <td><p>Plots EIS data in Nyquist and Bode plots.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_linKK_residuals.html#autoeis.visualization.plot_linKK_residuals" title="autoeis.visualization.plot_linKK_residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_linKK_residuals</span></code></a>(freq, res_real, res_imag)</p></td>
 <td><p>Plots the residuals of the linear Kramers-Kronig validation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_nyquist.html#autoeis.visualization.plot_nyquist" title="autoeis.visualization.plot_nyquist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_nyquist</span></code></a>(Z[, fmt, size, color, alpha, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.visualization.plot_nyquist.html#autoeis.visualization.plot_nyquist" title="autoeis.visualization.plot_nyquist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_nyquist</span></code></a>(Z[, fmt, markersize, color, ...])</p></td>
 <td><p>Plots EIS data in Nyquist plot.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.visualization.set_plot_style.html#autoeis.visualization.set_plot_style" title="autoeis.visualization.set_plot_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_plot_style</span></code></a>([use_arviz, use_seaborn, ...])</p></td>
