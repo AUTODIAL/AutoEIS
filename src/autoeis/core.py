@@ -627,7 +627,7 @@ def _perform_bayesian_inference(
     num_samples: int = 1000,
     num_chains: int = 1,
     seed: int | jax.Array = None,
-    progress_bar: bool = True,
+    progress_bar: bool = False,
 ) -> tuple[numpyro.infer.mcmc.MCMC, int]:
     """Performs Bayesian inference on the circuit based on impedance data.
 
@@ -651,7 +651,7 @@ def _perform_bayesian_inference(
     seed : int | jax.Array, optional
         Random seed for reproducibility (default is None).
     progress_bar : bool, optional
-        If True, a progress bar will be displayed (default is True).
+        If True, a progress bar will be displayed (default is False).
 
     Returns
     -------
