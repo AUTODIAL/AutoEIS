@@ -8,7 +8,8 @@ img.sidebar-logo {
     width: 80%;
 }
 
-p.admonition-title, .admonition > p {
+p.admonition-title,
+.admonition>p {
     font-size: 0.9rem !important;
 }
 
@@ -26,7 +27,7 @@ a.reference.internal {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;    
+    white-space: nowrap;
 }
 
 img {
@@ -49,10 +50,21 @@ pre {
     font-size: var(--code-font-size);
 }
 
-.widget-dropdown > select {
+.widget-dropdown>select {
     border-radius: 5px !important;
 }
 
 div.input_area {
     margin-bottom: 10px !important;
+}
+
+@media (max-width: 800px) {
+    img#banner {
+        display: none;
+    }
+}
+
+img#banner {
+    width: 100%;
+    padding: 25px 25px 0;
 }
