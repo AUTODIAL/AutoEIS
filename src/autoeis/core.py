@@ -721,8 +721,8 @@ def _perform_bayesian_inference(
     try:
         mcmc.run(subkey, **kwargs_inference)
         exit_code = 0
-    except RuntimeError:
-        log.error(f"Inference failed for circuit: {circuit}")
+    except RuntimeError as e:
+        log.error(f"Inference failed for circuit: {circuit}. Error: {e}")
         exit_code = -1
     return mcmc, exit_code
 
