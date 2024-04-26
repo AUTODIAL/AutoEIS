@@ -683,12 +683,6 @@ def _perform_bayesian_inference(
 
     # TODO: Remove this, circuit fitting must be done in the public API
     # Deal with initial values for the circuit parameters
-    if p0 is None:
-        p0 = utils.fit_circuit_parameters(circuit, freq, Z)
-    assert isinstance(p0, dict), "p0 must be a dictionary"
-
-    # TODO: Remove this, circuit fitting must be done in the public API
-    # Deal with initial values for the circuit parameters
     if priors is None:
         if p0 is None:
             p0 = utils.fit_circuit_parameters(circuit, freq, Z)
