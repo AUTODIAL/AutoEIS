@@ -32,6 +32,7 @@ from deprecated import deprecated
 from impedance.validation import linKK
 from jax import config
 from mpire import WorkerPool
+from numpyro.distributions import Distribution
 from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
@@ -525,6 +526,7 @@ def perform_bayesian_inference(
     | Mapping[str, float]
     | Iterable[Iterable[float]]
     | Iterable[Mapping[str, float]] = None,
+    priors: Mapping[str, Distribution] = None,
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
@@ -542,8 +544,13 @@ def perform_bayesian_inference(
         Frequency data corresponding to the impedance data.
     Z : np.ndarray[complex]
         Impedance data as a complex array.
-    p0 : Iterable[float] | Mapping[str, float] | Iterable[Iterable[float]] | Iterable[Mapping[str, float]], optional
+    p0 : Iterable[float] \
+            | Mapping[str, float] \
+            | Iterable[Iterable[float]] \
+            | Iterable[Mapping[str, float]], optional
         Initial guess for the circuit parameters (default is None).
+    priors : Mapping[str, Distribution], optional
+        Priors for the circuit parameters (default is None).
     num_warmup : int, optional
         Number of warmup samples for the MCMC (default is 2500).
     num_samples : int, optional
@@ -600,6 +607,7 @@ def perform_bayesian_inference(
     bi_kwargs = {
         "freq": freq,
         "Z": Z,
+        "priors": priors,
         "num_warmup": num_warmup,
         "num_samples": num_samples,
         "num_chains": num_chains,
@@ -623,6 +631,7 @@ def _perform_bayesian_inference(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     p0: Iterable[float] | Mapping[str, float] = None,
+    priors: Mapping[str, Distribution] = None,
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
@@ -642,6 +651,8 @@ def _perform_bayesian_inference(
         Complex impedance data.
     p0 : Iterable[float] | Mapping[str, float], optional
         Initial guess for the circuit parameters (default is None).
+    priors: Mapping[str, Distribution], optional
+        Priors for the circuit parameters (default is None).
     num_warmup : int, optional
         Number of warmup samples for the MCMC (default is 2500).
     num_samples : int, optional
@@ -676,10 +687,19 @@ def _perform_bayesian_inference(
         p0 = utils.fit_circuit_parameters(circuit, freq, Z)
     assert isinstance(p0, dict), "p0 must be a dictionary"
 
+    # TODO: Remove this, circuit fitting must be done in the public API
+    # Deal with initial values for the circuit parameters
+    if priors is None:
+        if p0 is None:
+            p0 = utils.fit_circuit_parameters(circuit, freq, Z)
+        assert isinstance(p0, dict), "p0 must be a dictionary"
+        # Create priors for the circuit parameters based on the initial guess
+        priors = utils.initialize_priors(p0, variables=p0.keys())
+    else:
+        assert isinstance(priors, dict), "'priors' must be a dictionary"
+
     circuit_fn = utils.generate_circuit_fn(circuit, jit=True)
 
-    # Compute prior predictive distribution using the initial guess
-    priors = utils.initialize_priors(p0, variables=p0.keys())
     nuts_kernel = NUTS(
         model=circuit_regression_complex,
         init_strategy=numpyro.infer.init_to_median,
@@ -712,6 +732,7 @@ def _perform_bayesian_inference_batch(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     p0: Iterable[Mapping[str, float]] = None,
+    priors: Iterable[Mapping[str, Distribution]] = None,
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
@@ -760,6 +781,7 @@ def _perform_bayesian_inference_batch(
         "freq": [freq] * N,
         "Z": [Z] * N,
         "p0": p0 if isinstance(p0, list) else [p0] * N,
+        "priors": priors if isinstance(priors, list) else [priors] * N,
         "num_warmup": [num_warmup] * N,
         "num_samples": [num_samples] * N,
         "num_chains": [num_chains] * N,
