@@ -16,7 +16,7 @@ Collection of utility functions used throughout the package.
     validate_circuits_dataframe
 
 """
-
+import copy
 import io
 import logging
 import os
@@ -693,7 +693,8 @@ def initialize_priors_from_posteriors(
                 priors[var] = dist.StudentT(df=df, loc=loc, scale=scale)
             else:
                 raise ValueError(f"Unknown distribution: {dist_type}")
-    return priors
+    # Make a deep copy of the priors to avoid side effects (pyro-ppl/numpyro/issues/1651)
+    return copy.deepcopy(priors)
 
 
 def eval_posterior_predictive(
