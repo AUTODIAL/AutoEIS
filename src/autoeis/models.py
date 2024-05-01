@@ -10,6 +10,7 @@ Collection of functions to be used as models for Bayesian inference.
 
 """
 
+import copy
 from collections import namedtuple
 from typing import Callable, Mapping
 
@@ -48,6 +49,8 @@ def circuit_regression_complex(
         posterior prediction, otherwise it will be used for Bayesian
         inference of circuit parameters.
     """
+    # Make a deep copy of the priors to avoid side effects (pyro-ppl/numpyro/issues/1651)
+    priors = copy.deepcopy(priors)
     Z = Impedance(real=None, imag=None) if Z is None else Z
     # Sample each element of X separately
     p = jnp.array([numpyro.sample(k, v) for k, v in priors.items()])
