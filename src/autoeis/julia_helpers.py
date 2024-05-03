@@ -32,18 +32,20 @@ def install_backend(ec_path: Path = None, quiet=True):
     """
     is_julia_installed(error=True)
 
-    kwargs = {"name": "EquivalentCircuits", "uuid": "da5bd070-f609-4e16-a30d-de86b3faa756"}
-    if ec_path is not None:
-        kwargs["path"] = str(ec_path)
-        kwargs["dev"] = True
-    else:
-        if __equivalent_circuits_jl_version__.startswith("v"):
-            kwargs["version"] = __equivalent_circuits_jl_version__
-        else:
-            kwargs["rev"] = __equivalent_circuits_jl_version__
-            kwargs["url"] = "https://github.com/ma-sadeghi/EquivalentCircuits.jl"
-    pkg_spec = juliapkg.PkgSpec(**kwargs)
-    juliapkg.add(pkg_spec)
+    # TODO: No longer needed since dependencies are specified in juliapkg.json
+    # kwargs = {"name": "EquivalentCircuits", "uuid": "da5bd070-f609-4e16-a30d-de86b3faa756"}
+    # if ec_path is not None:
+    #     kwargs["path"] = str(ec_path)
+    #     kwargs["dev"] = True
+    # else:
+    #     if __equivalent_circuits_jl_version__.startswith("v"):
+    #         kwargs["version"] = __equivalent_circuits_jl_version__
+    #     else:
+    #         kwargs["rev"] = __equivalent_circuits_jl_version__
+    #         kwargs["url"] = "https://github.com/ma-sadeghi/EquivalentCircuits.jl"
+    # pkg_spec = juliapkg.PkgSpec(**kwargs)
+    # juliapkg.add(pkg_spec)
+
     if quiet:
         with suppress_output():
             juliapkg.resolve()
