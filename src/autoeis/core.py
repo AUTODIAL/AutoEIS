@@ -580,11 +580,13 @@ def perform_bayesian_inference(
     elif isinstance(p0, list):
         assert len(p0) == len(circuits), "Invalid p0 length"
 
-    # Validate inputs' types and lengths
+    # Override initial guess in dataframe if p0 is provided
     if isinstance(circuits, pd.DataFrame):
         utils.validate_circuits_dataframe(circuits)
-        # NOTE: p0 from the dataframe overrides the input p0
-        p0 = circuits["Parameters"].tolist()
+        if p0[0] is not None:
+            log.warning("Ignoring parameters in 'circuits' dataframe in favor of 'p0'.")
+        else:
+            p0 = circuits["Parameters"].tolist()
         circuits = circuits["circuitstring"].tolist()
     for circuit, p0_ in zip(circuits, p0):
         assert isinstance(circuit, str), f"Circuit must be a string: {circuit}"
