@@ -591,10 +591,14 @@ def perform_bayesian_inference(
 
     # Refine the initial guess if requested or if p0 is still uninitialized
     if refine_p0 or p0[0] is None:
-        for i, (circuit, p0_) in enumerate(zip(circuits, p0)):
-            p0[i] = utils.fit_circuit_parameters(circuit, freq, Z, p0=p0_, iters=25)
-            # If circuit fitter didn't converge, use the initial guess
-            p0[i] = p0_ if p0[i] is None else p0[i]
+        args = circuits, freq, Z, p0, 25  # iters=25
+        p0 = utils.distribute_task(
+            utils.fit_circuit_parameters,
+            *args,
+            static=(1, 2, 4),  # static args = (freq, Z, iters)
+            progress_bar=progress_bar,
+            desc="Refining p0",
+        )
 
     # Validate inputs' types and lengths
     for circuit, p0_ in zip(circuits, p0):
