@@ -16,6 +16,7 @@ Collection of utility functions used throughout the package.
     validate_circuits_dataframe
 
 """
+
 import copy
 import io
 import logging
@@ -788,7 +789,7 @@ def distribute_task(
         args[i] = [arg] * iters if i in static else arg
         assert len(args[i]) == iters, "Make sure 'static' contains all the static args"
 
-    n_jobs = n_jobs or psutil.cpu_count(logical=False)
+    n_jobs = min(iters, n_jobs or psutil.cpu_count(logical=False))
     mpire_kwargs = {
         "progress_bar": progress_bar,
         "progress_bar_style": "notebook" if is_notebook() else "rich",
