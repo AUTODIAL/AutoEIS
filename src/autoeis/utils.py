@@ -22,6 +22,7 @@ import logging
 import os
 import re
 import sys
+import warnings
 from collections.abc import Callable, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -36,6 +37,7 @@ import psutil
 from impedance.models.circuits import CustomCircuit
 from impedance.models.circuits.fitting import set_default_bounds
 from jax import random
+from mpire import WorkerPool
 from numpy import pi  # NOQA: F401
 from numpyro.distributions import Distribution
 from numpyro.infer import MCMC, Predictive
@@ -753,6 +755,56 @@ def eval_posterior_predictive(
 
 
 # >>> Miscellaneous utils
+
+
+# TODO: Add support for kwargs
+def distribute_task(
+    func,
+    *args,
+    static: int | Iterable[int] = None,
+    iters: int = None,
+    n_jobs: int = None,
+    progress_bar: bool = True,
+    desc: str = "",
+):
+    """Distribute workload across multiple processes."""
+    static = [static] if isinstance(static, int) else static
+    # Infer the number of iterations from *args
+    if iters is None:
+        iters = [
+            len(arg)
+            for i, arg in enumerate(args)
+            if i not in static and hasattr(arg, "__len__")
+        ]
+        if np.unique(iters).size == 0:
+            raise RuntimeError("Couldn't infer `iters` from args, specify `iters`")
+        assert (
+            np.unique(iters).size == 1
+        ), "All iterable arguments must have the same length"
+        iters = iters[0]
+
+    args = list(args)
+    for i, arg in enumerate(args):
+        args[i] = [arg] * iters if i in static else arg
+        assert len(args[i]) == iters, "Make sure 'static' contains all the static args"
+
+    n_jobs = n_jobs or psutil.cpu_count(logical=False)
+    mpire_kwargs = {
+        "progress_bar": progress_bar,
+        "progress_bar_style": "notebook" if is_notebook() else "rich",
+        "progress_bar_options": {"desc": desc},
+        "iterable_len": iters,
+        "concatenate_numpy_output": False,
+    }
+
+    with warnings.catch_warnings():
+        # JAX doesn't work well with multiprocessing, but "spawn" should be fine
+        msg_to_ignore = ".*os\\.fork\\(\\).*"
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=msg_to_ignore)
+        with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
+            results = pool.map(func, zip(*args), **mpire_kwargs)
+
+    return results
 
 
 def validate_circuits_dataframe(circuits: pd.DataFrame):
