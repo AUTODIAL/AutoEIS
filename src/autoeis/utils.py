@@ -213,7 +213,7 @@ def suppress_output():
 
 
 def parse_initial_guess(
-    p0: np.ndarray | dict[str, float] | list[float],
+    p0: Mapping[str, float] | Iterable[float],
     circuit: str,
 ) -> np.ndarray:
     """Parses the initial guess for circuit parameters from various formats
@@ -221,7 +221,7 @@ def parse_initial_guess(
 
     Parameters
     ----------
-    p0: np.ndarray | dict[str, float] | list[float]
+    p0: Mapping[str, float] | Iterable[float]
         The initial guess for the circuit parameters.
     circuit: str
         The circuit string.
@@ -254,7 +254,7 @@ def fit_circuit_parameters_legacy(
     circuit: str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: np.ndarray[float] | dict[str, float] = None,
+    p0: Mapping[str, float] | Iterable[float] = None,
     iters: int = 1,
     maxfev: int = 1000,
 ) -> dict[str, float]:
@@ -269,7 +269,7 @@ def fit_circuit_parameters_legacy(
         Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Impedance data.
-    p0 : np.ndarray[float] | dict[str, float], optional
+    p0 : Mapping[str, float] | Iterable[float], optional
         Initial guess for the circuit parameters. Default is None.
     iters : int, optional
         Maximum number of iterations for the circuit fitter. Default is 1.
@@ -322,7 +322,7 @@ def fit_circuit_parameters(
     circuit: str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: np.ndarray[float] | dict[str, float] = None,
+    p0: Mapping[str, float] | Iterable[float] = None,
     iters: int = 1,
     maxfev: int = 1000,
     ftol: float = 1e-13,
@@ -338,7 +338,7 @@ def fit_circuit_parameters(
         Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Impedance data.
-    p0 : np.ndarray[float] | dict[str, float], optional
+    p0 : Mapping[str, float] | Iterable[float], optional
         Initial guess for the circuit parameters. Default is None.
     iters : int, optional
         Maximum number of iterations for the circuit fitter. Default is 1.
@@ -510,15 +510,15 @@ def circuit_complexity(circuit: str) -> list[int]:
     [0, 1, 2, 2, 0]
     """
 
-    def increment(arr):
+    def increment(arr: Iterable):
         """Adds one to each element in a nested list."""
         return [increment(e) if isinstance(e, list) else e + 1 for e in arr]
 
-    def depth(arr: list):
+    def depth(arr: Iterable):
         """Computes the depth of each element in a nested list."""
         return [increment(depth(e)) if isinstance(e, list) else 0 for e in arr]
 
-    def split(arr: list, chars: list[str]):
+    def split(arr: Iterable, chars: Iterable[str]):
         """Recursively splits comma-separated elements in a nested list."""
         out = []
         sep = "|".join(chars)
