@@ -35,7 +35,7 @@ dependencies = [
     "jax",
     "jinja2>=3.1.2",
     "julia",
-    "juliacall==0.9.18",
+    "juliacall",
     "juliapkg",
     "matplotlib",
     "mpire[dill]",
