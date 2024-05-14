@@ -325,7 +325,7 @@
           <section id="Circuit-models-101">
 <h1>Circuit models 101<a class="headerlink" href="#Circuit-models-101" title="Link to this heading">¶</a></h1>
 <p>In this notebook, we will explore the basics of circuit models in AutoEIS. We will start by importing the necessary libraries.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
@@ -334,66 +334,16 @@
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
-</pre></div></div>
-</div>
 <section id="Circuit-representation">
 <h2>Circuit representation<a class="headerlink" href="#Circuit-representation" title="Link to this heading">¶</a></h2>
 <p>In AutoEIS, circuits are represented as strings. Please refer to <a class="reference internal" href="../circuit.html"><span class="doc">circuit notation</span></a> for the syntax of the circuit string. Now, let’s create a sample circuit string:</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">circuit</span> <span class="o">=</span> <span class="s2">&quot;R1-[P2,R3]-C4-[[R5,C6],[L7,R8]]-R2&quot;</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
-</pre></div></div>
 </div>
 <p>We can visualize the circuit model using the <code class="docutils literal notranslate"><span class="pre">draw_circuit</span></code> function, which requires the <code class="docutils literal notranslate"><span class="pre">lcapy</span></code> package to be installed, and a working LaTeX installation. See <a class="reference external" href="https://lcapy.readthedocs.io/en/latest/install.html">here</a> for more details.</p>
 <div class="nbinput docutils container">
@@ -412,37 +362,12 @@ File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/a
 Suggestion: add a constraint between nodes (25, 27) and (28, 26) for vertical graph
 </pre></div></div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/examples_circuit_basics_5_1.png" class="no-scaled-link" src="../_images/examples_circuit_basics_5_1.png" style="width: 1787px; height: 688px;" />
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
-</pre></div></div>
 </div>
 </section>
 <section id="Querying-circuit-strings">
@@ -457,38 +382,13 @@ File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/a
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 [&#39;R1&#39;, &#39;P2&#39;, &#39;R3&#39;, &#39;C4&#39;, &#39;R5&#39;, &#39;C6&#39;, &#39;L7&#39;, &#39;R8&#39;, &#39;R2&#39;]
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
 </pre></div></div>
 </div>
 <p>(The impedance of) Each component is represented by one or more parameters. To get the list of parameters that fully describe the circuit, use the <code class="docutils literal notranslate"><span class="pre">get_parameter_labels</span></code> function:</p>
@@ -500,38 +400,13 @@ File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/a
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 [&#39;R1&#39;, &#39;P2w&#39;, &#39;P2n&#39;, &#39;R3&#39;, &#39;C4&#39;, &#39;R5&#39;, &#39;C6&#39;, &#39;L7&#39;, &#39;R8&#39;, &#39;R2&#39;]
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
 </pre></div></div>
 </div>
 <p>Note that components and parameters are not the same, despite the fact that for single-parameter components they’re represented by the same string. For instance, <code class="docutils literal notranslate"><span class="pre">R1</span></code> is both a parameter and a component, but <code class="docutils literal notranslate"><span class="pre">P2</span></code> is a component, which is described by the parameters <code class="docutils literal notranslate"><span class="pre">P2w</span></code> and <code class="docutils literal notranslate"><span class="pre">P2n</span></code>.</p>
@@ -544,38 +419,13 @@ File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/a
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 True
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
 </pre></div></div>
 </div>
 <p>Let’s try to validate an invalid circuit string:</p>
@@ -587,7 +437,7 @@ File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/a
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
@@ -605,31 +455,6 @@ File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:56
 <span class="ansi-green-intense-fg ansi-bold">     58</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span style="color: rgb(0,135,0)">len</span>(circuit) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Circuit string is empty.</span><span style="color: rgb(175,0,0)">&#34;</span>
 
 <span class="ansi-red-fg">AssertionError</span>: Duplicate elements found: {&#39;R1&#39;}
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-File <span class="ansi-green-fg">~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223</span>, in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    221</span>     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))
-<span class="ansi-green-intense-fg ansi-bold">    222</span> def __call__(self, *args, **kwargs):
-<span class="ansi-green-fg">--&gt; 223</span>     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)
-<span class="ansi-green-intense-fg ansi-bold">    224</span> def __bool__(self):
-<span class="ansi-green-intense-fg ansi-bold">    225</span>     return True
-
-<span class="ansi-red-fg">ValueError</span>: I/O operation on closed file.
 </pre></div></div>
 </div>
 </section>

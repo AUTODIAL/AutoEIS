@@ -14,32 +14,13 @@
    "execution_count": 1,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:44:54.005794Z",
-     "iopub.status.busy": "2024-05-13T14:44:54.005614Z",
-     "iopub.status.idle": "2024-05-13T14:45:00.169933Z",
-     "shell.execute_reply": "2024-05-13T14:45:00.168888Z"
+     "iopub.execute_input": "2024-05-14T05:09:21.903992Z",
+     "iopub.status.busy": "2024-05-14T05:09:21.903464Z",
+     "iopub.status.idle": "2024-05-14T05:09:26.323181Z",
+     "shell.execute_reply": "2024-05-14T05:09:26.322313Z"
     }
    },
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "import autoeis as ae\n",
     "ae.visualization.set_plot_style()"
@@ -59,32 +40,13 @@
    "execution_count": 2,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:45:00.173329Z",
-     "iopub.status.busy": "2024-05-13T14:45:00.173087Z",
-     "iopub.status.idle": "2024-05-13T14:45:00.187264Z",
-     "shell.execute_reply": "2024-05-13T14:45:00.186796Z"
+     "iopub.execute_input": "2024-05-14T05:09:26.327818Z",
+     "iopub.status.busy": "2024-05-14T05:09:26.327475Z",
+     "iopub.status.idle": "2024-05-14T05:09:26.330959Z",
+     "shell.execute_reply": "2024-05-14T05:09:26.330086Z"
     }
    },
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "circuit = \"R1-[P2,R3]-C4-[[R5,C6],[L7,R8]]-R2\""
    ]
@@ -101,10 +63,10 @@
    "execution_count": 3,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:45:00.189941Z",
-     "iopub.status.busy": "2024-05-13T14:45:00.189826Z",
-     "iopub.status.idle": "2024-05-13T14:45:02.642618Z",
-     "shell.execute_reply": "2024-05-13T14:45:02.641861Z"
+     "iopub.execute_input": "2024-05-14T05:09:26.333325Z",
+     "iopub.status.busy": "2024-05-14T05:09:26.333152Z",
+     "iopub.status.idle": "2024-05-14T05:09:28.687680Z",
+     "shell.execute_reply": "2024-05-14T05:09:28.687118Z"
     }
    },
    "outputs": [
@@ -126,24 +88,6 @@
       }
      },
      "output_type": "display_data"
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
-     ]
     }
    ],
    "source": [
@@ -166,10 +110,10 @@
    "execution_count": 4,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:45:02.646130Z",
-     "iopub.status.busy": "2024-05-13T14:45:02.645787Z",
-     "iopub.status.idle": "2024-05-13T14:45:02.656314Z",
-     "shell.execute_reply": "2024-05-13T14:45:02.655748Z"
+     "iopub.execute_input": "2024-05-14T05:09:28.760442Z",
+     "iopub.status.busy": "2024-05-14T05:09:28.689883Z",
+     "iopub.status.idle": "2024-05-14T05:09:28.769495Z",
+     "shell.execute_reply": "2024-05-14T05:09:28.769124Z"
     }
    },
    "outputs": [
@@ -182,24 +126,6 @@
      "execution_count": 4,
      "metadata": {},
      "output_type": "execute_result"
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
-     ]
     }
    ],
    "source": [
@@ -218,10 +144,10 @@
    "execution_count": 5,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:45:02.659650Z",
-     "iopub.status.busy": "2024-05-13T14:45:02.659474Z",
-     "iopub.status.idle": "2024-05-13T14:45:02.668972Z",
-     "shell.execute_reply": "2024-05-13T14:45:02.668182Z"
+     "iopub.execute_input": "2024-05-14T05:09:28.771462Z",
+     "iopub.status.busy": "2024-05-14T05:09:28.771359Z",
+     "iopub.status.idle": "2024-05-14T05:09:28.779057Z",
+     "shell.execute_reply": "2024-05-14T05:09:28.778664Z"
     }
    },
    "outputs": [
@@ -234,24 +160,6 @@
      "execution_count": 5,
      "metadata": {},
      "output_type": "execute_result"
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
-     ]
     }
    ],
    "source": [
@@ -277,10 +185,10 @@
    "execution_count": 6,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:45:02.672119Z",
-     "iopub.status.busy": "2024-05-13T14:45:02.671941Z",
-     "iopub.status.idle": "2024-05-13T14:45:02.683594Z",
-     "shell.execute_reply": "2024-05-13T14:45:02.682961Z"
+     "iopub.execute_input": "2024-05-14T05:09:28.781061Z",
+     "iopub.status.busy": "2024-05-14T05:09:28.780964Z",
+     "iopub.status.idle": "2024-05-14T05:09:28.783439Z",
+     "shell.execute_reply": "2024-05-14T05:09:28.783103Z"
     }
    },
    "outputs": [
@@ -293,24 +201,6 @@
      "execution_count": 6,
      "metadata": {},
      "output_type": "execute_result"
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
-     ]
     }
    ],
    "source": [
@@ -329,10 +219,10 @@
    "execution_count": 7,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-13T14:45:02.686789Z",
-     "iopub.status.busy": "2024-05-13T14:45:02.686592Z",
-     "iopub.status.idle": "2024-05-13T14:45:02.783596Z",
-     "shell.execute_reply": "2024-05-13T14:45:02.782981Z"
+     "iopub.execute_input": "2024-05-14T05:09:28.785440Z",
+     "iopub.status.busy": "2024-05-14T05:09:28.785308Z",
+     "iopub.status.idle": "2024-05-14T05:09:28.994320Z",
+     "shell.execute_reply": "2024-05-14T05:09:28.993917Z"
     },
     "tags": [
      "raises-exception"
@@ -349,24 +239,6 @@
       "Cell \u001b[0;32mIn[7], line 1\u001b[0m\n\u001b[0;32m----> 1\u001b[0m \u001b[43mae\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mparser\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mvalidate_circuit\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mR1-[R2,P3]-R1\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\n",
       "File \u001b[0;32m~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:56\u001b[0m, in \u001b[0;36mvalidate_circuit\u001b[0;34m(circuit)\u001b[0m\n\u001b[1;32m     54\u001b[0m components \u001b[38;5;241m=\u001b[39m get_component_labels(circuit)\n\u001b[1;32m     55\u001b[0m duplicates \u001b[38;5;241m=\u001b[39m [e \u001b[38;5;28;01mfor\u001b[39;00m e \u001b[38;5;129;01min\u001b[39;00m components \u001b[38;5;28;01mif\u001b[39;00m components\u001b[38;5;241m.\u001b[39mcount(e) \u001b[38;5;241m>\u001b[39m \u001b[38;5;241m1\u001b[39m]\n\u001b[0;32m---> 56\u001b[0m \u001b[38;5;28;01massert\u001b[39;00m \u001b[38;5;129;01mnot\u001b[39;00m duplicates, \u001b[38;5;124mf\u001b[39m\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mDuplicate elements found: \u001b[39m\u001b[38;5;132;01m{\u001b[39;00m\u001b[38;5;28mset\u001b[39m(duplicates)\u001b[38;5;132;01m}\u001b[39;00m\u001b[38;5;124m\"\u001b[39m\n\u001b[1;32m     57\u001b[0m \u001b[38;5;66;03m# Test circuit is not empty\u001b[39;00m\n\u001b[1;32m     58\u001b[0m \u001b[38;5;28;01massert\u001b[39;00m \u001b[38;5;28mlen\u001b[39m(circuit) \u001b[38;5;241m>\u001b[39m \u001b[38;5;241m0\u001b[39m, \u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mCircuit string is empty.\u001b[39m\u001b[38;5;124m\"\u001b[39m\n",
       "\u001b[0;31mAssertionError\u001b[0m: Duplicate elements found: {'R1'}"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Error in callback _flush_stdio (for post_execute), with arguments args (),kwargs {}:\n"
-     ]
-    },
-    {
-     "ename": "ValueError",
-     "evalue": "I/O operation on closed file.",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
-      "File \u001b[0;32m~/.julia/packages/PythonCall/S5MOg/src/JlWrap/any.jl:223\u001b[0m, in \u001b[0;36m__call__\u001b[0;34m(self, *args, **kwargs)\u001b[0m\n\u001b[1;32m    221\u001b[0m     return ValueBase.__dir__(self) + self._jl_callmethod($(pyjl_methodnum(pyjlany_dir)))\n\u001b[1;32m    222\u001b[0m def __call__(self, *args, **kwargs):\n\u001b[0;32m--> 223\u001b[0m     return self._jl_callmethod($(pyjl_methodnum(pyjlany_call)), args, kwargs)\n\u001b[1;32m    224\u001b[0m def __bool__(self):\n\u001b[1;32m    225\u001b[0m     return True\n",
-      "\u001b[0;31mValueError\u001b[0m: I/O operation on closed file."
      ]
     }
    ],
