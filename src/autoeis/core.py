@@ -611,7 +611,8 @@ def perform_bayesian_inference(
         valid_p0_types = (dict, np.ndarray, type(None))
         assert isinstance(p0_, valid_p0_types), f"Invalid p0 type: {p0_}"
         num_params = len(parser.get_parameter_labels(circuit))
-        assert len(p0_) == num_params, f"Invalid p0 length: {p0_}"
+        if p0_ is not None:
+            assert len(p0_) == num_params, f"Invalid p0 length: {p0_}"
 
     # Short-circuit if no circuits are provided
     if len(circuits) == 0:
