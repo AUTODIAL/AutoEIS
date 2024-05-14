@@ -833,6 +833,8 @@ def _perform_bayesian_inference_batch(
         desc="Performing Bayesian Inference",
     )
 
+    # TODO: Deal with failed inferences, i.e., Exception object in results
+
     return results
 
 
