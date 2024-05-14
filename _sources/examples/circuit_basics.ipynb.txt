@@ -14,10 +14,10 @@
    "execution_count": 1,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:31.343309Z",
-     "iopub.status.busy": "2024-05-14T17:26:31.343072Z",
-     "iopub.status.idle": "2024-05-14T17:26:37.141552Z",
-     "shell.execute_reply": "2024-05-14T17:26:37.139835Z"
+     "iopub.execute_input": "2024-05-14T18:20:25.069002Z",
+     "iopub.status.busy": "2024-05-14T18:20:25.068862Z",
+     "iopub.status.idle": "2024-05-14T18:20:30.576375Z",
+     "shell.execute_reply": "2024-05-14T18:20:30.575784Z"
     }
    },
    "outputs": [],
@@ -40,10 +40,10 @@
    "execution_count": 2,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:37.152778Z",
-     "iopub.status.busy": "2024-05-14T17:26:37.151930Z",
-     "iopub.status.idle": "2024-05-14T17:26:37.161304Z",
-     "shell.execute_reply": "2024-05-14T17:26:37.159516Z"
+     "iopub.execute_input": "2024-05-14T18:20:30.581148Z",
+     "iopub.status.busy": "2024-05-14T18:20:30.580898Z",
+     "iopub.status.idle": "2024-05-14T18:20:30.583438Z",
+     "shell.execute_reply": "2024-05-14T18:20:30.582773Z"
     }
    },
    "outputs": [],
@@ -63,10 +63,10 @@
    "execution_count": 3,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:37.168929Z",
-     "iopub.status.busy": "2024-05-14T17:26:37.168507Z",
-     "iopub.status.idle": "2024-05-14T17:26:40.477027Z",
-     "shell.execute_reply": "2024-05-14T17:26:40.475927Z"
+     "iopub.execute_input": "2024-05-14T18:20:30.586791Z",
+     "iopub.status.busy": "2024-05-14T18:20:30.586603Z",
+     "iopub.status.idle": "2024-05-14T18:20:33.148495Z",
+     "shell.execute_reply": "2024-05-14T18:20:33.147467Z"
     }
    },
    "outputs": [
@@ -110,10 +110,10 @@
    "execution_count": 4,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:40.482607Z",
-     "iopub.status.busy": "2024-05-14T17:26:40.481457Z",
-     "iopub.status.idle": "2024-05-14T17:26:40.487333Z",
-     "shell.execute_reply": "2024-05-14T17:26:40.486723Z"
+     "iopub.execute_input": "2024-05-14T18:20:33.153710Z",
+     "iopub.status.busy": "2024-05-14T18:20:33.153087Z",
+     "iopub.status.idle": "2024-05-14T18:20:33.233702Z",
+     "shell.execute_reply": "2024-05-14T18:20:33.233193Z"
     }
    },
    "outputs": [
@@ -144,10 +144,10 @@
    "execution_count": 5,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:40.491841Z",
-     "iopub.status.busy": "2024-05-14T17:26:40.491436Z",
-     "iopub.status.idle": "2024-05-14T17:26:40.495769Z",
-     "shell.execute_reply": "2024-05-14T17:26:40.494689Z"
+     "iopub.execute_input": "2024-05-14T18:20:33.236715Z",
+     "iopub.status.busy": "2024-05-14T18:20:33.236544Z",
+     "iopub.status.idle": "2024-05-14T18:20:33.239691Z",
+     "shell.execute_reply": "2024-05-14T18:20:33.239087Z"
     }
    },
    "outputs": [
@@ -185,10 +185,10 @@
    "execution_count": 6,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:40.501071Z",
-     "iopub.status.busy": "2024-05-14T17:26:40.500802Z",
-     "iopub.status.idle": "2024-05-14T17:26:40.506716Z",
-     "shell.execute_reply": "2024-05-14T17:26:40.505512Z"
+     "iopub.execute_input": "2024-05-14T18:20:33.242941Z",
+     "iopub.status.busy": "2024-05-14T18:20:33.242794Z",
+     "iopub.status.idle": "2024-05-14T18:20:33.246394Z",
+     "shell.execute_reply": "2024-05-14T18:20:33.245525Z"
     }
    },
    "outputs": [
@@ -219,10 +219,10 @@
    "execution_count": 7,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-14T17:26:40.513291Z",
-     "iopub.status.busy": "2024-05-14T17:26:40.512767Z",
-     "iopub.status.idle": "2024-05-14T17:26:40.827501Z",
-     "shell.execute_reply": "2024-05-14T17:26:40.826815Z"
+     "iopub.execute_input": "2024-05-14T18:20:33.249126Z",
+     "iopub.status.busy": "2024-05-14T18:20:33.248963Z",
+     "iopub.status.idle": "2024-05-14T18:20:33.470489Z",
+     "shell.execute_reply": "2024-05-14T18:20:33.469982Z"
     },
     "tags": [
      "raises-exception"
