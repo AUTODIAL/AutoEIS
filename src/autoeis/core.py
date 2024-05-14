@@ -600,6 +600,10 @@ def perform_bayesian_inference(
             progress_bar=progress_bar,
             desc="Refining p0",
         )
+        for i, e in enumerate(p0):
+            if isinstance(e, Exception):
+                log.error(f"Failed to refine p0 for circuit {circuits[i]}: {e}")
+                p0[i] = None
 
     # Validate inputs' types and lengths
     for circuit, p0_ in zip(circuits, p0):
