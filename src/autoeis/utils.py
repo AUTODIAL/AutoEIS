@@ -11,6 +11,7 @@ Collection of utility functions used throughout the package.
     generate_circuit_fn_impedance_backend
     fit_circuit_parameters
     are_circuits_equivalent
+    identify_duplicate_circuits
     initialize_priors
     initialize_priors_from_posteriors
     validate_circuits_dataframe
@@ -44,6 +45,7 @@ from numpyro.distributions import Distribution
 from numpyro.infer import MCMC, Predictive
 from scipy import stats
 from scipy.optimize import curve_fit
+from scipy.stats.mstats import gmean
 
 import __main__
 
@@ -587,6 +589,53 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     Z1 = generate_circuit_fn(circuit1)(freq, x0(circuit1))
     Z2 = generate_circuit_fn(circuit2)(freq, x0(circuit2))
     return np.allclose(Z1, Z2)
+
+
+def identify_duplicate_circuits(
+    circuits: Iterable[str], rtol: float = 1e-5
+) -> list[list[int]]:
+    """Identifies duplicate circuits in a list of circuit strings.
+
+    Parameters
+    ----------
+    circuits : Iterable[str]
+        List of circuit strings in CDC format. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    rtol : float, optional
+        The relative tolerance for the circuit equivalence check. Default is 1e-5.
+
+    Returns
+    -------
+    list[list[int]]
+        A list of lists containing the indices of duplicate circuits. The first
+        element of each sublist is the index of the circuit that is considered
+        unique, and the rest are the indices of the duplicate circuits.
+    """
+
+    def x0(circuit: str) -> np.ndarray[float]:
+        """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
+
+        The idea is that if two circuits are equivalent, then Z(x0) should be
+        the same for both circuits, given that x0 corresponds to the same
+        component values in both circuits. Since the order of the components
+        does not matter, we set the values of the components of the same type
+        to be the same.
+        """
+        values = {"R": 0.85, "C": 0.75, "L": 0.30, "Pw": 0.15, "Pn": 0.6}
+        labels = parser.get_parameter_labels(circuit)
+        x0 = []
+        for label in labels:
+            ptype = parser.parse_parameter(label)
+            x0.append(values[ptype])
+        return np.array(x0)
+
+    freq = np.logspace(-3, 3, 10)
+    Z = [generate_circuit_fn(circuit)(freq, x0(circuit)) for circuit in circuits]
+    y = np.abs(gmean(Z, axis=1))
+    y_unique = np.unique(y)
+    indices = [np.where(y == v)[0] for v in y_unique]
+    indices = sorted(indices, key=lambda elem: elem[0])  # Retain original order
+    return indices
 
 
 # <<< Circuit utils
