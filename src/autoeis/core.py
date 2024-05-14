@@ -513,7 +513,7 @@ def compute_fitness_metrics(
     circuits["n_params"] = circuits.apply(lambda r: len(r.Parameters), axis=1)
 
     # Rank the circuits based on WAIC
-    circuits["WAIC (sum)"] = (circuits["WAIC (real)"] * circuits["WAIC (imag)"]) ** 0.5
+    circuits["WAIC (sum)"] = circuits["WAIC (real)"] + circuits["WAIC (imag)"]
     circuits.sort_values(by=["WAIC (sum)"], ascending=True, inplace=True, ignore_index=True)
 
     return circuits
