@@ -374,7 +374,7 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
 
     # Add columns to the table
     columns = [
-        "Circuit", "WAIC (re)", "WAIC (im)", "R2 (re)", "R2 (im)", 
+        "Circuit", "WAIC (re)", "WAIC (im)", "R2 (re)", "R2 (im)",
         "MAPE (re)", "MAPE (im)", "Np"
     ]  # fmt: off
     for column in columns:
