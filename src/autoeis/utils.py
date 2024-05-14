@@ -389,7 +389,7 @@ def fit_circuit_parameters(
     for _ in range(iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-        except RuntimeError:
+        except Exception:
             continue
         err = np.mean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
         if err < err_min:
@@ -398,7 +398,7 @@ def fit_circuit_parameters(
         kwargs["p0"] = np.random.rand(num_params)
 
     if err_min == np.inf:
-        raise RuntimeError("Failed to fit the circuit parameters.")
+        raise Exception("Failed to fit the circuit parameters.")
 
     variables = parser.get_parameter_labels(circuit)
     return dict(zip(variables, p0))
