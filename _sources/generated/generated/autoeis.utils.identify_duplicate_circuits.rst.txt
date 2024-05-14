@@ -1,0 +1,6 @@
+identify\_duplicate\_circuits
+=============================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: identify_duplicate_circuits
