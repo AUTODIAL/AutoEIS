@@ -816,6 +816,7 @@ def distribute_task(
     n_jobs: int = None,
     progress_bar: bool = True,
     desc: str = "",
+    handle_errors: bool = True,
 ):
     """Distribute workload across multiple processes."""
     static = [static] if isinstance(static, int) else static
@@ -847,12 +848,20 @@ def distribute_task(
         "concatenate_numpy_output": False,
     }
 
+    def _func(*args):
+        try:
+            return func(*args)
+        except Exception as e:
+            return e
+
+    _func = _func if handle_errors else func
+
     with warnings.catch_warnings():
         # JAX doesn't work well with multiprocessing, but "spawn" should be fine
         msg_to_ignore = ".*os\\.fork\\(\\).*"
         warnings.filterwarnings("ignore", category=RuntimeWarning, message=msg_to_ignore)
         with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
-            results = pool.map(func, zip(*args), **mpire_kwargs)
+            results = pool.map(_func, zip(*args), **mpire_kwargs)
 
     return results
 
