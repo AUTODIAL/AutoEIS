@@ -391,7 +391,7 @@ def fit_circuit_parameters(
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
         except Exception:
             continue
-        err = np.mean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
+        err = gmean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
         if err < err_min:
             err_min = err
             p0 = popt
