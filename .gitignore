@@ -171,6 +171,8 @@ results/
 
 # Local development
 tmp/*
+requirements-dev.lock
+requirements.lock
 
 # macOS
 .DS_Store
