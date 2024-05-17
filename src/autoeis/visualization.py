@@ -18,6 +18,7 @@ Collection of functions for visualizing EIS data and results.
 """
 
 import logging
+import os
 import re
 
 import arviz
@@ -445,7 +446,10 @@ def override_mpl_colors(override_named_colors: bool = True):
 
 
 def set_plot_style(
-    use_arviz: bool = True, use_seaborn: bool = True, use_flexoki: bool = True
+    use_arviz: bool = True,
+    use_seaborn: bool = True,
+    use_flexoki: bool = True,
+    console_width: int = 100,
 ):
     """Modifies the default arviz/matplotlib config for prettier plots.
 
@@ -457,6 +461,9 @@ def set_plot_style(
         If True, use seaborn's default plotting style. Default is True.
     use_flexoki: bool, optional
         If True, use Flexoki's default plotting style. Default is True.
+    console_width: int, optional
+        Width of the console in characters. Only set when in VS Code
+        Interactive mode, otherwise automaticall deterimined. Default is 100.
     """
     # Arviz
     if use_arviz:
@@ -494,6 +501,10 @@ def set_plot_style(
         IPython.display.set_matplotlib_formats("retina")
     except ImportError:
         pass
+
+    # Set rich console width when in VS Code Interactive Window
+    if os.getenv("VSCODE_PID") is not None:
+        rich.get_console().width = console_width
 
 
 def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
