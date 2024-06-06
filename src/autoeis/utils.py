@@ -567,6 +567,9 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     circuits at a set of random frequencies and checks if the results are
     close enough to be considered equivalent.
     """
+    # Ensure that the circuits are valid
+    parser.validate_circuit(circuit1)
+    parser.validate_circuit(circuit2)
 
     def x0(circuit: str) -> np.ndarray[float]:
         """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
