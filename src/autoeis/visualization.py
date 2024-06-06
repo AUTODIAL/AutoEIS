@@ -497,8 +497,10 @@ def set_plot_style(
     # Set up Jupyter notebook
     try:
         import IPython
+        import matplotlib_inline.backend_inline
 
-        IPython.display.set_matplotlib_formats("retina")
+        # IPython.display.set_matplotlib_formats("retina")
+        matplotlib_inline.backend_inline.set_matplotlib_formats("retina")
     except ImportError:
         pass
 
