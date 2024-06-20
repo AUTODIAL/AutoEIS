@@ -115,6 +115,7 @@ def draw_circuit(circuit: str) -> mpl.figure.Figure:
 
 def plot_nyquist(
     Z: np.ndarray[complex],
+    *,
     fmt: str = "o-",
     markersize: int = 6,
     color: str = None,
@@ -168,6 +169,7 @@ def plot_nyquist(
 def plot_bode(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
+    *,
     fmt=".-",
     markersize=6,
     deg: bool = True,
@@ -228,6 +230,7 @@ def plot_bode(
 def plot_impedance_combo(
     freq: np.ndarray,
     Z: np.ndarray,
+    *,
     fmt: str = ".-",
     markersize: int = 6,
     ax: list[plt.Axes] = None,
