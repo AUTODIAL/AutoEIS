@@ -130,6 +130,54 @@ def flatten(xs: Iterable) -> list:
     return list(_flatten(xs))
 
 
+def is_iterable(xs: Iterable) -> bool:
+    """Returns true if the input is an iterable but not a string or bytes.
+
+    Parameters
+    ----------
+    xs: list
+        An iterable.
+
+    Returns
+    -------
+    bool
+        True if the input is an iterable but not a string or bytes, False otherwise.
+
+    Examples
+    --------
+    >>> is_iterable([1, 2, 3])
+    True
+    >>> is_iterable("hello")
+    False
+    """
+    return isinstance(xs, Iterable) and not isinstance(xs, (str, bytes))
+
+
+def is_nested_iterable(xs: Iterable) -> bool:
+    """Returns True if all items of an iterable are iterable themselves.
+
+    Parameters
+    ----------
+    xs: list
+        An iterable.
+
+    Returns
+    -------
+    bool
+        True if the iterable is nested, False otherwise.
+
+    Examples
+    --------
+    >>> is_nested_iterable([1, 2, [3, 4], [5, [6, 7]]])
+    False
+    >>> is_nested_iterable([1, 2, 3, 4])
+    False
+    >>> is_nested_iterable([[1, 2], [3, 4], [5, 6]])
+    True
+    """
+    return all(is_iterable(x) for x in xs)
+
+
 def suppress_output_legacy(func: Callable) -> Callable:
     """Suppresses the output of a function.
 
