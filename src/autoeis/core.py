@@ -442,6 +442,92 @@ def compute_fitness_metrics(
     return circuits
 
 
+def _validate_circuit(circuits):
+    """Validates the circuits input."""
+    # Dataframe
+    if isinstance(circuits, pd.DataFrame):
+        utils.validate_circuits_dataframe(circuits)
+    # List
+    elif isinstance(circuits, list):
+        for c in circuits:
+            assert isinstance(c, str), f"Invalid circuit: {c}"
+    # String
+    elif isinstance(circuits, str):
+        pass
+    else:
+        raise ValueError("`circuits` must be a DataFrame, list, or string.")
+    return circuits
+
+
+def _validate_impedance_data(freq, Z):
+    """Validates the impedance data input."""
+    # Shared validations (single/multiple datasets)
+    assert type(freq) is type(Z), "freq and Z must be of the same type."
+    assert utils.is_iterable(freq), "freq must be an ndarray or list/tuple[ndarray]."
+    assert utils.is_iterable(Z), "Z must be an ndarray or list/tuple[ndarray]."
+    assert len(freq) == len(Z), "freq and Z must have the same length."
+    # Standardize freq/Z to be an np.ndarray (freq/Z[i] for multiple datasets)
+    if utils.is_nested_iterable(freq):
+        for i, (f, z) in enumerate(zip(freq, Z)):
+            assert isinstance(f, np.ndarray), f"freq must be a numpy array (dataset #{i})."
+            assert isinstance(z, np.ndarray), f"Z must be a numpy array (dataset #{i})."
+            assert f.size == z.size, f"freq and Z must have the same length (dataset #{i})."
+    else:
+        assert isinstance(freq, np.ndarray), "freq must be a numpy array."
+        assert isinstance(Z, np.ndarray), "Z must be a numpy array."
+    return freq, Z
+
+
+def _validate_p0(p0):
+    """Validates the initial guess for the circuit parameters."""
+    if p0 is None:
+        return None
+    # Single initial guess
+    if isinstance(p0, (Mapping, Iterable)):
+        # return [p0]
+        return p0
+    # Multiple initial guesses
+    if isinstance(p0, list):
+        for p0_ in p0:
+            assert isinstance(p0_, (Mapping, Iterable)), "Invalid initial guess."
+        return p0
+    raise ValueError("`p0` must be a dict, list[dict], or list[np.ndarray].")
+
+
+def _validate_priors(priors):
+    """Validates the priors for the circuit parameters."""
+    if priors is None:
+        return None
+    msg = "'priors' must be a dict of NumPyro distributions."
+    # Single prior
+    if isinstance(priors, Mapping):
+        assert all(isinstance(v, Distribution) for v in priors.values()), msg
+        # return [priors]
+        return priors
+    # Multiple priors
+    if isinstance(priors, Iterable):
+        assert all(isinstance(prior, Mapping) for prior in priors), msg
+        return priors
+    raise ValueError("'priors' must be a dict[Distribution] or list[dict[Distribution]].")
+
+
+def _validate_seed(seed, num_splits=1):
+    """Validates the random seed to be used in ``MCMC.run()``."""
+    # If seed is not set, generate a new seed using time
+    if seed is None:
+        seed = time.time_ns() % 2**32
+    # If a jax.Array is already provided, use it otherwise generate one
+    if isinstance(seed, jax.Array):
+        assert seed.size == 2, "'seed' must be a 2-element jax.Array."
+        subkey = seed
+    elif isinstance(seed, int):
+        key = jax.random.PRNGKey(seed)
+        key, *subkey = jax.random.split(key, num_splits + 1)
+    else:
+        raise ValueError("'seed' must be an int or a jax.Array.")
+    return subkey
+
+
 def perform_bayesian_inference(
     circuits: pd.DataFrame | Iterable[str] | str,
     freq: np.ndarray[float],
