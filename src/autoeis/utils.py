@@ -15,6 +15,9 @@ Collection of utility functions used throughout the package.
     initialize_priors
     initialize_priors_from_posteriors
     validate_circuits_dataframe
+    preprocess_impedance_data
+    InferenceResult
+    ImpedanceData
 
 """
 
@@ -695,7 +698,7 @@ def identify_duplicate_circuits(
 # <<< Circuit utils
 
 
-# >>> Statistics utils
+# >>> Inference utils
 
 
 # TODO: Remove variables from input arguments
@@ -785,7 +788,7 @@ def initialize_priors_from_posteriors(
             # NOTE: above conversion is only valid when loc = 0
             if dist_type == "lognormal":
                 s, loc, scale = stats.lognorm.fit(samples, floc=0)
-                priors[var] = dist.LogNormal(loc=np.log(scale), scale=8 * s)
+                priors[var] = dist.LogNormal(loc=np.log(scale), scale=4 * s)
             elif dist_type == "normal":
                 loc, scale = stats.norm.fit(samples)
                 priors[var] = dist.TruncatedNormal(
@@ -855,7 +858,80 @@ def eval_posterior_predictive(
     return Z_pred
 
 
-# <<< Statistics utils
+class InferenceResult:
+    """Container for inference result."""
+
+    def __init__(
+        self,
+        circuit: str,
+        mcmc: MCMC,
+        *,
+        converged: bool,
+        freq: np.ndarray[float],
+        Z: np.ndarray[complex],
+    ):
+        self.circuit = circuit
+        self.mcmc = mcmc
+        self.converged = converged
+        self.freq = freq
+        self.Z = Z
+
+    @functools.cached_property
+    def variables(self):
+        """Returns the inferred variables, i.e., circuit parameters."""
+        return parser.get_parameter_labels(self.circuit)
+
+    @functools.cached_property
+    def samples(self):
+        """Returns the MCMC samples."""
+        return self.mcmc.get_samples()
+
+    @functools.cached_property
+    def num_divergences(self):
+        """Returns the number of divergences in the MCMC chain."""
+        return self.mcmc.get_extra_fields()["diverging"].sum()
+
+    def print_summary(self):
+        """Prints a summary of the inference results."""
+        self.mcmc.print_summary()
+
+
+class ImpedanceData:
+    """Container for impedance data."""
+
+    def __init__(self, freq: np.ndarray[float], Z: np.ndarray[complex]):
+        assert len(freq) == len(Z), "freq and Z data must have the same length."
+        self.freq = freq
+        self.Z = Z
+
+    def __len__(self):
+        return len(self.freq)
+
+    def plot_nyquist(self, ax=None, **kwargs):
+        """Plots the Nyquist plot of the impedance data."""
+        return visualization.plot_nyquist(self.Z, ax=ax, **kwargs)
+
+    def plot_bode(self, ax=None, **kwargs):
+        """Plots the Bode plot of the impedance data."""
+        return visualization.plot_bode(self.freq, self.Z, ax=ax, **kwargs)
+
+    def preprocess(
+        self, tol_linKK=5e-2, high_freq_threshold=1e3, return_aux=False, inplace=True
+    ):
+        """Preprocesses the impedance data."""
+        out = preprocess_impedance_data(
+            self.freq,
+            self.Z,
+            tol_linKK=tol_linKK,
+            high_freq_threshold=high_freq_threshold,
+            return_aux=return_aux,
+        )
+        if inplace:
+            self.freq, self.Z = out[:2]
+        return out
+
+
+# <<< Inference utils
 
 
 # >>> Miscellaneous utils
@@ -1024,11 +1100,11 @@ def validate_circuits_dataframe(circuits: pd.DataFrame):
     # Check if the circuitstring column contains only strings
     assert (
         circuits["circuitstring"].apply(lambda x: isinstance(x, str)).all()
-    ), "circuitstring column must contain only strings."
+    ), "circuitstring column must only contain strings."
     # Check if the Parameters column contains only dictionaries
     assert (
         circuits["Parameters"].apply(lambda x: isinstance(x, dict)).all()
-    ), "Parameters column must contain only dictionaries."
+    ), "Parameters column must only contain dictionaries."
 
 
 # <<< Miscellaneous utils
