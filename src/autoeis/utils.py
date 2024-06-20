@@ -19,6 +19,7 @@ Collection of utility functions used throughout the package.
 """
 
 import copy
+import functools
 import io
 import logging
 import os
@@ -36,8 +37,10 @@ import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
 import psutil
+from box import Box
 from impedance.models.circuits import CustomCircuit
 from impedance.models.circuits.fitting import set_default_bounds
+from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
 from numpy import pi  # NOQA: F401
@@ -49,7 +52,7 @@ from scipy.stats.mstats import gmean
 
 import __main__
 
-from . import models, parser
+from . import metrics, models, parser, visualization
 
 log = logging.getLogger(__name__)
 
@@ -808,6 +811,85 @@ def eval_posterior_predictive(
 
 
 # >>> Miscellaneous utils
+
+
+def preprocess_impedance_data(
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    tol_linKK: float = 5e-2,
+    high_freq_threshold: float = 1e3,
+    return_aux: bool = False,
+) -> tuple[np.ndarray[float], np.ndarray[complex], Box]:
+    """Preprocesses/cleans up impedance measurements.
+
+    The preprocessing does the following steps:
+        - Discard invalid high frequency measurements (see Notes section)
+        - Filter out data with a positive imaginary part in high frequencies
+        - Enforce the Kramers-Kronig validation (aka Lin-KK)
+
+    Parameters
+    ----------
+    freq : np.ndarray[float]
+        Frequencies corresponding to impedance measurements.
+    Z : np.ndarray[complex]
+        Impedance measurements as a complex array.
+    tol_linKK : float
+        Tolerance for acceptable measurements based on linKK residuals.
+    high_freq_threshold : float
+        Lower bound for what is considered a high frequency measurement.
+    return_aux : bool, optional
+        If True, returns the preprocessed data along with auxiliary
+        information. Default is False.
+
+    Returns
+    -------
+    tuple[np.ndarray[float], np.ndarray[complex], Box]
+        Tuple containing the preprocessed data with the following elements:
+            - freq: Frequencies corresponding to the impedance data.
+            - Z: Filtered impedance data.
+            - aux: Box containing the Lin-KK validation results with keys:
+                - res.real: Residual array for real part of the impedance data.
+                - res.imag: Residual array for imaginary part of the impedance data.
+                - rmse: Root mean square error of KK validated data vs. measurements.
+    """
+    log.info("Preprocessing/cleaning up impedance data.")
+    n0 = len(freq)
+
+    # Make sure frequency is sorted in descending order
+    Z = Z[np.argsort(freq)[::-1]]
+    freq = freq[np.argsort(freq)[::-1]]
+
+    # Heuristic 1: @freq->∞: |Z.im|->0 => highest_valid_freq = freq @ np.argmin(|Z.im|)
+    high_freq = freq > high_freq_threshold
+    idx_highest_valid_freq = np.argmin(np.abs(Z.imag[high_freq]))
+    # Filter out frequencies above the highest valid frequency (only works if freq is sorted)
+    freq = freq[idx_highest_valid_freq:]
+    Z = Z[idx_highest_valid_freq:]
+
+    # Heuristic 2: Remove the data whose Z.imag is positive at high frequencies
+    high_freq = freq > high_freq_threshold
+    positive_im = Z.imag > 0
+    mask = high_freq & positive_im
+    Z = Z[~mask]
+    freq = freq[~mask]
+
+    # Heuristic 3: Kramers-Kronig validation (aka Lin-KK)
+    linKK_kwargs = {"c": 0.5, "max_M": 100, "fit_type": "complex", "add_cap": True}
+    # TODO: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
+    linKK_silent = suppress_output_legacy(linKK)
+    M, mu, Z_linKK, res_real, res_imag = linKK_silent(freq, Z, **linKK_kwargs)
+    rmse = metrics.rmse_score(Z, Z_linKK)
+
+    mask = (np.abs(res_real) < tol_linKK) & (np.abs(res_imag) < tol_linKK)
+    freq = freq[mask]
+    Z = Z[mask]
+
+    if (n0 - len(freq)) / n0 > 0.1:
+        log.warning("More than 10% of the data was filtered out.")
+
+    aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
+
+    return (freq, Z, aux) if return_aux else (freq, Z)
 
 
 # TODO: Add support for kwargs
