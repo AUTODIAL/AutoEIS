@@ -33,8 +33,19 @@ def get_assets_path() -> Path:
     return PATH
 
 
-def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
+def load_test_dataset(
+    preprocess: bool = False, noise: float = 0
+) -> tuple[np.ndarray[float], np.ndarray[complex]]:
     """Returns a test dataset as a tuple of frequency and impedance arrays.
+
+    Parameters
+    ----------
+    preprocess: bool, optional
+        If True, the impedance data is preprocessed using
+        :func:`autoeis.core.preprocess_impedance_data`. Default is False.
+    noise: float, optional
+        If greater than zero, uniform noise with prescribed amplitude is added
+        to the impedance data. Default is 0.
 
     Returns
     -------
@@ -46,6 +57,13 @@ def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
     freq, Zreal, Zimag = np.loadtxt(fpath, skiprows=1, unpack=True, usecols=(0, 1, 2))
     # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
     Z = Zreal - 1j * Zimag
+    if preprocess:
+        freq, Z = ae.utils.preprocess_impedance_data(freq, Z)
+    if noise:
+        # Only add noise to impedance data (opinionated!)
+        noise_real = np.random.rand(len(Z)) * Z.real * noise
+        noise_imag = np.random.rand(len(Z)) * Z.imag * noise
+        Z += noise_real + noise_imag * 1j
     return freq, Z
 
 
