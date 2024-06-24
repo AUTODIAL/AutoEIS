@@ -14,8 +14,10 @@ Collection of utility functions used throughout the package.
     identify_duplicate_circuits
     initialize_priors
     initialize_priors_from_posteriors
+    eval_posterior_predictive
     validate_circuits_dataframe
     preprocess_impedance_data
+    Settings
     InferenceResult
     ImpedanceData
 
@@ -61,6 +63,12 @@ log = logging.getLogger(__name__)
 
 
 # >>> General utils
+
+
+def flush_streams():
+    """Flushes the standard output and error streams."""
+    sys.stdout.flush()
+    sys.stderr.flush()
 
 
 def is_notebook():
