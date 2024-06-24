@@ -34,6 +34,7 @@ AutoEIS is still under development and therefore, the API is still not stable. I
 
    installation.md
    basic_usage.md
+   IO_formating.md
    circuit.md
    examples
    modules.rst
