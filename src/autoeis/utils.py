@@ -435,8 +435,9 @@ def fit_circuit_parameters(
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
     iters: int = 1,
-    maxfev: int = 1000,
-    ftol: float = 1e-13,
+    maxfev: int = None,
+    ftol: float = 1e-8,
+    xtol: float = 1e-8,
 ) -> dict[str, float]:
     """Fits and returns the parameters of a circuit to impedance data.
 
@@ -455,9 +456,11 @@ def fit_circuit_parameters(
         Maximum number of iterations for the circuit fitter. Default is 1.
     maxfev : int, optional
         Maximum number of function evaluations for the circuit fitter.
-        Default is 1000.
+        Default is None. See ``scipy.optimize.leastsq`` for details.
     ftol : float, optional
-        Tolerance for the convergence criterion. Default is 1e-13.
+        See ``scipy.optimize.leastsq`` for details. Default is 1e-8.
+    xtol : float, optional
+        See ``scipy.optimize.leastsq`` for details. Default is 1e-8.
 
     Returns
     -------
@@ -486,22 +489,24 @@ def fit_circuit_parameters(
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Assemble kwargs for curve_fit
-    circuit_impy = parser.convert_to_impedance_format(circuit)
-    bounds = set_default_bounds(circuit_impy)
-    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol}
+    # TODO: Remove the next two lines once `get_parameter_bounds` is tested
+    # circuit_impy = parser.convert_to_impedance_format(circuit)
+    # bounds = set_default_bounds(circuit_impy)
+    bounds = get_parameter_bounds(circuit)
+    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol, "xtol": xtol}
 
     # Fit circuit parameters by brute force
     err_min = np.inf
     for _ in range(iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-        except Exception:
+        except Exception as e:
             continue
         err = gmean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
         if err < err_min:
             err_min = err
             p0 = popt
-        kwargs["p0"] = np.random.rand(num_params)
+        kwargs["p0"] = generate_initial_guess(circuit)
 
     if err_min == np.inf:
         raise Exception("Failed to fit the circuit parameters.")
