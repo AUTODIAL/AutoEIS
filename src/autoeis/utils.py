@@ -400,8 +400,8 @@ def fit_circuit_parameters_legacy(
     """
     # NOTE: Each circuit eval ~ 1 ms, so 1000 evals ~ 1 s
     # Deal with initial guess
+    p0 = parse_initial_guess(p0) if p0 is not None else generate_initial_guess(circuit)
     num_params = parser.count_parameters(circuit)
-    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Fit circuit parameters
@@ -481,8 +481,8 @@ def fit_circuit_parameters(
     # <<<
 
     # Sanitize initial guess
+    p0 = parse_initial_guess(p0) if p0 is not None else generate_initial_guess(circuit)
     num_params = parser.count_parameters(circuit)
-    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Assemble kwargs for curve_fit
