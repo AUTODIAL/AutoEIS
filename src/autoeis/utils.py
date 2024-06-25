@@ -290,17 +290,13 @@ def suppress_output():
 
 def parse_initial_guess(
     p0: Mapping[str, float] | Iterable[float],
-    circuit: str,
 ) -> np.ndarray:
-    """Parses the initial guess for circuit parameters from various formats
-    and returns an array of parameters.
+    """Parses the initial guess for circuit parameters into an ndarray.
 
     Parameters
     ----------
     p0: Mapping[str, float] | Iterable[float]
         The initial guess for the circuit parameters.
-    circuit: str
-        The circuit string.
 
     Returns
     -------
@@ -311,17 +307,10 @@ def parse_initial_guess(
     ------
     ValueError
         If the initial guess is not not a dict nor array-like.
-
-    Notes
-    -----
-    If no initial guess is provided, a random array of parameters is returned.
     """
-    num_params = parser.count_parameters(circuit)
-    if p0 is None:
-        return np.random.rand(num_params)
     if isinstance(p0, dict):
         return np.fromiter(p0.values(), dtype=float)
-    if isinstance(p0, (list, np.ndarray)):
+    if is_ndarray_like(p0):
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
