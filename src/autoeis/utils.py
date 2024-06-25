@@ -155,7 +155,7 @@ def is_iterable(xs: Iterable) -> bool:
 
     Parameters
     ----------
-    xs: list
+    xs: Iterable
         An iterable.
 
     Returns
@@ -178,7 +178,7 @@ def is_nested_iterable(xs: Iterable) -> bool:
 
     Parameters
     ----------
-    xs: list
+    xs: Iterable
         An iterable.
 
     Returns
