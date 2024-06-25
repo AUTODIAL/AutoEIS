@@ -314,6 +314,25 @@ def parse_initial_guess(
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
+
+def generate_initial_guess(circuit: str) -> np.ndarray:
+    """Generates a random initial guess for the circuit parameters.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+
+    Returns
+    -------
+    np.ndarray
+        A random initial guess for the circuit parameters.
+    """
+    num_params = parser.count_parameters(circuit)
+    return np.random.rand(num_params)
+
+
 def get_parameter_bounds(circuit: str) -> tuple:
     """Returns a 2-element tuple of lower and upper bounds, to be used in
     SciPy's ``curve_fit``.
