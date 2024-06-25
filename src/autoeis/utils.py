@@ -141,6 +141,15 @@ def flatten(xs: Iterable) -> list:
     return list(_flatten(xs))
 
 
+def is_ndarray_like(xs: Iterable) -> bool:
+    """Returns True if the input is an ndarray-like object."""
+    try:
+        np.array(xs)
+    except ValueError:
+        return False
+    return True
+
+
 def is_iterable(xs: Iterable) -> bool:
     """Returns true if the input is an iterable but not a string or bytes.
 
