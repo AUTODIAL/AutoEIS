@@ -314,6 +314,33 @@ def parse_initial_guess(
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
+def get_parameter_bounds(circuit: str) -> tuple:
+    """Returns a 2-element tuple of lower and upper bounds, to be used in
+    SciPy's ``curve_fit``.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+
+    Returns
+    -------
+    tuple
+        A 2-element tuple of lower and upper bounds for the circuit parameters.
+    """
+    bounds_dict = {
+        "R": (0.0, 1e9),
+        "C": (0.0, 10.0),
+        "Pw": (0.0, 1e9),
+        "Pn": (0.0, 1.0),
+        "L": (0.0, 5.0),
+    }
+    types = parser.get_parameter_types(circuit)
+    bounds = [bounds_dict[type_] for type_ in types]
+    bounds = tuple(zip(*bounds))
+    return bounds
+
 
 def fit_circuit_parameters_legacy(
     circuit: str,
