@@ -847,8 +847,7 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     circuits = circuits.drop(columns=["Resistors", "Capacitors", "Inductors", "CPEs"])
 
     if len(circuits) == 0:
-        log.warning("No plausible circuits found. Increase `iters` or `tol` and rerun "
-                    "`generate_equivalent_circuits`")  # fmt: skip
+        log.warning("No plausible circuits left after post-filtering")  # fmt: skip
 
     return circuits
 
