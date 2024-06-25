@@ -195,12 +195,15 @@ def _generate_ecm_serial(
 
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
+        utils.flush_streams()
         try:
             circuit = ec.circuit_evolution(Z, freq, **ec_kwargs, quiet=True)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
         circuits.append(circuit)
+    else:
+        utils.flush_streams()
 
     circuits = [str(c) for c in circuits if c is not None]
     return circuits
@@ -234,6 +237,7 @@ def _generate_ecm_parallel_julia(
     circuits = []
 
     with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
+        utils.flush_streams()
         for iters_ in iters_chunked:
             try:
                 circuits_ = ec.circuit_evolution_batch(
@@ -244,6 +248,7 @@ def _generate_ecm_parallel_julia(
                 circuits_ = []
             circuits += circuits_
             pbar.update(iters_)
+            utils.flush_streams()
 
     circuits = [str(c) for c in circuits if c is not None]
     return circuits
