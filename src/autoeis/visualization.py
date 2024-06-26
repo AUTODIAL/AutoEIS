@@ -20,6 +20,7 @@ Collection of functions for visualizing EIS data and results.
 import logging
 import os
 import re
+from collections.abc import Iterable
 
 import arviz
 import matplotlib as mpl
@@ -122,7 +123,7 @@ def plot_nyquist(
     alpha: int = 1,
     label: str = None,
     ax: plt.Axes = None,
-) -> tuple[plt.Figure, plt.Axes]:
+) -> plt.Axes:
     """Plots EIS data in Nyquist plot.
 
     Parameters
@@ -144,8 +145,8 @@ def plot_nyquist(
 
     Returns
     -------
-    tuple[plt.Figure, plt.Axes]
-        Figure and axes of the plot.
+    plt.Axes
+        Axes object of the Nyquist plot.
     """
     if ax is None:
         fig, ax = plt.subplots()
@@ -163,7 +164,7 @@ def plot_nyquist(
     if label is not None:
         ax.legend()
 
-    return ax.figure, ax
+    return ax
 
 
 def plot_bode(
@@ -174,7 +175,7 @@ def plot_bode(
     markersize=6,
     deg: bool = True,
     ax: plt.Axes = None,
-) -> tuple[plt.Figure, plt.Axes]:
+) -> plt.Axes:
     """Plots the Bode plot for the impedance data.
 
     Parameters
@@ -194,8 +195,8 @@ def plot_bode(
 
     Returns
     -------
-    tuple[plt.Figure, plt.Axes]
-        Figure and axes of the plot.
+    plt.Axes
+        Axes object of the Bode plot.
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=(5.5, 3.5))
@@ -233,9 +234,9 @@ def plot_impedance_combo(
     *,
     fmt: str = ".-",
     markersize: int = 6,
-    ax: list[plt.Axes] = None,
+    ax: Iterable[plt.Axes] = None,
     label: str = None,
-) -> tuple[plt.Figure, list[plt.Axes]]:
+) -> list[plt.Axes]:
     """Plots EIS data in Nyquist and Bode plots.
 
     Parameters
@@ -248,15 +249,15 @@ def plot_impedance_combo(
         Format of the markers in the plot. Default is ".-".
     markersize: int, optional
         Size of the markers in the plots. Default is 10.
-    ax: list[plt.Axes], optional
-        List of axes (must be of length 2) to plot on. Default is None.
+    ax: Iterable[plt.Axes], optional
+        Iterable of axes (must be of length 2) to plot on. Default is None.
     label: str, optional
         Label for the plot. Default is None.
 
     Returns
     -------
-    tuple[plt.Figure, list[plt.Axes]]
-        Figure and axes of the plots.
+    list[plt.Axes]
+        List of axes objects of the Nyquist and Bode plots.
     """
     if ax is None:
         fig, ax = plt.subplots(ncols=2, figsize=(9, 3.5))
@@ -271,7 +272,7 @@ def plot_impedance_combo(
     ax[1].set_title("Bode plot")
     fig.tight_layout()
 
-    return fig, ax
+    return ax
 
 
 def plot_linKK_residuals(
@@ -279,7 +280,7 @@ def plot_linKK_residuals(
     res_real: np.ndarray[float],
     res_imag: np.ndarray[float],
     ax: plt.Axes = None,
-) -> tuple[plt.Figure, plt.Axes]:
+) -> plt.Axes:
     """Plots the residuals of the linear Kramers-Kronig validation.
 
     Parameters
@@ -295,8 +296,8 @@ def plot_linKK_residuals(
 
     Returns
     -------
-    tuple[plt.Figure, plt.Axes]
-        Figure and axes of the plot.
+    plt.Axes
+        Axes object of the residuals plot.
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=(5.5, 3.5))
@@ -308,7 +309,7 @@ def plot_linKK_residuals(
     ax.set_title("Lin-KK validation")
     ax.ticklabel_format(axis="y", style="sci", scilimits=(-2, 2))
     ax.legend()
-    return ax.figure, ax
+    return ax
 
 
 def print_summary_statistics(mcmc: "numpyro.MCMC", circuit: str):
