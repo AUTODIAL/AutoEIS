@@ -329,7 +329,7 @@ def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Excludes ideal capacitors from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for row in circuits.itertuples():
         variables = row.Parameters.keys()
@@ -343,7 +343,7 @@ def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Excludes circuits without an ohmic resistance from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for row in circuits.itertuples():
         circuit = row.circuitstring
@@ -357,7 +357,7 @@ def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Excludes circuits with series-only components from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for row in circuits.itertuples():
         circuit = row.circuitstring
@@ -371,7 +371,7 @@ def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     """Merges identical circuits from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for i, row_i in circuits.iterrows():
         circuit_i = row_i.circuitstring
@@ -402,8 +402,7 @@ def compute_fitness_metrics(
     circuits : pd.DataFrame
         Circuits dataframe with fitness metrics
     """
-    circuits = circuits.copy()
-    mcmcs = circuits["MCMC"]
+    circuits = circuits.copy(deep=True)
 
     # Compute WAIC and add to the dataframe
     waic_re = [az.waic(x, var_name="obs_real", scale="deviance") for x in mcmcs]
@@ -832,6 +831,7 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
         Dataframe containing the filtered circuits.
     """
     log.info("Filtering the circuits using heuristic rules.")
+    circuits = circuits.copy(deep=True)
 
     if len(circuits) == 0:
         log.warning("Circuits' dataframe is empty!")
