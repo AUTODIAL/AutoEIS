@@ -403,6 +403,9 @@ def compute_fitness_metrics(
         Circuits dataframe with fitness metrics
     """
     circuits = circuits.copy(deep=True)
+    results = circuits["InferenceResult"]
+    mcmcs = [result.mcmc for result in results]
+    circuits["MCMC"] = mcmcs
 
     # Compute WAIC and add to the dataframe
     waic_re = [az.waic(x, var_name="obs_real", scale="deviance") for x in mcmcs]
@@ -412,23 +415,23 @@ def compute_fitness_metrics(
 
     # Compute the posterior predictive and add to the dataframe
     # NOTE: axis=1 because posterior is of shape (num_samples, num_obs)
-    _fn = lambda r: utils.eval_posterior_predictive(r.MCMC, r.circuitstring, freq)
-    circuits["Z_pred"] = circuits.apply(_fn, axis=1)
+    fn = lambda r: utils.eval_posterior_predictive(r.MCMC, r.circuitstring, freq)
+    circuits["Z_pred"] = circuits.apply(fn, axis=1)
 
     # Compute R^2 and add to the dataframe
-    _fn = lambda r: metrics.r2_score(Z.real, r.Z_pred.real, axis=1)
-    circuits["R^2 (real)"] = circuits.apply(_fn, axis=1)
-    _fn = lambda r: metrics.r2_score(Z.imag, r.Z_pred.imag, axis=1)
-    circuits["R^2 (imag)"] = circuits.apply(_fn, axis=1)
+    fn = lambda r: metrics.r2_score(Z.real, r.Z_pred.real, axis=1)
+    circuits["R^2 (real)"] = circuits.apply(fn, axis=1)
+    fn = lambda r: metrics.r2_score(Z.imag, r.Z_pred.imag, axis=1)
+    circuits["R^2 (imag)"] = circuits.apply(fn, axis=1)
     # Since R^2 is a vector (num_samples), also compute its mean for convenience
     circuits["R^2 (ravg)"] = circuits["R^2 (real)"].apply(np.mean)
     circuits["R^2 (iavg)"] = circuits["R^2 (imag)"].apply(np.mean)
 
     # Compute MAPE and add to the dataframe
-    _fn = lambda r: metrics.mape_score(Z.real, r.Z_pred.real, axis=1)
-    circuits["MAPE (real)"] = circuits.apply(_fn, axis=1)
-    _fn = lambda r: metrics.mape_score(Z.imag, r.Z_pred.imag, axis=1)
-    circuits["MAPE (imag)"] = circuits.apply(_fn, axis=1)
+    fn = lambda r: metrics.mape_score(Z.real, r.Z_pred.real, axis=1)
+    circuits["MAPE (real)"] = circuits.apply(fn, axis=1)
+    fn = lambda r: metrics.mape_score(Z.imag, r.Z_pred.imag, axis=1)
+    circuits["MAPE (imag)"] = circuits.apply(fn, axis=1)
     # Since MAPE is a vector (num_samples), also compute its mean for convenience
     circuits["MAPE (ravg)"] = circuits["MAPE (real)"].apply(np.mean)
     circuits["MAPE (iavg)"] = circuits["MAPE (imag)"].apply(np.mean)
@@ -503,7 +506,6 @@ def _validate_priors(priors):
     # Single prior
     if isinstance(priors, Mapping):
         assert all(isinstance(v, Distribution) for v in priors.values()), msg
-        # return [priors]
         return priors
     # Multiple priors
     if isinstance(priors, Iterable):
@@ -512,7 +514,7 @@ def _validate_priors(priors):
     raise ValueError("'priors' must be a dict[Distribution] or list[dict[Distribution]].")
 
 
-def _validate_seed(seed, num_splits=1):
+def _validate_seed(seed, num_splits=1) -> list[jax.Array] | jax.Array:
     """Validates the random seed to be used in ``MCMC.run()``."""
     # If seed is not set, generate a new seed using time
     if seed is None:
@@ -524,6 +526,7 @@ def _validate_seed(seed, num_splits=1):
     elif isinstance(seed, int):
         key = jax.random.PRNGKey(seed)
         key, *subkey = jax.random.split(key, num_splits + 1)
+        subkey = subkey[0] if num_splits == 1 else subkey
     else:
         raise ValueError("'seed' must be an int or a jax.Array.")
     return subkey
