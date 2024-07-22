@@ -15,7 +15,7 @@ def test_load_test_dataset():
     assert len(Z) == len(freq) > 0
 
 
-def test_loat_dataset_preprocess():
+def test_load_dataset_preprocess():
     freq0, Z0 = ae.io.load_test_dataset()
     freq, Z = ae.io.load_test_dataset(preprocess=True)
     assert Z.shape == freq.shape
