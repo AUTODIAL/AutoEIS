@@ -758,20 +758,14 @@ def identify_duplicate_circuits(
 # >>> Inference utils
 
 
-# TODO: Remove variables from input arguments
-# TODO: Refactor inference functions to strip non-variable keys from MCMC samples
-def initialize_priors(
-    p0: Mapping[str, float], variables: Iterable[str]
-) -> dict[str, Distribution]:
-    """Initializes priors for a given circuit.
+def initialize_priors(p0: Mapping[str, float]) -> dict[str, Distribution]:
+    """Initializes prior distributions from parameters dictionary.
 
     Parameters
     ----------
     p0 : Mapping[str, float]
         Initial guess for the circuit parameters as a dictionary of parameter
         names and values.
-    variables : Iterable[str]
-        List of variable names.
 
     Returns
     -------
@@ -785,6 +779,8 @@ def initialize_priors(
     elements and a log-normal distribution for the rest of the parameters.
     """
     priors = {}
+    # Get parameter labels; exclude MCMC-specific parameters, e.g., sigma_real, etc.
+    variables = [k for k in p0.keys() if parser.validate_parameter(k, raises=False)]
     for var in variables:
         value = p0[var]
         if "n" in var:
@@ -800,7 +796,6 @@ def initialize_priors(
 
 def initialize_priors_from_posteriors(
     posterior: Mapping[str, np.ndarray[float]],
-    variables: Iterable[str],
     dist_type: str = "lognormal",
 ) -> dict[str, Distribution]:
     """Creates new priors based on the posterior distributions.
@@ -810,8 +805,6 @@ def initialize_priors_from_posteriors(
     posterior : Mapping[str, np.ndarray[float]]
         Posterior distributions for the circuit parameters as a dictionary
         of parameter names and distributions.
-    variables : Iterable[str]
-        List of variable names.
     dist_type : str, optional
         Type of prior distribution to use. Default is "lognormal".
 
@@ -831,6 +824,8 @@ def initialize_priors_from_posteriors(
     used no matter what the ``dist_type`` is.
     """
     priors = {}
+    # Get parameter labels; exclude MCMC-specific parameters, e.g., sigma_real, etc.
+    variables = [k for k in posterior.keys() if parser.validate_parameter(k, raises=False)]
     for var in variables:
         samples = posterior[var]
         # Fit data to a truncated normal distribution for exponents of CPE elements
@@ -864,18 +859,18 @@ def initialize_priors_from_posteriors(
 
 
 def eval_posterior_predictive(
-    mcmc: MCMC,
+    samples: Mapping[str, np.ndarray],
     circuit: str,
     freq: np.ndarray[float],
     priors: Mapping[str, Distribution] = None,
     rng_key: random.PRNGKey = None,
 ) -> np.ndarray[complex]:
-    """Evaluate the posterior predictive distribution of a MCMC run.
+    """Evaluates the posterior predictive distribution of a MCMC run.
 
     Parameters
     ----------
-    mcmc : MCMC
-        MCMC object.
+    samples: Mapping[str, np.ndarray]
+        Samples from the MCMC run as a dictionary of parameter names and arrays.
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
@@ -894,14 +889,14 @@ def eval_posterior_predictive(
     """
     rng_key = rng_key or random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
-    samples = mcmc.get_samples()
     circuit_fn = generate_circuit_fn(circuit, jit=True)
 
+    # TODO: priors is a dummy variable for posterior predictive
     # Deal with default arguments
     if priors is None:
         variables = parser.get_parameter_labels(circuit)
         p0 = {var: np.median(samples[var]) for var in variables}
-        priors = initialize_priors(p0, variables)
+        priors = initialize_priors(p0)
 
     # Create a predictive distribution for the circuit parameters
     model = models.circuit_regression_complex
