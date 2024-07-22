@@ -360,7 +360,7 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
         Styled table with the inference results
     """
     cols_to_hide = [
-        "Parameters", "MCMC", "success", "divergences", "Z_pred", "WAIC (sum)",
+        "Parameters", "MCMC", "converged", "divergences", "Z_pred", "WAIC (sum)",
         "R^2 (real)", "R^2 (imag)", "MAPE (real)", "MAPE (imag)"
     ]  # fmt: off
     df = circuits.style.hide(cols_to_hide, axis=1)
