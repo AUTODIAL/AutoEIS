@@ -177,7 +177,7 @@ def generate_equivalent_circuits(
     circuits = io.parse_ec_output(circuits)
 
     if not len(circuits):
-        log.warning("No plausible circuits found. Increase `iters` or `tol`.")
+        log.warning("No plausible circuits found. Increase 'tol', 'iters', or both!")
 
     return circuits
 
