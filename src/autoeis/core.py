@@ -651,11 +651,8 @@ def perform_bayesian_inference(
             if isinstance(p0_, list):
                 p0[i] = {k: v for k, v in zip(parser.get_parameter_labels(circuit_), p0_)}
 
-        # Compute priors from p0
-        priors = [
-            utils.initialize_priors(p0_, parser.get_parameter_labels(circuit_))
-            for p0_, circuit_ in zip(p0, circuit)
-        ]
+        # Compute priors from p0; if p0 is None, initialize priors to None
+        priors = [None if p0_ is None else utils.initialize_priors(p0_) for p0_ in p0]
 
     # Generate N random seeds (one for each inference)
     seed = _validate_seed(seed, num_splits=num_inferences)
