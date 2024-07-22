@@ -892,23 +892,23 @@ def perform_full_analysis(
         Dataframe containing circuits, parameters, and MCMC results.
     """
     # Filter out bad impedance data
-    freq, Z = preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
+    freq, Z = utils.preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
-    circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
+    circuits_unfiltered = generate_equivalent_circuits(freq, Z, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = filter_implausible_circuits(circuits_unfiltered)
 
     # Perform Bayesian inference on the filtered ECMs
     kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}
-    mcmc_results = perform_bayesian_inference(circuits, freq, Z, **kwargs_mcmc)
+    results = perform_bayesian_inference(circuits, freq, Z, **kwargs_mcmc)
 
     # Add the results to the circuits dataframe as a new column
-    mcmcs, status = zip(*mcmc_results)
-    circuits["MCMC (chain)"] = mcmcs
-    circuits["MCMC (status)"] = status
+    circuits["MCMC"] = [result.mcmc for result in results]
+    circuits["success"] = [result.converged for result in results]
+    circuits["divergences"] = [result.num_divergences for result in results]
 
     # Compute fitness metrics and add to the dataframe
     circuits = compute_fitness_metrics(circuits, freq, Z)
