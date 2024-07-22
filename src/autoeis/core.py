@@ -656,6 +656,8 @@ def perform_bayesian_inference(
 
     # Generate N random seeds (one for each inference)
     seed = _validate_seed(seed, num_splits=num_inferences)
+    # Ensure seed is a list since MCMD requires all inputs to be lists
+    seed = [seed] if not isinstance(seed, list) else seed
 
     # Perform Bayesian inference
     if parallel:
