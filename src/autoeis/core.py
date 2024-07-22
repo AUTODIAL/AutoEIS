@@ -10,7 +10,6 @@ Collection of functions core to AutoEIS functionality.
     generate_equivalent_circuits
     filter_implausible_circuits
     perform_bayesian_inference
-    preprocess_impedance_data
 
 """
 
