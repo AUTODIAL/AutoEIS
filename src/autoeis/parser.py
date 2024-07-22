@@ -498,7 +498,8 @@ def generate_mathematical_expr(circuit: str) -> str:
     # Replace parameters with array indexing, e.g., R1, P2w, P2n -> x[0], x[1], x[2]
     parameters = get_parameter_labels(circuit)
     for i, var in enumerate(parameters):
-        expr = expr.replace(var, f"p[{i}]", 1)
+        # Negative look-ahead to avoid replacing R10 when dealing with R1
+        expr = re.sub(rf"{var}(?!\d)", f"p[{i}]", expr)
 
     return expr
 
@@ -544,5 +545,7 @@ def replace_components_with_impedance(expr: str) -> str:
     components = get_component_labels(expr)
     # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*pi*f*C1))
     for c in components:
-        expr = expr.replace(c, replacement(c))
+        # Negative look-ahead to avoid replacing R10 when dealing with R1
+        expr = re.sub(rf"{c}(?!\d)", replacement(c), expr)
+
     return expr
