@@ -633,7 +633,7 @@ def perform_bayesian_inference(
         if p0 is None or refine_p0:
             iters = 25
             freq, Z = zip(*[(dataset.freq, dataset.Z) for dataset in datasets])
-            args = circuit, freq, Z, p0, iters
+            args = circuit, freq, Z, [p0] * num_inferences, iters
             p0 = utils.distribute_task(
                 utils.fit_circuit_parameters,
                 *args,
