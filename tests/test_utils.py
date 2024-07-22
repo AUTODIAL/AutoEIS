@@ -82,10 +82,10 @@ def test_eval_posterior_predictive():
     result = ae.core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
 
     # Evaluate the posterior predictive distribution with priors
-    priors = ae.utils.initialize_priors(p0, variables=p0.keys())
-    Z_pred = ae.utils.eval_posterior_predictive(result.mcmc, circuit, freq, priors)
+    priors = ae.utils.initialize_priors(p0)
+    Z_pred = ae.utils.eval_posterior_predictive(result.samples, circuit, freq, priors)
     assert Z_pred.shape == (1000, len(freq))
 
     # Evaluate the posterior predictive distribution without priors
-    Z_pred = ae.utils.eval_posterior_predictive(result.mcmc, circuit, freq)
+    Z_pred = ae.utils.eval_posterior_predictive(result.samples, circuit, freq)
     assert Z_pred.shape == (1000, len(freq))
