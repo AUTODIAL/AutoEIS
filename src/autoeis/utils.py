@@ -933,6 +933,9 @@ class InferenceResult:
         self.freq = freq
         self.Z = Z
 
+    def __repr__(self):
+        return f"InferenceResult at {id(self):#x}"
+
     @functools.cached_property
     def variables(self):
         """Returns the inferred variables, i.e., circuit parameters."""
