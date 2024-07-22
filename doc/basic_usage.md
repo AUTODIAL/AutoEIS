@@ -11,13 +11,16 @@ ae.visualization.plot_impedance_combo(freq, Z)
 
 # Perform automated EIS analysis
 circuits = ae.perform_full_analysis(freq, Z, iters=24, parallel=True)
-print(circuits)
 
-# Print summary of the results
-mcmcs, status = circuits["MCMC (chain)"], circuits["MCMC (status)"]
-for mcmc, stat, circuit in zip(mcmcs, status, circuits.circuitstring):
-    if stat == 0:
+# Print summary of the inference for each circuit model
+for i, row in circuits.iterrows():
+    circuit = row["circuit"]
+    mcmc = row["MCMC"]
+    if row["success"]:
         ae.visualization.print_summary_statistics(mcmc, circuit)
+
+# Print summary of all circuit models
+ae.visualization.print_inference_results(circuits)
 ```
 
 :::{seealso}
