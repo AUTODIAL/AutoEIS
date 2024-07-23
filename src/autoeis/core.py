@@ -10,7 +10,6 @@ Collection of functions core to AutoEIS functionality.
     generate_equivalent_circuits
     filter_implausible_circuits
     perform_bayesian_inference
-    preprocess_impedance_data
 
 """
 
@@ -27,9 +26,8 @@ import numpy as np
 import numpyro
 import pandas as pd
 import psutil
-from box import Box
 from deprecated import deprecated
-from impedance.validation import linKK
+
 from jax import config
 from mpire import WorkerPool
 from numpyro.distributions import Distribution
@@ -40,15 +38,14 @@ from tqdm.auto import tqdm
 from autoeis import io, julia_helpers, metrics, parser, utils
 from autoeis.models import circuit_regression_complex
 
+from .utils import InferenceResult
+
 # Enforce FP64, otherwise circuit fitter fails (because FP32 gradients not sufficient?)
 config.update("jax_enable_x64", True)
 # Tell JAX to use CPUs to avoid the annoying "GPU might be present" warning
 config.update("jax_platforms", "cpu")
 # EIS datasets are not big-enough -> CPU much faster than GPU
 numpyro.set_platform("cpu")
-
-# TODO: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
-linKK = utils.suppress_output_legacy(linKK)
 
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = logging.getLogger(__name__)
@@ -61,7 +58,6 @@ ec = julia_helpers.import_backend(jl)
 
 __all__ = [
     "perform_full_analysis",
-    "preprocess_impedance_data",
     "generate_equivalent_circuits",
     "filter_implausible_circuits",
     "perform_bayesian_inference",
@@ -118,83 +114,6 @@ def compute_ohmic_resistance(freq: np.ndarray[float], Z: np.ndarray[complex]) ->
         R = Z.real[0]
         log.warning("Failed to fit ohmic resistance, returning Re(Z) @ max(freq).")
     return R
-
-
-def preprocess_impedance_data(
-    freq: np.ndarray[float],
-    Z: np.ndarray[complex],
-    tol_linKK: float = 5e-2,
-    high_freq_threshold: float = 1e3,
-    return_aux: bool = False,
-) -> tuple[np.ndarray[float], np.ndarray[complex], Box]:
-    """Preprocesses/cleans up impedance measurements.
-
-    The preprocessing does the following steps:
-        - Discard invalid high frequency measurements (see Notes section)
-        - Filter out data with a positive imaginary part in high frequencies
-        - Enforce the Kramers-Kronig validation (aka Lin-KK)
-
-    Parameters
-    ----------
-    freq : np.ndarray[float]
-        Frequencies corresponding to impedance measurements.
-    Z : np.ndarray[complex]
-        Impedance measurements as a complex array.
-    tol_linKK : float
-        Tolerance for acceptable measurements based on linKK residuals.
-    high_freq_threshold : float
-        Lower bound for what is considered a high frequency measurement.
-    return_aux : bool, optional
-        If True, returns the preprocessed data along with auxiliary
-        information. Default is False.
-
-    Returns
-    -------
-    tuple[np.ndarray[float], np.ndarray[complex], Box]
-        Tuple containing the preprocessed data with the following elements:
-            - freq: Frequencies corresponding to the impedance data.
-            - Z: Filtered impedance data.
-            - aux: Box containing the Lin-KK validation results with keys:
-                - res.real: Residual array for real part of the impedance data.
-                - res.imag: Residual array for imaginary part of the impedance data.
-                - rmse: Root mean square error of KK validated data vs. measurements.
-    """
-    log.info("Preprocessing/cleaning up impedance data.")
-    n0 = len(freq)
-
-    # Make sure frequency is sorted in descending order
-    Z = Z[np.argsort(freq)[::-1]]
-    freq = freq[np.argsort(freq)[::-1]]
-
-    # Heuristic 1: @freq->∞: |Z.im|->0 => highest_valid_freq = freq @ np.argmin(|Z.im|)
-    high_freq = freq > high_freq_threshold
-    idx_highest_valid_freq = np.argmin(np.abs(Z.imag[high_freq]))
-    # Filter out frequencies above the highest valid frequency (only works if freq is sorted)
-    freq = freq[idx_highest_valid_freq:]
-    Z = Z[idx_highest_valid_freq:]
-
-    # Heuristic 2: Remove the data whose Z.imag is positive at high frequencies
-    high_freq = freq > high_freq_threshold
-    positive_im = Z.imag > 0
-    mask = high_freq & positive_im
-    Z = Z[~mask]
-    freq = freq[~mask]
-
-    # Heuristic 3: Kramers-Kronig validation (aka Lin-KK)
-    linKK_kwargs = {"c": 0.5, "max_M": 100, "fit_type": "complex", "add_cap": True}
-    M, mu, Z_linKK, res_real, res_imag = linKK(freq, Z, **linKK_kwargs)
-    rmse = metrics.rmse_score(Z, Z_linKK)
-
-    mask = (np.abs(res_real) < tol_linKK) & (np.abs(res_imag) < tol_linKK)
-    freq = freq[mask]
-    Z = Z[mask]
-
-    if (n0 - len(freq)) / n0 > 0.1:
-        log.warning("More than 10% of the data was filtered out.")
-
-    aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
-
-    return (freq, Z, aux) if return_aux else (freq, Z)
 
 
 def generate_equivalent_circuits(
@@ -257,7 +176,7 @@ def generate_equivalent_circuits(
     circuits = io.parse_ec_output(circuits)
 
     if not len(circuits):
-        log.warning("No plausible circuits found. Increase `iters` or lower `tol`.")
+        log.warning("No plausible circuits found. Increase 'tol', 'iters', or both!")
 
     return circuits
 
@@ -275,12 +194,15 @@ def _generate_ecm_serial(
 
     circuits = []
     for _ in tqdm(range(iters), desc="Circuit Evolution"):
+        utils.flush_streams()
         try:
             circuit = ec.circuit_evolution(Z, freq, **ec_kwargs, quiet=True)
         except Exception as e:
             log.error(f"Error generating circuit: {e}")
             continue
         circuits.append(circuit)
+    else:
+        utils.flush_streams()
 
     circuits = [str(c) for c in circuits if c is not None]
     return circuits
@@ -314,6 +236,7 @@ def _generate_ecm_parallel_julia(
     circuits = []
 
     with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
+        utils.flush_streams()
         for iters_ in iters_chunked:
             try:
                 circuits_ = ec.circuit_evolution_batch(
@@ -324,6 +247,7 @@ def _generate_ecm_parallel_julia(
                 circuits_ = []
             circuits += circuits_
             pbar.update(iters_)
+            utils.flush_streams()
 
     circuits = [str(c) for c in circuits if c is not None]
     return circuits
@@ -404,7 +328,7 @@ def split_components(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Excludes ideal capacitors from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for row in circuits.itertuples():
         variables = row.Parameters.keys()
@@ -418,7 +342,7 @@ def capacitance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Excludes circuits without an ohmic resistance from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for row in circuits.itertuples():
         circuit = row.circuitstring
@@ -432,7 +356,7 @@ def ohmic_resistance_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
     """Excludes circuits with series-only components from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for row in circuits.itertuples():
         circuit = row.circuitstring
@@ -446,7 +370,7 @@ def series_filter(circuits: pd.DataFrame) -> pd.DataFrame:
 
 def merge_identical_circuits(circuits: "pd.DataFrame") -> "pd.DataFrame":
     """Merges identical circuits from the circuits dataframe."""
-    circuits = circuits.copy()
+    circuits = circuits.copy(deep=True)
 
     for i, row_i in circuits.iterrows():
         circuit_i = row_i.circuitstring
@@ -477,8 +401,12 @@ def compute_fitness_metrics(
     circuits : pd.DataFrame
         Circuits dataframe with fitness metrics
     """
-    circuits = circuits.copy()
-    mcmcs = circuits["MCMC"]
+    circuits = circuits.copy(deep=True)
+
+    results = circuits["InferenceResult"]
+    mcmcs = [result.mcmc for result in results]
+    circuits["converged"] = [result.converged for result in results]
+    circuits["divergences"] = [result.num_divergences for result in results]
 
     # Compute WAIC and add to the dataframe
     waic_re = [az.waic(x, var_name="obs_real", scale="deviance") for x in mcmcs]
@@ -488,23 +416,23 @@ def compute_fitness_metrics(
 
     # Compute the posterior predictive and add to the dataframe
     # NOTE: axis=1 because posterior is of shape (num_samples, num_obs)
-    _fn = lambda r: utils.eval_posterior_predictive(r.MCMC, r.circuitstring, freq)
-    circuits["Z_pred"] = circuits.apply(_fn, axis=1)
+    fn = lambda r: utils.eval_posterior_predictive(r.InferenceResult.samples, r.circuitstring, freq)  # fmt: off
+    circuits["Z_pred"] = circuits.apply(fn, axis=1)
 
     # Compute R^2 and add to the dataframe
-    _fn = lambda r: metrics.r2_score(Z.real, r.Z_pred.real, axis=1)
-    circuits["R^2 (real)"] = circuits.apply(_fn, axis=1)
-    _fn = lambda r: metrics.r2_score(Z.imag, r.Z_pred.imag, axis=1)
-    circuits["R^2 (imag)"] = circuits.apply(_fn, axis=1)
+    fn = lambda r: metrics.r2_score(Z.real, r.Z_pred.real, axis=1)
+    circuits["R^2 (real)"] = circuits.apply(fn, axis=1)
+    fn = lambda r: metrics.r2_score(Z.imag, r.Z_pred.imag, axis=1)
+    circuits["R^2 (imag)"] = circuits.apply(fn, axis=1)
     # Since R^2 is a vector (num_samples), also compute its mean for convenience
     circuits["R^2 (ravg)"] = circuits["R^2 (real)"].apply(np.mean)
     circuits["R^2 (iavg)"] = circuits["R^2 (imag)"].apply(np.mean)
 
     # Compute MAPE and add to the dataframe
-    _fn = lambda r: metrics.mape_score(Z.real, r.Z_pred.real, axis=1)
-    circuits["MAPE (real)"] = circuits.apply(_fn, axis=1)
-    _fn = lambda r: metrics.mape_score(Z.imag, r.Z_pred.imag, axis=1)
-    circuits["MAPE (imag)"] = circuits.apply(_fn, axis=1)
+    fn = lambda r: metrics.mape_score(Z.real, r.Z_pred.real, axis=1)
+    circuits["MAPE (real)"] = circuits.apply(fn, axis=1)
+    fn = lambda r: metrics.mape_score(Z.imag, r.Z_pred.imag, axis=1)
+    circuits["MAPE (imag)"] = circuits.apply(fn, axis=1)
     # Since MAPE is a vector (num_samples), also compute its mean for convenience
     circuits["MAPE (ravg)"] = circuits["MAPE (real)"].apply(np.mean)
     circuits["MAPE (iavg)"] = circuits["MAPE (imag)"].apply(np.mean)
@@ -512,17 +440,99 @@ def compute_fitness_metrics(
     # Add number of parameters to the dataframe
     circuits["n_params"] = circuits.apply(lambda r: len(r.Parameters), axis=1)
 
-    # Rank the circuits based on WAIC
-    circuits["WAIC (sum)"] = circuits["WAIC (real)"] + circuits["WAIC (imag)"]
-    circuits.sort_values(by=["WAIC (sum)"], ascending=True, inplace=True, ignore_index=True)
-
     return circuits
 
 
+def _validate_circuit(circuits):
+    """Validates the circuits input."""
+    # Dataframe
+    if isinstance(circuits, pd.DataFrame):
+        utils.validate_circuits_dataframe(circuits)
+    # List
+    elif isinstance(circuits, list):
+        for c in circuits:
+            assert isinstance(c, str), f"Invalid circuit: {c}"
+    # String
+    elif isinstance(circuits, str):
+        pass
+    else:
+        raise ValueError("`circuits` must be a DataFrame, list, or string.")
+    return circuits
+
+
+def _validate_impedance_data(freq, Z):
+    """Validates the impedance data input."""
+    # Shared validations (single/multiple datasets)
+    assert type(freq) is type(Z), "freq and Z must be of the same type."
+    assert utils.is_iterable(freq), "freq must be an ndarray or list/tuple[ndarray]."
+    assert utils.is_iterable(Z), "Z must be an ndarray or list/tuple[ndarray]."
+    assert len(freq) == len(Z), "freq and Z must have the same length."
+    # Standardize freq/Z to be an np.ndarray (freq/Z[i] for multiple datasets)
+    if utils.is_nested_iterable(freq):
+        for i, (f, z) in enumerate(zip(freq, Z)):
+            assert isinstance(f, np.ndarray), f"freq must be a numpy array (dataset #{i})."
+            assert isinstance(z, np.ndarray), f"Z must be a numpy array (dataset #{i})."
+            assert f.size == z.size, f"freq and Z must have the same length (dataset #{i})."
+    else:
+        assert isinstance(freq, np.ndarray), "freq must be a numpy array."
+        assert isinstance(Z, np.ndarray), "Z must be a numpy array."
+    return freq, Z
+
+
+def _validate_p0(p0):
+    """Validates the initial guess for the circuit parameters."""
+    if p0 is None:
+        return None
+    # Single initial guess
+    if isinstance(p0, (Mapping, Iterable)):
+        # return [p0]
+        return p0
+    # Multiple initial guesses
+    if isinstance(p0, list):
+        for p0_ in p0:
+            assert isinstance(p0_, (Mapping, Iterable)), "Invalid initial guess."
+        return p0
+    raise ValueError("`p0` must be a dict, list[dict], or list[np.ndarray].")
+
+
+def _validate_priors(priors):
+    """Validates the priors for the circuit parameters."""
+    if priors is None:
+        return None
+    msg = "'priors' must be a dict of NumPyro distributions."
+    # Single prior
+    if isinstance(priors, Mapping):
+        assert all(isinstance(v, Distribution) for v in priors.values()), msg
+        return priors
+    # Multiple priors
+    if isinstance(priors, Iterable):
+        assert all(isinstance(prior, Mapping) for prior in priors), msg
+        return priors
+    raise ValueError("'priors' must be a dict[Distribution] or list[dict[Distribution]].")
+
+
+def _validate_seed(seed, num_splits=1) -> list[jax.Array] | jax.Array:
+    """Validates the random seed to be used in ``MCMC.run()``."""
+    # If seed is not set, generate a new seed using time
+    if seed is None:
+        seed = time.time_ns() % 2**32
+    # If a jax.Array is already provided, use it otherwise generate one
+    if isinstance(seed, jax.Array):
+        assert seed.size == 2, "'seed' must be a 2-element jax.Array."
+        subkey = seed
+    elif isinstance(seed, int):
+        key = jax.random.PRNGKey(seed)
+        key, *subkey = jax.random.split(key, num_splits + 1)
+        subkey = subkey[0] if num_splits == 1 else subkey
+    else:
+        raise ValueError("'seed' must be an int or a jax.Array.")
+    return subkey
+
+
 def perform_bayesian_inference(
-    circuits: pd.DataFrame | Iterable[str] | str,
-    freq: np.ndarray[float],
-    Z: np.ndarray[complex],
+    circuit: str | Iterable[str] | pd.DataFrame,
+    freq: np.ndarray[float] | Iterable[float],
+    Z: np.ndarray[complex] | Iterable[complex],
     p0: Iterable[float]
     | Mapping[str, float]
     | Iterable[Iterable[float]]
@@ -534,17 +544,23 @@ def perform_bayesian_inference(
     seed: int | jax.Array = None,
     progress_bar: bool = True,
     refine_p0: bool = False,
-) -> list[tuple[MCMC, int]]:
+    parallel: bool = True,
+) -> list[InferenceResult] | InferenceResult:
     """Performs Bayesian inference on the circuits based on impedance data.
 
     Parameters
     ----------
-    circuits : pd.DataFrame | Iterable[str] | str
-        Dataframe containing circuits or list of circuit strings.
-    freq: np.ndarray[float]
-        Frequency data corresponding to the impedance data.
-    Z : np.ndarray[complex]
-        Impedance data as a complex array.
+    circuit : str | Iterable[str] | pd.DataFrame
+        Dataframe containing circuits, list of circuit strings, or a single
+        circuit string.
+    freq: np.ndarray[float] | Iterable[float]
+        Frequency array corresponding to the impedance data. If a list of
+        frequencies is provided, separate inferences will be performed for
+        each frequency array.
+    Z : np.ndarray[complex] | Iterable[np.ndarray[complex]]
+        Impedance data as a complex array. If a list of impedance arrays is
+        provided, separate inferences will be performed for each impedance
+        array.
     p0 : Iterable[float] \
             | Mapping[str, float] \
             | Iterable[Iterable[float]] \
@@ -565,94 +581,127 @@ def perform_bayesian_inference(
     refine_p0 : bool, optional
         If True, the initial guess for the circuit parameters will be refined
         using the circuit fitter (default is False).
+    parallel : bool, optional
+        If True, the MCMC chains will be run in parallel (default is True).
 
     Returns
     -------
-    list[tuple[numpyro.infer.mcmc.MCMC, int]]
-        List of MCMC objects and exit codes (0 if successful, -1 if failed).
+    InferenceResult | list[InferenceResult]
+        InferenceResult object. If multiple circuits are provided (with a
+        single freq/Z pair), or if multiple freq/Z pairs are provided (with a
+        single circuit), a list of InferenceResult objects will be returned.
+
+    Notes
+    -----
+    You cannot provide multiple circuits and multiple datasets together, i.e.,
+    either pass a single circuit with multiple datasets or multiple circuits
+    with a single dataset.
     """
-    # Ensure inputs are lists
-    if isinstance(circuits, str):
-        circuits = [circuits]
-    if p0 is None:
-        p0 = [None] * len(circuits)
-    elif isinstance(p0, (dict, np.ndarray)):
-        p0 = [p0] * len(circuits)
-    elif isinstance(p0, list):
-        assert len(p0) == len(circuits), "Invalid p0 length"
+    # Validate inputs data types
+    circuit = _validate_circuit(circuit)
+    freq, Z = _validate_impedance_data(freq, Z)
+    # Convert dataframe to list if necessary
+    if isinstance(circuit, pd.DataFrame):
+        p0 = circuit["Parameters"].tolist()
+        circuit = circuit["circuitstring"].tolist()
 
-    # Override initial guess in dataframe if p0 is provided
-    if isinstance(circuits, pd.DataFrame):
-        utils.validate_circuits_dataframe(circuits)
-        if p0[0] is not None:
-            log.warning("Ignoring parameters in 'circuits' dataframe in favor of 'p0'.")
-        else:
-            p0 = circuits["Parameters"].tolist()
-        circuits = circuits["circuitstring"].tolist()
+    # Standardize circuits and impedance data to always be a list
+    circuit = [circuit] if isinstance(circuit, str) else circuit
+    freq, Z = ([freq], [Z]) if isinstance(freq, np.ndarray) else (freq, Z)
+    datasets = [utils.ImpedanceData(freq_, Z_) for freq_, Z_ in zip(freq, Z)]
 
-    # Refine the initial guess if requested or if p0 is still uninitialized
-    if refine_p0 or p0[0] is None:
-        args = circuits, freq, Z, p0, 25  # iters=25
-        p0 = utils.distribute_task(
-            utils.fit_circuit_parameters,
-            *args,
-            static=(1, 2, 4),  # static args = (freq, Z, iters)
-            progress_bar=progress_bar,
-            desc="Refining p0",
-        )
-        for i, e in enumerate(p0):
-            if isinstance(e, Exception):
-                log.error(f"Failed to refine p0 for circuit {circuits[i]}: {e}")
-                p0[i] = None
+    # Determine processing workflow: SCSD, SCMD, MCSD
+    num_inferences = max(len(circuit), len(datasets))
+    # Raise error if multiple circuits and datasets are provided together
+    if len(circuit) > 1 and len(datasets) > 1:
+        raise ValueError("Can't handle multiple circuits and multiple datasets together.")
+    # Ensure circuits and datasets are of the same length (if not, broadcast)
+    circuit = circuit * num_inferences if len(circuit) == 1 else circuit
+    datasets = datasets * num_inferences if len(datasets) == 1 else datasets
 
-    # Validate inputs' types and lengths
-    for circuit, p0_ in zip(circuits, p0):
-        assert isinstance(circuit, str), f"Circuit must be a string: {circuit}"
-        valid_p0_types = (dict, np.ndarray, type(None))
-        assert isinstance(p0_, valid_p0_types), f"Invalid p0 type: {p0_}"
-        num_params = len(parser.get_parameter_labels(circuit))
-        if p0_ is not None:
-            assert len(p0_) == num_params, f"Invalid p0 length: {p0_}"
-
-    # Short-circuit if no circuits are provided
-    if len(circuits) == 0:
-        log.warning("'circuits' dataframe is empty!")
-        return None
-
-    bi_kwargs = {
-        "freq": freq,
-        "Z": Z,
-        "priors": priors,
-        "num_warmup": num_warmup,
-        "num_samples": num_samples,
-        "num_chains": num_chains,
-        "seed": seed,
-        "progress_bar": progress_bar,
-    }
-
-    if len(circuits) == 1:
-        # NOTE: Single inference gets slowed down by progress bar
-        bi_kwargs["progress_bar"] = False
-        # ?: For single inference, DON'T return a list -> crashes multiprocessing (maybe not?)
-        results = [_perform_bayesian_inference(circuits[0], p0=p0[0], **bi_kwargs)]
+    # Deal with p0 or priors
+    if (p0 is not None) and (priors is not None):
+        log.warning("Both 'p0' and 'priors' are provided. Ignoring 'p0'.")
+    if priors is not None:
+        priors = _validate_priors(priors)
+        priors = [priors] * num_inferences if isinstance(priors, Mapping) else priors
     else:
-        results = _perform_bayesian_inference_batch(circuits, p0=p0, **bi_kwargs)
+        # Compute p0 if needed
+        if p0 is not None:
+            p0 = _validate_p0(p0)
+            p0 = [p0] * num_inferences if isinstance(p0, Mapping) else p0
+        if p0 is None or refine_p0:
+            iters = 25
+            freq, Z = zip(*[(dataset.freq, dataset.Z) for dataset in datasets])
+            args = circuit, freq, Z, [p0] * num_inferences, iters
+            p0 = utils.distribute_task(
+                utils.fit_circuit_parameters,
+                *args,
+                static=(4),  # static args = (iters)
+                progress_bar=progress_bar,
+                desc="Refining p0",
+            )
+            for i, elem in enumerate(p0):
+                if isinstance(elem, Exception):
+                    log.error(f"Failed to refine p0 for circuit {circuit[i]}: {elem}")
+                    p0[i] = None
 
-    return results
+        # Convert p0 to dict if Iterable is provided
+        for i, (p0_, circuit_) in enumerate(zip(p0, circuit)):
+            if isinstance(p0_, list):
+                p0[i] = {k: v for k, v in zip(parser.get_parameter_labels(circuit_), p0_)}
+
+        # Compute priors from p0; if p0 is None, initialize priors to None
+        priors = [None if p0_ is None else utils.initialize_priors(p0_) for p0_ in p0]
+
+    # Generate N random seeds (one for each inference)
+    seed = _validate_seed(seed, num_splits=num_inferences)
+    # Ensure seed is a list since MCMD requires all inputs to be lists
+    seed = [seed] if not isinstance(seed, list) else seed
+
+    # Perform Bayesian inference
+    if parallel:
+        results = _perform_bayesian_inference_MCMD(
+            circuit=circuit,
+            dataset=datasets,
+            priors=priors,
+            num_warmup=num_warmup,
+            num_samples=num_samples,
+            num_chains=num_chains,
+            seed=seed,
+            progress_bar=progress_bar,
+        )
+    else:
+        results = []
+        for i in range(num_inferences):
+            result = _perform_bayesian_inference_SCSD(
+                circuit=circuit[i],
+                freq=datasets[i].freq,
+                Z=datasets[i].Z,
+                priors=priors[i],
+                num_warmup=num_warmup,
+                num_samples=num_samples,
+                num_chains=num_chains,
+                seed=seed[i],
+                progress_bar=progress_bar,
+            )
+            results.append(result)
+
+    # Return a single InferenceResult object if n_inferences = 1, else a list
+    return results[0] if len(results) == 1 else results
 
 
-def _perform_bayesian_inference(
+def _perform_bayesian_inference_SCSD(
     circuit: str,
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
-    p0: Iterable[float] | Mapping[str, float] = None,
-    priors: Mapping[str, Distribution] = None,
+    priors: Mapping[str, Distribution],
     num_warmup: int = 2500,
     num_samples: int = 1000,
     num_chains: int = 1,
     seed: int | jax.Array = None,
     progress_bar: bool = False,
-) -> tuple[numpyro.infer.mcmc.MCMC, int]:
+) -> InferenceResult:
     """Performs Bayesian inference on the circuit based on impedance data.
 
     Parameters
@@ -664,8 +713,6 @@ def _perform_bayesian_inference(
         Frequencies corresponding to the impedance data.
     Z : np.ndarray[complex]
         Complex impedance data.
-    p0 : Iterable[float] | Mapping[str, float], optional
-        Initial guess for the circuit parameters (default is None).
     priors: Mapping[str, Distribution], optional
         Priors for the circuit parameters (default is None).
     num_warmup : int, optional
@@ -681,32 +728,12 @@ def _perform_bayesian_inference(
 
     Returns
     -------
-    tuple[MCMC, int]
-        MCMC object and exit code (0 if successful, -1 if failed).
+    InferenceResult
+        InferenceResult object.
     """
     log.info("Performing Bayesian inference on the circuit {circuit}.")
 
-    # If the seed is already set using JAX, use it
-    assert isinstance(seed, (int, jax.Array, type(None)))
-    if isinstance(seed, jax.Array) and len(seed) == 2:
-        subkey = seed
-    # If seed is int -> use it, else generate a new seed using time
-    else:
-        seed = time.time_ns() % 2**32 if seed is None else seed
-        key = jax.random.PRNGKey(seed)
-        key, subkey = jax.random.split(key)
-
-    # TODO: Remove this, circuit fitting must be done in the public API
-    # Deal with initial values for the circuit parameters
-    if priors is None:
-        if p0 is None:
-            p0 = utils.fit_circuit_parameters(circuit, freq, Z)
-        assert isinstance(p0, dict), "p0 must be a dictionary"
-        # Create priors for the circuit parameters based on the initial guess
-        priors = utils.initialize_priors(p0, variables=p0.keys())
-    else:
-        assert isinstance(priors, dict), "'priors' must be a dictionary"
-
+    subkey = _validate_seed(seed)
     circuit_fn = utils.generate_circuit_fn(circuit, jit=True)
 
     nuts_kernel = NUTS(
@@ -728,113 +755,71 @@ def _perform_bayesian_inference(
     }
 
     try:
+        # HACK: Handle when circuit fitter fails to find p0 (to be caught by RuntimeError)
+        if priors is None:
+            raise RuntimeError(
+                f"Inference couldn't be performed for circuit: {circuit}, "
+                "because 'priors' are not provided, possibly because "
+                "circuit fitter failed to find an initial guess 'p0'."
+            )
         mcmc.run(subkey, **kwargs_inference)
-        exit_code = 0
+        converged = True
     except RuntimeError as e:
         log.error(f"Inference failed for circuit: {circuit}. Error: {e}")
-        exit_code = -1
-    return mcmc, exit_code
+        converged = False
+
+    return InferenceResult(circuit, mcmc, converged=converged, freq=freq, Z=Z)
 
 
-def _perform_bayesian_inference_batch(
-    circuits: Iterable[str],
-    freq: np.ndarray[float],
-    Z: np.ndarray[complex],
-    p0: Iterable[Mapping[str, float]] = None,
-    priors: Iterable[Mapping[str, Distribution]] = None,
-    num_warmup: int = 2500,
-    num_samples: int = 1000,
-    num_chains: int = 1,
-    seed: int | jax.Array = None,
-    progress_bar=True,
-):
-    """Performs Bayesian inference on a list of circuits in parallel.
+def _perform_bayesian_inference_MCMD(
+    circuit: Iterable[str],
+    dataset: Iterable[utils.ImpedanceData],
+    priors: Iterable[Mapping[str, Distribution]],
+    num_warmup: int,
+    num_samples: int,
+    num_chains: int,
+    seed: jax.Array,
+    progress_bar: bool,
+) -> list[InferenceResult]:
+    """Performs inference in batch mode; multiple-circuits multiple-data (MCMD)."""
+    # Sanity check on input lengths
+    msg = "'circuit', 'dataset', and 'priors' must have the same length."
+    assert len(circuit) == len(dataset) == len(priors), msg
 
-    Parameters
-    ----------
-    circuits : pd.DataFrame or list[str]
-        Dataframe containing circuits or list of circuit strings.
-    freq : np.ndarray[float]
-        Frequencies corresponding to the impedance data.
-    Z : np.ndarray[complex]
-        Complex impedance data.
-    p0 : Iterable[Mapping[str, float]], optional
-        Initial guess for the circuit parameters (default is None).
-    priors : Iterable[Mapping[str, Distribution]], optional
-        Priors for the circuit parameters (default is None).
-    num_warmup : int, optional
-        Number of warmup samples for the MCMC (default is 2500).
-    num_samples : int, optional
-        Number of samples for the MCMC (default is 1000).
-    num_chains : int, optional
-        Number of MCMC chains (default is 1).
-    seed : int | jax.Array, optional
-        Random seed for reproducibility (default is None).
-    progress_bar : bool, optional
-        If True, a progress bar will be displayed (default is True).
+    # Fetch freq, Z pairs from the dataset
+    freq, Z = zip(*[(dataset_.freq, dataset_.Z) for dataset_ in dataset])
 
-    Returns
-    -------
-    list[tuple[MCMC, int]]
-        List of MCMC objects and exit codes (0 if successful, -1 if failed).
-    """
-    # Generate a random seed for each circuit
-    N = len(circuits)
-    seed = seed or time.time_ns() % 2**32
-    key = jax.random.PRNGKey(seed)
-    key, *subkeys = jax.random.split(key, N + 1)
-
-    # TODO: Remove the following code once made sure that distribute_task works
-    # # Multiprocessing requires all inputs to be iterables of the same length
-    # bi_kwargs = {
-    #     "circuits": circuits,
-    #     "freq": [freq] * N,
-    #     "Z": [Z] * N,
-    #     "p0": p0 if isinstance(p0, list) else [p0] * N,
-    #     "priors": priors if isinstance(priors, list) else [priors] * N,
-    #     "num_warmup": [num_warmup] * N,
-    #     "num_samples": [num_samples] * N,
-    #     "num_chains": [num_chains] * N,
-    #     "seed": subkeys,
-    #     "progress_bar": [False] * N,
-    # }
-
-    # # Use all available cores for parallel processing
-    # n_jobs = min(psutil.cpu_count(logical=False), N)
-
-    # # Perform Bayesian inference in parallel
-    # with warnings.catch_warnings():
-    #     # JAX doesn't work well with multiprocessing, but "spawn" should be fine
-    #     msg_to_ignore = ".*os\\.fork\\(\\).*"
-    #     warnings.filterwarnings("ignore", category=RuntimeWarning, message=msg_to_ignore)
-    #     with WorkerPool(n_jobs=n_jobs, use_dill=True, start_method="spawn") as pool:
-    #         results = pool.map(
-    #             _perform_bayesian_inference,
-    #             zip(*bi_kwargs.values()),
-    #             progress_bar=progress_bar,
-    #             progress_bar_style="notebook" if utils.is_notebook() else "rich",
-    #             progress_bar_options={"desc": "Performing Bayesian Inference"},
-    #             iterable_len=len(circuits),
-    #         )
-
-    results = utils.distribute_task(
-        _perform_bayesian_inference,
-        circuits,
-        freq,
-        Z,
-        p0 if isinstance(p0, list) else [p0] * N,
-        priors if isinstance(priors, list) else [priors] * N,
-        num_warmup,
-        num_samples,
-        num_chains,
-        subkeys,  # seed
-        False,  # progress_bar
-        static=(1, 2, 5, 6, 7, 9),
-        desc="Performing Bayesian Inference",
-    )
-
-    # TODO: Deal with failed inferences, i.e., Exception object in results
-
+    # If a single inference is requested, perform SCSD directly to avoid overhead
+    if len(circuit) == 1:
+        results = _perform_bayesian_inference_SCSD(
+            circuit[0],
+            freq[0],
+            Z[0],
+            priors=priors[0],
+            num_warmup=num_warmup,
+            num_samples=num_samples,
+            num_chains=num_chains,
+            seed=seed[0],
+            progress_bar=False,
+        )
+        results = [results]
+    else:
+        results = utils.distribute_task(
+            _perform_bayesian_inference_SCSD,
+            # --- _perform_bayesian_inference_SCSD args ---
+            circuit,  # 0
+            freq,  # 1
+            Z,  # 2
+            priors,  # 3
+            num_warmup,  # 4
+            num_samples,  # 5
+            num_chains,  # 6
+            seed,  # 7
+            # --- distribute_task kwargs ---
+            static=(4, 5, 6),  # indices of static args
+            progress_bar=progress_bar,
+            desc="Performing Bayesian Inference",
+        )
     return results
 
 
@@ -852,6 +837,7 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
         Dataframe containing the filtered circuits.
     """
     log.info("Filtering the circuits using heuristic rules.")
+    circuits = circuits.copy(deep=True)
 
     if len(circuits) == 0:
         log.warning("Circuits' dataframe is empty!")
@@ -867,8 +853,7 @@ def filter_implausible_circuits(circuits: pd.DataFrame) -> pd.DataFrame:
     circuits = circuits.drop(columns=["Resistors", "Capacitors", "Inductors", "CPEs"])
 
     if len(circuits) == 0:
-        log.warning("No plausible circuits found. Increase `iters` or `tol` and rerun "
-                    "`generate_equivalent_circuits`")  # fmt: skip
+        log.warning("No plausible circuits left after post-filtering")  # fmt: skip
 
     return circuits
 
@@ -911,23 +896,23 @@ def perform_full_analysis(
         Dataframe containing circuits, parameters, and MCMC results.
     """
     # Filter out bad impedance data
-    freq, Z = preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
+    freq, Z = utils.preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
 
     # Generate a pool of potential ECMs via an evolutionary algorithm
     kwargs = {"iters": iters, "complexity": 12, "tol": tol, "parallel": parallel}
-    circuits_unfiltered = generate_equivalent_circuits(Z, freq, **kwargs)
+    circuits_unfiltered = generate_equivalent_circuits(freq, Z, **kwargs)
 
     # Apply heuristic rules to filter unphysical circuits
     circuits = filter_implausible_circuits(circuits_unfiltered)
 
     # Perform Bayesian inference on the filtered ECMs
     kwargs_mcmc = {"num_warmup": num_warmup, "num_samples": num_samples}
-    mcmc_results = perform_bayesian_inference(circuits, freq, Z, **kwargs_mcmc)
+    results = perform_bayesian_inference(circuits, freq, Z, **kwargs_mcmc)
 
     # Add the results to the circuits dataframe as a new column
-    mcmcs, status = zip(*mcmc_results)
-    circuits["MCMC (chain)"] = mcmcs
-    circuits["MCMC (status)"] = status
+    circuits["MCMC"] = [result.mcmc for result in results]
+    circuits["success"] = [result.converged for result in results]
+    circuits["divergences"] = [result.num_divergences for result in results]
 
     # Compute fitness metrics and add to the dataframe
     circuits = compute_fitness_metrics(circuits, freq, Z)

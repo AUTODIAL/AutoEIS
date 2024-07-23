@@ -28,7 +28,8 @@ dependencies = [
     "click",
     "deprecated",
     "dill",
-    "impedance",
+    # "impedance",
+    "impedance @ git+https://github.com/ma-sadeghi/impedance.py@fix-numpy2",
     "ipython",
     "ipykernel",
     "ipywidgets",
@@ -101,6 +102,9 @@ path = "src/autoeis/version.py"
 
 [tool.hatch.build.targets.sdist]
 include = ["src/autoeis"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"

@@ -1,6 +1,7 @@
 import os
 
 import autoeis as ae
+import numpy as np
 
 
 def test_get_assets_path():
@@ -12,6 +13,23 @@ def test_load_test_dataset():
     freq, Z = ae.io.load_test_dataset()
     assert Z.shape == freq.shape
     assert len(Z) == len(freq) > 0
+
+
+def test_load_dataset_preprocess():
+    freq0, Z0 = ae.io.load_test_dataset()
+    freq, Z = ae.io.load_test_dataset(preprocess=True)
+    assert Z.shape == freq.shape
+    assert len(Z) == len(freq) > 0
+    assert len(Z) < len(Z0)
+
+
+def test_load_dataset_noise():
+    freq0, Z0 = ae.io.load_test_dataset()
+    freq, Z = ae.io.load_test_dataset(noise=0.1)
+    assert Z.shape == freq.shape
+    assert len(Z) == len(freq) > 0
+    assert np.allclose(freq, freq0)  # No noised added to frequency
+    assert not np.allclose(Z, Z0)  # Noise added to impedance
 
 
 def test_load_test_circuits_no_filter():

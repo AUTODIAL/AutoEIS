@@ -7,6 +7,7 @@ Collection of functions for importing and exporting EIS data/results.
    :toctree: generated/
 
     get_assets_path
+    load_battery_dataset
     load_test_dataset
     load_test_circuits
     parse_ec_output
@@ -33,8 +34,57 @@ def get_assets_path() -> Path:
     return PATH
 
 
-def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
+def load_battery_dataset(
+    preprocess: bool = False,
+    noise: float = 0,
+) -> list[tuple[np.ndarray[float], np.ndarray[complex]]]:
+    """Loads EIS data of a battery cell during cycling (at discharged state).
+
+    Parameters
+    ----------
+    preprocess: bool, optional
+        If True, the impedance data is preprocessed using
+        :func:`autoeis.core.preprocess_impedance_data`. Default is False.
+    noise: float, optional
+        If greater than zero, uniform noise with prescribed amplitude is added
+        to the impedance data. Default is 0.
+
+    Returns
+    -------
+    list[tuple[np.ndarray[float], np.ndarray[complex]]]
+        List of tuples of frequency and impedance arrays for each cycle.
+    """
+    PATH = get_assets_path()
+    fpath = os.path.join(PATH, "battery_data.npy")
+    data = np.load(fpath)
+    # Data are stored as complex, convert frequency to float
+    data = [(freq.real, Z) for freq, Z in data]
+    if preprocess:
+        data = [ae.utils.preprocess_impedance_data(freq, Z) for freq, Z in data]
+    if noise:
+        # Only add noise to impedance data (opinionated!)
+        noise_real = [np.random.rand(len(Z)) * Z.real * noise for freq, Z in data]
+        noise_imag = [np.random.rand(len(Z)) * Z.imag * noise for freq, Z in data]
+        data = [
+            (freq, Z + noise_real[i] + noise_imag[i] * 1j)
+            for i, (freq, Z) in enumerate(data)
+        ]
+    return data
+
+
+def load_test_dataset(
+    preprocess: bool = False, noise: float = 0
+) -> tuple[np.ndarray[float], np.ndarray[complex]]:
     """Returns a test dataset as a tuple of frequency and impedance arrays.
+
+    Parameters
+    ----------
+    preprocess: bool, optional
+        If True, the impedance data is preprocessed using
+        :func:`autoeis.core.preprocess_impedance_data`. Default is False.
+    noise: float, optional
+        If greater than zero, uniform noise with prescribed amplitude is added
+        to the impedance data. Default is 0.
 
     Returns
     -------
@@ -46,6 +96,13 @@ def load_test_dataset() -> tuple[np.ndarray[complex], np.ndarray[float]]:
     freq, Zreal, Zimag = np.loadtxt(fpath, skiprows=1, unpack=True, usecols=(0, 1, 2))
     # Convert to complex impedance (the file contains -Im(Z) hence the minus sign)
     Z = Zreal - 1j * Zimag
+    if preprocess:
+        freq, Z = ae.utils.preprocess_impedance_data(freq, Z)
+    if noise:
+        # Only add noise to impedance data (opinionated!)
+        noise_real = np.random.rand(len(Z)) * Z.real * noise
+        noise_imag = np.random.rand(len(Z)) * Z.imag * noise
+        Z += noise_real + noise_imag * 1j
     return freq, Z
 
 

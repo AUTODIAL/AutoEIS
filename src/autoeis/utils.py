@@ -14,11 +14,17 @@ Collection of utility functions used throughout the package.
     identify_duplicate_circuits
     initialize_priors
     initialize_priors_from_posteriors
+    eval_posterior_predictive
     validate_circuits_dataframe
+    preprocess_impedance_data
+    Settings
+    InferenceResult
+    ImpedanceData
 
 """
 
 import copy
+import functools
 import io
 import logging
 import os
@@ -36,8 +42,10 @@ import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
 import psutil
+from box import Box
 from impedance.models.circuits import CustomCircuit
 from impedance.models.circuits.fitting import set_default_bounds
+from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
 from numpy import pi  # NOQA: F401
@@ -49,12 +57,18 @@ from scipy.stats.mstats import gmean
 
 import __main__
 
-from . import models, parser
+from . import metrics, models, parser, visualization
 
 log = logging.getLogger(__name__)
 
 
 # >>> General utils
+
+
+def flush_streams():
+    """Flushes the standard output and error streams."""
+    sys.stdout.flush()
+    sys.stderr.flush()
 
 
 def is_notebook():
@@ -125,6 +139,63 @@ def flatten(xs: Iterable) -> list:
                 yield x
 
     return list(_flatten(xs))
+
+
+def is_ndarray_like(xs: Iterable) -> bool:
+    """Returns True if the input is an ndarray-like object."""
+    try:
+        np.array(xs)
+    except ValueError:
+        return False
+    return True
+
+
+def is_iterable(xs: Iterable) -> bool:
+    """Returns true if the input is an iterable but not a string or bytes.
+
+    Parameters
+    ----------
+    xs: Iterable
+        An iterable.
+
+    Returns
+    -------
+    bool
+        True if the input is an iterable but not a string or bytes, False otherwise.
+
+    Examples
+    --------
+    >>> is_iterable([1, 2, 3])
+    True
+    >>> is_iterable("hello")
+    False
+    """
+    return isinstance(xs, Iterable) and not isinstance(xs, (str, bytes))
+
+
+def is_nested_iterable(xs: Iterable) -> bool:
+    """Returns True if all items of an iterable are iterable themselves.
+
+    Parameters
+    ----------
+    xs: Iterable
+        An iterable.
+
+    Returns
+    -------
+    bool
+        True if the iterable is nested, False otherwise.
+
+    Examples
+    --------
+    >>> is_nested_iterable([1, 2, [3, 4], [5, [6, 7]]])
+    False
+    >>> is_nested_iterable([1, 2, 3, 4])
+    False
+    >>> is_nested_iterable([[1, 2], [3, 4], [5, 6]])
+    True
+    """
+    return all(is_iterable(x) for x in xs)
 
 
 def suppress_output_legacy(func: Callable) -> Callable:
@@ -219,17 +290,13 @@ def suppress_output():
 
 def parse_initial_guess(
     p0: Mapping[str, float] | Iterable[float],
-    circuit: str,
 ) -> np.ndarray:
-    """Parses the initial guess for circuit parameters from various formats
-    and returns an array of parameters.
+    """Parses the initial guess for circuit parameters into an ndarray.
 
     Parameters
     ----------
     p0: Mapping[str, float] | Iterable[float]
         The initial guess for the circuit parameters.
-    circuit: str
-        The circuit string.
 
     Returns
     -------
@@ -240,19 +307,58 @@ def parse_initial_guess(
     ------
     ValueError
         If the initial guess is not not a dict nor array-like.
-
-    Notes
-    -----
-    If no initial guess is provided, a random array of parameters is returned.
     """
-    num_params = parser.count_parameters(circuit)
-    if p0 is None:
-        return np.random.rand(num_params)
     if isinstance(p0, dict):
         return np.fromiter(p0.values(), dtype=float)
-    if isinstance(p0, (list, np.ndarray)):
+    if is_ndarray_like(p0):
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
+
+
+def generate_initial_guess(circuit: str) -> np.ndarray:
+    """Generates a random initial guess for the circuit parameters.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+
+    Returns
+    -------
+    np.ndarray
+        A random initial guess for the circuit parameters.
+    """
+    num_params = parser.count_parameters(circuit)
+    return np.random.rand(num_params)
+
+
+def get_parameter_bounds(circuit: str) -> tuple:
+    """Returns a 2-element tuple of lower and upper bounds, to be used in
+    SciPy's ``curve_fit``.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+
+    Returns
+    -------
+    tuple
+        A 2-element tuple of lower and upper bounds for the circuit parameters.
+    """
+    bounds_dict = {
+        "R": (0.0, 1e9),
+        "C": (0.0, 10.0),
+        "Pw": (0.0, 1e9),
+        "Pn": (0.0, 1.0),
+        "L": (0.0, 5.0),
+    }
+    types = parser.get_parameter_types(circuit)
+    bounds = [bounds_dict[type_] for type_ in types]
+    bounds = tuple(zip(*bounds))
+    return bounds
 
 
 def fit_circuit_parameters_legacy(
@@ -294,8 +400,8 @@ def fit_circuit_parameters_legacy(
     """
     # NOTE: Each circuit eval ~ 1 ms, so 1000 evals ~ 1 s
     # Deal with initial guess
+    p0 = parse_initial_guess(p0) if p0 is not None else generate_initial_guess(circuit)
     num_params = parser.count_parameters(circuit)
-    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Fit circuit parameters
@@ -329,8 +435,9 @@ def fit_circuit_parameters(
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
     iters: int = 1,
-    maxfev: int = 1000,
-    ftol: float = 1e-13,
+    maxfev: int = None,
+    ftol: float = 1e-8,
+    xtol: float = 1e-8,
 ) -> dict[str, float]:
     """Fits and returns the parameters of a circuit to impedance data.
 
@@ -349,9 +456,11 @@ def fit_circuit_parameters(
         Maximum number of iterations for the circuit fitter. Default is 1.
     maxfev : int, optional
         Maximum number of function evaluations for the circuit fitter.
-        Default is 1000.
+        Default is None. See ``scipy.optimize.leastsq`` for details.
     ftol : float, optional
-        Tolerance for the convergence criterion. Default is 1e-13.
+        See ``scipy.optimize.leastsq`` for details. Default is 1e-8.
+    xtol : float, optional
+        See ``scipy.optimize.leastsq`` for details. Default is 1e-8.
 
     Returns
     -------
@@ -375,27 +484,29 @@ def fit_circuit_parameters(
     # <<<
 
     # Sanitize initial guess
+    p0 = parse_initial_guess(p0) if p0 is not None else generate_initial_guess(circuit)
     num_params = parser.count_parameters(circuit)
-    p0 = parse_initial_guess(p0, circuit)
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Assemble kwargs for curve_fit
-    circuit_impy = parser.convert_to_impedance_format(circuit)
-    bounds = set_default_bounds(circuit_impy)
-    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol}
+    # TODO: Remove the next two lines once `get_parameter_bounds` is tested
+    # circuit_impy = parser.convert_to_impedance_format(circuit)
+    # bounds = set_default_bounds(circuit_impy)
+    bounds = get_parameter_bounds(circuit)
+    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol, "xtol": xtol}
 
     # Fit circuit parameters by brute force
     err_min = np.inf
     for _ in range(iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-        except Exception:
+        except Exception as e:
             continue
         err = gmean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
         if err < err_min:
             err_min = err
             p0 = popt
-        kwargs["p0"] = np.random.rand(num_params)
+        kwargs["p0"] = generate_initial_guess(circuit)
 
     if err_min == np.inf:
         raise Exception("Failed to fit the circuit parameters.")
@@ -644,23 +755,17 @@ def identify_duplicate_circuits(
 # <<< Circuit utils
 
 
-# >>> Statistics utils
+# >>> Inference utils
 
 
-# TODO: Remove variables from input arguments
-# TODO: Refactor inference functions to strip non-variable keys from MCMC samples
-def initialize_priors(
-    p0: Mapping[str, float], variables: Iterable[str]
-) -> dict[str, Distribution]:
-    """Initializes priors for a given circuit.
+def initialize_priors(p0: Mapping[str, float]) -> dict[str, Distribution]:
+    """Initializes prior distributions from parameters dictionary.
 
     Parameters
     ----------
     p0 : Mapping[str, float]
         Initial guess for the circuit parameters as a dictionary of parameter
         names and values.
-    variables : Iterable[str]
-        List of variable names.
 
     Returns
     -------
@@ -674,6 +779,8 @@ def initialize_priors(
     elements and a log-normal distribution for the rest of the parameters.
     """
     priors = {}
+    # Get parameter labels; exclude MCMC-specific parameters, e.g., sigma_real, etc.
+    variables = [k for k in p0.keys() if parser.validate_parameter(k, raises=False)]
     for var in variables:
         value = p0[var]
         if "n" in var:
@@ -689,7 +796,6 @@ def initialize_priors(
 
 def initialize_priors_from_posteriors(
     posterior: Mapping[str, np.ndarray[float]],
-    variables: Iterable[str],
     dist_type: str = "lognormal",
 ) -> dict[str, Distribution]:
     """Creates new priors based on the posterior distributions.
@@ -699,8 +805,6 @@ def initialize_priors_from_posteriors(
     posterior : Mapping[str, np.ndarray[float]]
         Posterior distributions for the circuit parameters as a dictionary
         of parameter names and distributions.
-    variables : Iterable[str]
-        List of variable names.
     dist_type : str, optional
         Type of prior distribution to use. Default is "lognormal".
 
@@ -720,6 +824,8 @@ def initialize_priors_from_posteriors(
     used no matter what the ``dist_type`` is.
     """
     priors = {}
+    # Get parameter labels; exclude MCMC-specific parameters, e.g., sigma_real, etc.
+    variables = [k for k in posterior.keys() if parser.validate_parameter(k, raises=False)]
     for var in variables:
         samples = posterior[var]
         # Fit data to a truncated normal distribution for exponents of CPE elements
@@ -734,7 +840,7 @@ def initialize_priors_from_posteriors(
             # NOTE: above conversion is only valid when loc = 0
             if dist_type == "lognormal":
                 s, loc, scale = stats.lognorm.fit(samples, floc=0)
-                priors[var] = dist.LogNormal(loc=np.log(scale), scale=8 * s)
+                priors[var] = dist.LogNormal(loc=np.log(scale), scale=4 * s)
             elif dist_type == "normal":
                 loc, scale = stats.norm.fit(samples)
                 priors[var] = dist.TruncatedNormal(
@@ -753,18 +859,18 @@ def initialize_priors_from_posteriors(
 
 
 def eval_posterior_predictive(
-    mcmc: MCMC,
+    samples: Mapping[str, np.ndarray],
     circuit: str,
     freq: np.ndarray[float],
     priors: Mapping[str, Distribution] = None,
     rng_key: random.PRNGKey = None,
 ) -> np.ndarray[complex]:
-    """Evaluate the posterior predictive distribution of a MCMC run.
+    """Evaluates the posterior predictive distribution of a MCMC run.
 
     Parameters
     ----------
-    mcmc : MCMC
-        MCMC object.
+    samples: Mapping[str, np.ndarray]
+        Samples from the MCMC run as a dictionary of parameter names and arrays.
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
@@ -783,14 +889,14 @@ def eval_posterior_predictive(
     """
     rng_key = rng_key or random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
-    samples = mcmc.get_samples()
     circuit_fn = generate_circuit_fn(circuit, jit=True)
 
+    # TODO: priors is a dummy variable for posterior predictive
     # Deal with default arguments
     if priors is None:
         variables = parser.get_parameter_labels(circuit)
         p0 = {var: np.median(samples[var]) for var in variables}
-        priors = initialize_priors(p0, variables)
+        priors = initialize_priors(p0)
 
     # Create a predictive distribution for the circuit parameters
     model = models.circuit_regression_complex
@@ -804,10 +910,165 @@ def eval_posterior_predictive(
     return Z_pred
 
 
-# <<< Statistics utils
+class InferenceResult:
+    """Container for inference result."""
+
+    def __init__(
+        self,
+        circuit: str,
+        mcmc: MCMC,
+        *,
+        converged: bool,
+        freq: np.ndarray[float],
+        Z: np.ndarray[complex],
+    ):
+        self.circuit = circuit
+        self.mcmc = mcmc
+        self.converged = converged
+        self.freq = freq
+        self.Z = Z
+
+    def __repr__(self):
+        return f"InferenceResult at {id(self):#x}"
+
+    @functools.cached_property
+    def variables(self):
+        """Returns the inferred variables, i.e., circuit parameters."""
+        return parser.get_parameter_labels(self.circuit)
+
+    @functools.cached_property
+    def samples(self):
+        """Returns the MCMC samples."""
+        return self.mcmc.get_samples()
+
+    @functools.cached_property
+    def num_divergences(self):
+        """Returns the number of divergences in the MCMC chain."""
+        return self.mcmc.get_extra_fields()["diverging"].sum()
+
+    def print_summary(self):
+        """Prints a summary of the inference results."""
+        self.mcmc.print_summary()
+
+
+class ImpedanceData:
+    """Container for impedance data."""
+
+    def __init__(self, freq: np.ndarray[float], Z: np.ndarray[complex]):
+        assert len(freq) == len(Z), "freq and Z data must have the same length."
+        self.freq = freq
+        self.Z = Z
+
+    def __len__(self):
+        return len(self.freq)
+
+    def plot_nyquist(self, ax=None, **kwargs):
+        """Plots the Nyquist plot of the impedance data."""
+        return visualization.plot_nyquist(self.Z, ax=ax, **kwargs)
+
+    def plot_bode(self, ax=None, **kwargs):
+        """Plots the Bode plot of the impedance data."""
+        return visualization.plot_bode(self.freq, self.Z, ax=ax, **kwargs)
+
+    def preprocess(
+        self, tol_linKK=5e-2, high_freq_threshold=1e3, return_aux=False, inplace=True
+    ):
+        """Preprocesses the impedance data."""
+        out = preprocess_impedance_data(
+            self.freq,
+            self.Z,
+            tol_linKK=tol_linKK,
+            high_freq_threshold=high_freq_threshold,
+            return_aux=return_aux,
+        )
+        if inplace:
+            self.freq, self.Z = out[:2]
+        return out
+
+
+# <<< Inference utils
 
 
 # >>> Miscellaneous utils
+
+
+def preprocess_impedance_data(
+    freq: np.ndarray[float],
+    Z: np.ndarray[complex],
+    tol_linKK: float = 5e-2,
+    high_freq_threshold: float = 1e3,
+    return_aux: bool = False,
+) -> tuple[np.ndarray[float], np.ndarray[complex], Box]:
+    """Preprocesses/cleans up impedance measurements.
+
+    The preprocessing does the following steps:
+        - Discard invalid high frequency measurements (see Notes section)
+        - Filter out data with a positive imaginary part in high frequencies
+        - Enforce the Kramers-Kronig validation (aka Lin-KK)
+
+    Parameters
+    ----------
+    freq : np.ndarray[float]
+        Frequencies corresponding to impedance measurements.
+    Z : np.ndarray[complex]
+        Impedance measurements as a complex array.
+    tol_linKK : float
+        Tolerance for acceptable measurements based on linKK residuals.
+    high_freq_threshold : float
+        Lower bound for what is considered a high frequency measurement.
+    return_aux : bool, optional
+        If True, returns the preprocessed data along with auxiliary
+        information. Default is False.
+
+    Returns
+    -------
+    tuple[np.ndarray[float], np.ndarray[complex], Box]
+        Tuple containing the preprocessed data with the following elements:
+            - freq: Frequencies corresponding to the impedance data.
+            - Z: Filtered impedance data.
+            - aux: Box containing the Lin-KK validation results with keys:
+                - res.real: Residual array for real part of the impedance data.
+                - res.imag: Residual array for imaginary part of the impedance data.
+                - rmse: Root mean square error of KK validated data vs. measurements.
+    """
+    log.info("Preprocessing/cleaning up impedance data.")
+    n0 = len(freq)
+
+    # Make sure frequency is sorted in descending order
+    Z = Z[np.argsort(freq)[::-1]]
+    freq = freq[np.argsort(freq)[::-1]]
+
+    # Heuristic 1: @freq->∞: |Z.im|->0 => highest_valid_freq = freq @ np.argmin(|Z.im|)
+    high_freq = freq > high_freq_threshold
+    idx_highest_valid_freq = np.argmin(np.abs(Z.imag[high_freq]))
+    # Filter out frequencies above the highest valid frequency (only works if freq is sorted)
+    freq = freq[idx_highest_valid_freq:]
+    Z = Z[idx_highest_valid_freq:]
+
+    # Heuristic 2: Remove the data whose Z.imag is positive at high frequencies
+    high_freq = freq > high_freq_threshold
+    positive_im = Z.imag > 0
+    mask = high_freq & positive_im
+    Z = Z[~mask]
+    freq = freq[~mask]
+
+    # Heuristic 3: Kramers-Kronig validation (aka Lin-KK)
+    linKK_kwargs = {"c": 0.5, "max_M": 100, "fit_type": "complex", "add_cap": True}
+    # TODO: Suppress output until ECSHackWeek/impedance.py/issues/280 is fixed
+    linKK_silent = suppress_output_legacy(linKK)
+    M, mu, Z_linKK, res_real, res_imag = linKK_silent(freq, Z, **linKK_kwargs)
+    rmse = metrics.rmse_score(Z, Z_linKK)
+
+    mask = (np.abs(res_real) < tol_linKK) & (np.abs(res_imag) < tol_linKK)
+    freq = freq[mask]
+    Z = Z[mask]
+
+    if (n0 - len(freq)) / n0 > 0.1:
+        log.warning("More than 10% of the data was filtered out.")
+
+    aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
+
+    return (freq, Z, aux) if return_aux else (freq, Z)
 
 
 # TODO: Add support for kwargs
@@ -894,11 +1155,11 @@ def validate_circuits_dataframe(circuits: pd.DataFrame):
     # Check if the circuitstring column contains only strings
     assert (
         circuits["circuitstring"].apply(lambda x: isinstance(x, str)).all()
-    ), "circuitstring column must contain only strings."
+    ), "circuitstring column must only contain strings."
     # Check if the Parameters column contains only dictionaries
     assert (
         circuits["Parameters"].apply(lambda x: isinstance(x, dict)).all()
-    ), "Parameters column must contain only dictionaries."
+    ), "Parameters column must only contain dictionaries."
 
 
 # <<< Miscellaneous utils
