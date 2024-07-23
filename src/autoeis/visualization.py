@@ -359,8 +359,14 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
     pd.io.formats.style.Styler | Table
         Styled table with the inference results
     """
+    circuits = circuits.copy(deep=True)
+
+    # Rank the circuits based on WAIC
+    circuits["WAIC (sum)"] = circuits["WAIC (real)"] + circuits["WAIC (imag)"]
+    circuits.sort_values(by=["WAIC (sum)"], ascending=True, inplace=True, ignore_index=True)
+
     cols_to_hide = [
-        "Parameters", "MCMC", "converged", "divergences", "Z_pred", "WAIC (sum)",
+        "Parameters", "InferenceResult", "converged", "divergences", "Z_pred", "WAIC (sum)",
         "R^2 (real)", "R^2 (imag)", "MAPE (real)", "MAPE (imag)"
     ]  # fmt: off
     df = circuits.style.hide(cols_to_hide, axis=1)
