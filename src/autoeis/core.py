@@ -402,9 +402,11 @@ def compute_fitness_metrics(
         Circuits dataframe with fitness metrics
     """
     circuits = circuits.copy(deep=True)
+
     results = circuits["InferenceResult"]
     mcmcs = [result.mcmc for result in results]
-    circuits["MCMC"] = mcmcs
+    circuits["converged"] = [result.converged for result in results]
+    circuits["divergences"] = [result.num_divergences for result in results]
 
     # Compute WAIC and add to the dataframe
     waic_re = [az.waic(x, var_name="obs_real", scale="deviance") for x in mcmcs]
@@ -414,7 +416,7 @@ def compute_fitness_metrics(
 
     # Compute the posterior predictive and add to the dataframe
     # NOTE: axis=1 because posterior is of shape (num_samples, num_obs)
-    fn = lambda r: utils.eval_posterior_predictive(r.MCMC, r.circuitstring, freq)
+    fn = lambda r: utils.eval_posterior_predictive(r.InferenceResult.samples, r.circuitstring, freq)  # fmt: off
     circuits["Z_pred"] = circuits.apply(fn, axis=1)
 
     # Compute R^2 and add to the dataframe
