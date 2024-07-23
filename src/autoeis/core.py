@@ -755,6 +755,13 @@ def _perform_bayesian_inference_SCSD(
     }
 
     try:
+        # HACK: Handle when circuit fitter fails to find p0 (to be caught by RuntimeError)
+        if priors is None:
+            raise RuntimeError(
+                f"Inference couldn't be performed for circuit: {circuit}, "
+                "because 'priors' are not provided, possibly because "
+                "circuit fitter failed to find an initial guess 'p0'."
+            )
         mcmc.run(subkey, **kwargs_inference)
         converged = True
     except RuntimeError as e:
