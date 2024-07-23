@@ -3,14 +3,14 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="parser" href="../autoeis.parser.html" /><link rel="prev" title="initialize_priors_from_posteriors" href="autoeis.utils.initialize_priors_from_posteriors.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="preprocess_impedance_data" href="autoeis.utils.preprocess_impedance_data.html" /><link rel="prev" title="eval_posterior_predictive" href="autoeis.utils.eval_posterior_predictive.html" />
 
-    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
+    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
         <title>validate_circuits_dataframe - AutoEIS 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=c2075f1a" />
     
     
@@ -90,19 +90,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -143,7 +130,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -221,13 +208,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic_usage.html">Basic usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../examples/circuit_basics.html">Circuit models 101</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../examples/basic_workflow.html">General Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/circuit_basics.html">Circuit Models 101</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/circuit_generation.html">Circuit Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/basic_workflow.html">Detailed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/parallel_inference.html">Batch Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../modules.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.get_assets_path.html">get_assets_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_battery_dataset.html">load_battery_dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_circuits.html">load_test_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
@@ -238,7 +228,6 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.core.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -261,7 +250,12 @@
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.identify_duplicate_circuits.html">identify_duplicate_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.initialize_priors.html">initialize_priors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.eval_posterior_predictive.html">eval_posterior_predictive</a></li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">validate_circuits_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.Settings.html">autoeis.utils.Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.InferenceResult.html">autoeis.utils.InferenceResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.utils.ImpedanceData.html">autoeis.utils.ImpedanceData</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -353,23 +347,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../autoeis.parser.html">
+          <a class="next-page" href="autoeis.utils.preprocess_impedance_data.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">parser</div>
+                <div class="title">preprocess_impedance_data</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="autoeis.utils.initialize_priors_from_posteriors.html">
+          <a class="prev-page" href="autoeis.utils.eval_posterior_predictive.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">initialize_priors_from_posteriors</div>
+                <div class="title">eval_posterior_predictive</div>
                 
               </div>
             </a>
@@ -426,7 +420,7 @@
 </div><script src="../../_static/documentation_options.js?v=828725f0"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>

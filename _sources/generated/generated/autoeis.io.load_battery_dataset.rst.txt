@@ -1,0 +1,6 @@
+load\_battery\_dataset
+======================
+
+.. currentmodule:: autoeis.io
+
+.. autofunction:: load_battery_dataset

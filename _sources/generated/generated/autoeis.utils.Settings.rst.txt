@@ -1,0 +1,31 @@
+autoeis.utils.Settings
+======================
+
+.. currentmodule:: autoeis.utils
+
+.. autoclass:: Settings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Settings.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Settings.loglevel
+      ~Settings.ncores
+      ~Settings.notebook
+      ~Settings.progress_bar
+   
+   

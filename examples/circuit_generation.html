@@ -1,0 +1,807 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Detailed Workflow" href="basic_workflow.html" /><link rel="prev" title="Circuit Models 101" href="circuit_basics.html" />
+
+    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+        <title>Circuit Generation - AutoEIS 0.0.29 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c2075f1a" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">AutoEIS 0.0.29 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/logo-light-mode.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/logo-dark-mode.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../circuit.html">Circuit notation</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../examples.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="circuit_basics.html">Circuit Models 101</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Circuit Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic_workflow.html">Detailed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel_inference.html">Batch Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.load_battery_dataset.html">load_battery_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.load_test_circuits.html">load_test_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.perform_full_analysis.html">perform_full_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_bode.html">plot_bode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_impedance_combo.html">plot_impedance_combo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_linKK_residuals.html">plot_linKK_residuals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.set_plot_style.html">set_plot_style</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.show_nticks.html">show_nticks</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.identify_duplicate_circuits.html">identify_duplicate_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.initialize_priors.html">initialize_priors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.eval_posterior_predictive.html">eval_posterior_predictive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.validate_circuits_dataframe.html">validate_circuits_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.preprocess_impedance_data.html">preprocess_impedance_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.Settings.html">autoeis.utils.Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.InferenceResult.html">autoeis.utils.InferenceResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.ImpedanceData.html">autoeis.utils.ImpedanceData</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.validate_circuit.html">validate_circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.validate_parameter.html">validate_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.parse_component.html">parse_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.parse_parameter.html">parse_parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.get_component_labels.html">get_component_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.get_component_types.html">get_component_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.get_parameter_types.html">get_parameter_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.get_parameter_labels.html">get_parameter_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.group_parameters_by_type.html">group_parameters_by_type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.group_parameters_by_component.html">group_parameters_by_component</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.count_parameters.html">count_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.convert_to_impedance_format.html">convert_to_impedance_format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.find_ohmic_resistors.html">find_ohmic_resistors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/examples/circuit_generation.ipynb.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="Circuit-Generation">
+<h1>Circuit Generation<a class="headerlink" href="#Circuit-Generation" title="Link to this heading">¶</a></h1>
+<p>In this notebook, we demonstrate how to generate a pool of equivalent circuit models from electrochemical impedance spectroscopy (EIS) measurements that best fit the data.</p>
+<section id="Set-up-the-environment">
+<h2>Set up the environment<a class="headerlink" href="#Set-up-the-environment" title="Link to this heading">¶</a></h2>
+<p>AutoEIS relies on <code class="docutils literal notranslate"><span class="pre">EquivalentCircuits.jl</span></code> package to perform the EIS analysis. The package is not written in Python, so we need to install it first. AutoEIS ships with <code class="docutils literal notranslate"><span class="pre">julia_helpers</span></code> module that helps to install and manage Julia dependencies with minimal user interaction. For convenience, installing Julia and the required packages is done automatically when you import <code class="docutils literal notranslate"><span class="pre">autoeis</span></code> for the first time. If you have Julia installed already (discoverable in system PATH), it’ll get detected and
+used, otherwise, it’ll be installed automatically.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If this is the first time you’re importing AutoEIS, executing the next cell will take a while, outputting a lot of logs. Re-run the cell to get rid of the logs.</p>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">autoeis</span> <span class="k">as</span> <span class="nn">ae</span>
+
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">set_plot_style</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Load-EIS-data">
+<h2>Load EIS data<a class="headerlink" href="#Load-EIS-data" title="Link to this heading">¶</a></h2>
+<p>Once the environment is set up, we can load the EIS data. You can use <code class="docutils literal notranslate"><span class="pre">`pyimpspec</span></code> &lt;<a class="reference external" href="https://vyrjana.github.io/pyimpspec/guide_data.html">https://vyrjana.github.io/pyimpspec/guide_data.html</a>&gt;`__ to load EIS data from a variety of popular formats. Eventually, AutoEIS requires two arrays: <code class="docutils literal notranslate"><span class="pre">Z</span></code> and <code class="docutils literal notranslate"><span class="pre">freq</span></code>. <code class="docutils literal notranslate"><span class="pre">Z</span></code> is a complex impedance array, and <code class="docutils literal notranslate"><span class="pre">freq</span></code> is a frequency array. Both arrays must be 1D and have the same length. The impedance array must be in Ohms, and the frequency array must be in Hz.</p>
+<p>For convenience, we provide a function <code class="docutils literal notranslate"><span class="pre">load_test_dataset()</span></code> in <code class="docutils literal notranslate"><span class="pre">autoeis.io</span></code> to load a test dataset. The function returns a tuple of <code class="docutils literal notranslate"><span class="pre">freq</span></code> and <code class="docutils literal notranslate"><span class="pre">Z</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_test_dataset</span><span class="p">(</span><span class="n">preprocess</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">[21:23:21]</span><span class="ansi-cyan-fg"> </span><span class="ansi-red-fg">WARNING </span> More than <span class="ansi-cyan-intense-fg ansi-bold">10</span>% of the data was filtered out.
+</pre></div></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your EIS data is stored as text, you can easily load them using <code class="docutils literal notranslate"><span class="pre">numpy.loadtxt</span></code>. See NumPy’s documentation for more details.</p>
+</div>
+<p>Let’s take a look at the test dataset before we proceed:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_circuit_generation_11_0.png" class="no-scaled-link" src="../_images/examples_circuit_generation_11_0.png" style="width: 901px; height: 339px;" />
+</div>
+</div>
+</section>
+<section id="Generate-equivalent-circuits">
+<h2>Generate equivalent circuits<a class="headerlink" href="#Generate-equivalent-circuits" title="Link to this heading">¶</a></h2>
+<p>Now that we have loaded the EIS data, we can generate a pool of candidate equivalent circuits using the <code class="docutils literal notranslate"><span class="pre">generate_equivalent_circuits</span></code> function. The function takes the impedance data and frequency as input and returns a list of equivalent circuits. It also takes many optional arguments to control the circuit generation process. The most important ones are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iters</span></code>: Number of circuits to generate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">complexity</span></code>: Maximum number of elements in a circuit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel</span></code>: Whether to run the circuit generation in parallel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tol</span></code>: Tolerance for accepting a circuit as a good fit.</p></li>
+</ul>
+<p>The function uses a gene expression programming (GEP) algorithm to generate the circuits. The GEP algorithm is a genetic algorithm that evolves circuits by combining and mutating genes. The algorithm starts with a population of random circuits and evolves them over many generations to find the best circuits that fit the data. The following parameters control the GEP algorithm:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">generations</span></code>: Number of generations to run the genetic algorithm.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">population_size</span></code>: Number of circuits in the population for</p></li>
+</ul>
+<p>The default values for these parameters are usually good enough for most cases. However, you can adjust them to get better results (e.g., increase both arguments if you’re not satisfied with the generated circuits, or decrease them if you want to speed up the process).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Circuit generation is a lengthy process. It may take one minute per iteration on a modern CPU. We recommend generating at least 50 circuits to get a good pool of candidate circuits, which may take about an hour.</p>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;iters&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;complexity&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="s2">&quot;population_size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">&quot;generations&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;tol&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="s2">&quot;parallel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">circuits_unfiltered</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">generate_equivalent_circuits</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">circuits_unfiltered</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "5cc1751612644efd8cc6c21600384f48", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>circuitstring</th>
+      <th>Parameters</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>[[R1,P2],L3]</td>
+      <td>{'R1': 999999890.7182983, 'P2w': 1.37376610214...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>[[P1,R2],L3-C4]-[[C5-L6,[R7,L8]],[R9,L10]]</td>
+      <td>{'P1w': 1.4627102456592993e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>[P1,L2]-R3</td>
+      <td>{'P1w': 1.5318043908194768e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>[L1,P2]</td>
+      <td>{'L1': 0.9194548901246837, 'P2w': 1.3731542805...</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>[P1,[L2,L3]]</td>
+      <td>{'P1w': 1.3731156036236492e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>[L1-P2,P3]</td>
+      <td>{'L1': 0.9193771823997572, 'P2w': 1000000000.0...</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>[C1-L2,L3]</td>
+      <td>{'C1': 1.4333688426915105e-06, 'L2': 8.4291556...</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>R1-R2-[[L3,P4],[R5,R6]-P7-R8]</td>
+      <td>{'R1': 144.38046157863064, 'R2': 999999969.258...</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>[P1,L2]-P3-[L4,L5]</td>
+      <td>{'P1w': 1.4627364686819347e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>[P1,[R2,L3]]</td>
+      <td>{'P1w': 1.3732753015092122e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>[P1,L2]-R3</td>
+      <td>{'P1w': 1.4021998942562844e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>[[L1,[[L2,P3]-R4,[R5,R6]-P7]],R8]</td>
+      <td>{'L1': 0.9009650900329796, 'L2': 0.00260744785...</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>[L1,P2]-L3</td>
+      <td>{'L1': 0.7760420056946724, 'P2w': 1.6286554525...</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>[L1,P2]-R3</td>
+      <td>{'L1': 0.9000031055100092, 'P2w': 1.4038173969...</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>[[R1,P2],L3]-[L4,L5]</td>
+      <td>{'R1': 1000000000.0, 'P2w': 1.4626997316356901...</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>[L1-P2-L3,[[R4,R5],R6]-P7]</td>
+      <td>{'L1': 0.012839736329839124, 'P2w': 774045422....</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>[R1-L2,R3-C4]</td>
+      <td>{'R1': 4.768142117186528e-06, 'L2': 0.90026183...</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>R1-[P2,L3]</td>
+      <td>{'R1': 0.006952735470471706, 'P2w': 1.40212956...</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>[P1-L2,L3]</td>
+      <td>{'P1w': 1.4854121091306283e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>[R1,R2]-[P3,[L4,R5]]-[R6-[R7,P8],[[R9,R10],L11]]</td>
+      <td>{'R1': 143.79224247245168, 'R2': 10964814.9196...</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>[L1,[L2,P3]]</td>
+      <td>{'L1': 5.0, 'L2': 1.244071687802378, 'P3w': 1....</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>[L1,P2-L3]</td>
+      <td>{'L1': 0.6511827579256133, 'P2w': 1.9771031933...</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>[P1,C2-L3]</td>
+      <td>{'P1w': 1.3732879750163233e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>R1-[P2,L3]</td>
+      <td>{'R1': 0.007448567750044642, 'P2w': 1.53272365...</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>[C1-L2,L3]</td>
+      <td>{'C1': 1.4332319713369011e-06, 'L2': 8.4300196...</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>R1-[R2-L3,P4]</td>
+      <td>{'R1': 143.6933089626204, 'R2': 3.621362288079...</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>[[L1,P2]-C3-L4,P5-R6-L7]</td>
+      <td>{'L1': 0.8635769381156195, 'P2w': 1.4626085289...</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>[L1,[R2,P3-[L4,R5]]]</td>
+      <td>{'L1': 0.8634983380413304, 'R2': 1000000000.0,...</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>[L1,[R2,[P3,R4]]]-[[L5,R6]-L7,R8]</td>
+      <td>{'L1': 0.9002498987203875, 'R2': 999999975.880...</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>P1-[L2,P3]</td>
+      <td>{'P1w': 1000000000.0, 'P1n': 0.998943270872030...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Convergence</p>
+<p>The Circuit generation algorithm is sensitive to the <code class="docutils literal notranslate"><span class="pre">tol</span></code> parameter, meaning that the order of magnitude of the <code class="docutils literal notranslate"><span class="pre">tol</span></code> needs to be proportional to the order of magnitude of the impedance data. There’s no one-size-fits-all value for <code class="docutils literal notranslate"><span class="pre">tol</span></code>, and we’re trying to make the algorithm <code class="docutils literal notranslate"><span class="pre">tol</span></code>-agnostic in future releases. For now, we’ve hacked a heuristic that internally scales the <code class="docutils literal notranslate"><span class="pre">tol</span></code> based on the impedance data. Nevertheless, you may still need to adjust the <code class="docutils literal notranslate"><span class="pre">tol</span></code> if you end up with no
+circuits (increase <code class="docutils literal notranslate"><span class="pre">tol</span></code>) or too many circuits (decrease <code class="docutils literal notranslate"><span class="pre">tol</span></code>). The default value is 0.01. When increasing or decreasing <code class="docutils literal notranslate"><span class="pre">tol</span></code>, try doubling or halving the value to see if it helps.</p>
+</div>
+</section>
+<section id="Filter-candidate-equivalent-circuits">
+<h2>Filter candidate equivalent circuits<a class="headerlink" href="#Filter-candidate-equivalent-circuits" title="Link to this heading">¶</a></h2>
+<p>Note that all these circuits generated by the GEP process probably fit the data well, but they may not be physically meaningful. Therefore, we need to filter them to find the ones that are most plausible. AutoEIS uses “statistical plausibility” as a proxy for gauging “physical plausibility”. To this end, AutoEIS provides a function to filter the candidate circuits based on some heuristics (read our <a class="reference external" href="https://doi.org/10.1149/1945-7111/aceab2">paper</a> for the exact steps and the supporting
+rationale).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">circuits</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">filter_implausible_circuits</span><span class="p">(</span><span class="n">circuits_unfiltered</span><span class="p">)</span>
+<span class="n">circuits</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>circuitstring</th>
+      <th>Parameters</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>[P1,L2]-R3</td>
+      <td>{'P1w': 1.5318043908194768e-06, 'P1n': 0.99999...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>R1-R2-[[L3,P4],[R5,R6]-P7-R8]</td>
+      <td>{'R1': 144.38046157863064, 'R2': 999999969.258...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>R1-[R2-L3,P4]</td>
+      <td>{'R1': 143.6933089626204, 'R2': 3.621362288079...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>Let’s see how well the generated circuits fit the data. You can either use the parameters’ values at the end of the GEP process (stored in the <code class="docutils literal notranslate"><span class="pre">circuits</span></code> dataframe), or use <code class="docutils literal notranslate"><span class="pre">fit_circuit_parameters</span></code> to further refine the parameters (recommended).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Normally, the found circuits are good enough, but since we didn’t run the algorithm for long enough (to not timeout our CI on GitHub), we will use a custom circuit for evaluation. If you’re running this notebook on your own data, try using <code class="docutils literal notranslate"><span class="pre">iters</span> <span class="pre">&gt;=</span> <span class="pre">200</span></code> together with a more stringet <code class="docutils literal notranslate"><span class="pre">tol</span></code> to get a good pool of circuits. We’re currently working on changing the evolutionary algorithm backend to speed up the process, so you no longer need to wait for hours to get a good pool of circuits.</p>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">use_custom_circuit</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">use_custom_circuit</span><span class="p">:</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;circuitstring&quot;</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Parameters&quot;</span><span class="p">]</span>
+    <span class="c1"># Refine the circuit parameters</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fit_circuit_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="s2">&quot;R4-[P1, R3-P2]&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fit_circuit_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+
+<span class="c1"># Simulate Z using the circuit and the fitted parameters</span>
+<span class="n">circuit_fn</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">generate_circuit_fn</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+<span class="n">Z_sim</span> <span class="o">=</span> <span class="n">circuit_fn</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+<span class="c1"># Plot against ground truth</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">5.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_nyquist</span><span class="p">(</span><span class="n">Z_sim</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;simulated&quot;</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_nyquist</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_circuit_generation_20_0.png" class="no-scaled-link" src="../_images/examples_circuit_generation_20_0.png" style="width: 503px; height: 385px;" />
+</div>
+</div>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"1180ee7d18624ebeb3d15500a8648a91": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "5cc1751612644efd8cc6c21600384f48": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_73f8552118d84088b71f6e4c534eaf06", "IPY_MODEL_5f4805bceb554bd3bf591c74d8ee25d7", "IPY_MODEL_a321ed2f73b04992ad9de29137ffdbf6"], "layout": "IPY_MODEL_5ceaef962f3b4bf690986c62c7c4227e", "tabbable": null, "tooltip": null}}, "5ceaef962f3b4bf690986c62c7c4227e": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5f4805bceb554bd3bf591c74d8ee25d7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_ce2ed45dd0a649709cab9dee7c6ac9a1", "max": 30.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_ec197e30001b4e839d1339513f0c81c4", "tabbable": null, "tooltip": null, "value": 30.0}}, "6d9c4ec354af44cf877f5c24f9a3663d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "73f8552118d84088b71f6e4c534eaf06": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_e088d88b46774c6aa87afa06f4cfafeb", "placeholder": "\u200b", "style": "IPY_MODEL_6d9c4ec354af44cf877f5c24f9a3663d", "tabbable": null, "tooltip": null, "value": "Circuit\u2007Evolution:\u2007100%"}}, "8b5d203eee634aadb25cc11eb31cc692": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "a321ed2f73b04992ad9de29137ffdbf6": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_8b5d203eee634aadb25cc11eb31cc692", "placeholder": "\u200b", "style": "IPY_MODEL_1180ee7d18624ebeb3d15500a8648a91", "tabbable": null, "tooltip": null, "value": "\u200730/30\u2007[12:11&lt;00:00,\u200723.80s/it]"}}, "ce2ed45dd0a649709cab9dee7c6ac9a1": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "e088d88b46774c6aa87afa06f4cfafeb": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "ec197e30001b4e839d1339513f0c81c4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}}, "version_major": 2, "version_minor": 0}
+</script></section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="basic_workflow.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Detailed Workflow</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="circuit_basics.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Circuit Models 101</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, AutoEIS developers
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/AUTODIAL/AutoEIS" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Circuit Generation</a><ul>
+<li><a class="reference internal" href="#Set-up-the-environment">Set up the environment</a></li>
+<li><a class="reference internal" href="#Load-EIS-data">Load EIS data</a></li>
+<li><a class="reference internal" href="#Generate-equivalent-circuits">Generate equivalent circuits</a></li>
+<li><a class="reference internal" href="#Filter-candidate-equivalent-circuits">Filter candidate equivalent circuits</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=828725f0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>

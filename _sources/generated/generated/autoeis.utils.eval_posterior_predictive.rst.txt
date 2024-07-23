@@ -1,0 +1,6 @@
+eval\_posterior\_predictive
+===========================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: eval_posterior_predictive

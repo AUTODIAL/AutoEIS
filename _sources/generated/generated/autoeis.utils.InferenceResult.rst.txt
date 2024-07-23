@@ -1,0 +1,31 @@
+autoeis.utils.InferenceResult
+=============================
+
+.. currentmodule:: autoeis.utils
+
+.. autoclass:: InferenceResult
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InferenceResult.__init__
+      ~InferenceResult.print_summary
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InferenceResult.num_divergences
+      ~InferenceResult.samples
+      ~InferenceResult.variables
+   
+   

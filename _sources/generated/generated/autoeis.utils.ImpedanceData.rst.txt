@@ -1,0 +1,25 @@
+autoeis.utils.ImpedanceData
+===========================
+
+.. currentmodule:: autoeis.utils
+
+.. autoclass:: ImpedanceData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ImpedanceData.__init__
+      ~ImpedanceData.plot_bode
+      ~ImpedanceData.plot_nyquist
+      ~ImpedanceData.preprocess
+   
+   
+
+   
+   
+   
