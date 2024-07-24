@@ -318,6 +318,10 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="basic-usage">
 <h1>Basic usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The envelope function, <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> has some issues since it was doing too much all at once. For now, we’ve deprecated the function until it’s made robust. We recommend using the step-by-step approach since it gives more control. That said, since a one-stop-shop function is what many users, especially experimentlists, would like, we’re working on making it robust. We’ll update this page once the function is ready.</p>
+</div>
 <p>To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> function to perform the whole process automatically. The following is a minimal example of how to use the <code class="docutils literal notranslate"><span class="pre">perform_full_analysis</span></code> function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">autoeis</span> <span class="k">as</span> <span class="nn">ae</span>
 
@@ -331,8 +335,8 @@
 <span class="c1"># Print summary of the inference for each circuit model</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
     <span class="n">circuit</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;circuit&quot;</span><span class="p">]</span>
-    <span class="n">mcmc</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;MCMC&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+    <span class="n">mcmc</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;InferenceResult&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mcmc</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;converged&quot;</span><span class="p">]:</span>
         <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">print_summary_statistics</span><span class="p">(</span><span class="n">mcmc</span><span class="p">,</span> <span class="n">circuit</span><span class="p">)</span>
 
 <span class="c1"># Print summary of all circuit models</span>
