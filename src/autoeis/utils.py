@@ -515,7 +515,7 @@ def fit_circuit_parameters(
         kwargs["p0"] = generate_initial_guess(circuit)
 
     if err_min == np.inf:
-        raise Exception("Failed to fit the circuit parameters.")
+        raise Exception("Failed to fit the circuit parameters. Try increasing 'iters'.")
 
     variables = parser.get_parameter_labels(circuit)
     return dict(zip(variables, p0))
