@@ -1034,23 +1034,24 @@ def preprocess_impedance_data(
     log.info("Preprocessing/cleaning up impedance data.")
     n0 = len(freq)
 
-    # Make sure frequency is sorted in descending order
+    # Make sure frequency is sorted in descending order (needed in Heuristic 1)
     Z = Z[np.argsort(freq)[::-1]]
     freq = freq[np.argsort(freq)[::-1]]
 
     # Heuristic 1: @freq->∞: |Z.im|->0 => highest_valid_freq = freq @ np.argmin(|Z.im|)
-    high_freq = freq > high_freq_threshold
-    idx_highest_valid_freq = np.argmin(np.abs(Z.imag[high_freq]))
-    # Filter out frequencies above the highest valid frequency (only works if freq is sorted)
-    freq = freq[idx_highest_valid_freq:]
-    Z = Z[idx_highest_valid_freq:]
+    if (high_freq := freq > high_freq_threshold).any():
+        idx_highest_valid_freq = np.argmin(np.abs(Z.imag[high_freq]))
+        # Filter out frequencies above the highest valid frequency
+        freq = freq[idx_highest_valid_freq:]
+        Z = Z[idx_highest_valid_freq:]
 
     # Heuristic 2: Remove the data whose Z.imag is positive at high frequencies
-    high_freq = freq > high_freq_threshold
-    positive_im = Z.imag > 0
-    mask = high_freq & positive_im
-    Z = Z[~mask]
-    freq = freq[~mask]
+    # NOTE: Need to redefine high_freq since freq might have changed in Heuristic 1
+    if (high_freq := freq > high_freq_threshold).any():
+        positive_im = Z.imag > 0
+        mask = high_freq & positive_im
+        Z = Z[~mask]
+        freq = freq[~mask]
 
     # Heuristic 3: Kramers-Kronig validation (aka Lin-KK)
     linKK_kwargs = {"c": 0.5, "max_M": 100, "fit_type": "complex", "add_cap": True}
