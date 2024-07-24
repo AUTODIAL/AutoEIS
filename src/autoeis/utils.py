@@ -1063,8 +1063,8 @@ def preprocess_impedance_data(
     freq = freq[mask]
     Z = Z[mask]
 
-    if (n0 - len(freq)) / n0 > 0.1:
-        log.warning("More than 10% of the data was filtered out.")
+    if (frac_filtered := 1 - len(freq) / n0) > 0.1:
+        log.warning(f"{frac_filtered * 100:.0f}% of data filtered out.")
 
     aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
 
