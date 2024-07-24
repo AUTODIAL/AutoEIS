@@ -560,10 +560,10 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
         and returns the impedance.
     """
 
-    def Z_complex(freq: np.ndarray, p: np.ndarray | float) -> np.ndarray[complex]:
+    def Z_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
         return eval_circuit(circuit, freq, p)
 
-    def Z_concat(freq: np.ndarray, p: np.ndarray | float) -> np.ndarray[complex]:
+    def Z_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
         Z = Z_complex(freq, p)
         hstack = jnp.hstack if jit else np.hstack
         return hstack([Z.real, Z.imag])
