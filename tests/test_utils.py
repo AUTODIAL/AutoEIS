@@ -17,6 +17,28 @@ freq = np.logspace(-3, 3, 1000)
 Z = circuit_fn_gt(freq, p0_vals)
 
 
+def test_preprocess_impedance_data():
+    freq, Z = ae.io.load_test_dataset()
+    # Test various tolerances for linKK validation
+    freq_prep, Z_prep = ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    assert len(Z_prep) == len(freq_prep)
+    assert len(Z_prep) == 60
+    freq_prep, Z_prep = ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
+    assert len(Z_prep) == len(freq_prep)
+    assert len(Z_prep) == 50
+    # Test return_aux=True
+    _, _, aux = ae.utils.preprocess_impedance_data(freq, Z, return_aux=True)
+    assert list(aux.keys()) == ["res", "rmse"]
+    assert list(aux["res"].keys()) == ["real", "imag"]
+
+
+def test_preprocess_impedance_data_no_high_freq():
+    # This is to ensure AUTODIAL/AutoEIS/#122 is fixed
+    freq, Z = ae.io.load_test_dataset()
+    # Pass high_freq_threshold=1e10 to simulate missing high frequency data
+    ae.utils.preprocess_impedance_data(freq, Z, high_freq_threshold=1e10)
+
+
 def test_fit_circuit_parameters_without_x0():
     p_dict = ae.utils.fit_circuit_parameters(circuit_string, freq, Z, iters=10)
     p_fit = list(p_dict.values())

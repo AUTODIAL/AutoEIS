@@ -28,21 +28,6 @@ def test_compute_ohmic_resistance_missing_high_freq():
     np.testing.assert_allclose(R, Zreal_at_high_freq)
 
 
-def test_preprocess_impedance_data():
-    freq, Z = ae.io.load_test_dataset()
-    # Test various tolerances for linKK validation
-    freq_prep, Z_prep = ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
-    assert len(Z_prep) == len(freq_prep)
-    assert len(Z_prep) == 60
-    freq_prep, Z_prep = ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
-    assert len(Z_prep) == len(freq_prep)
-    assert len(Z_prep) == 50
-    # Test return_aux=True
-    _, _, aux = ae.utils.preprocess_impedance_data(freq, Z, return_aux=True)
-    assert list(aux.keys()) == ["res", "rmse"]
-    assert list(aux["res"].keys()) == ["real", "imag"]
-
-
 def test_gep():
     def test_gep_serial():
         freq, Z = ae.io.load_test_dataset()
