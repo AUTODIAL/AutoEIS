@@ -892,9 +892,15 @@ def perform_full_analysis(
 
     Returns
     -------
-    results: pd.DataFrame
-        Dataframe containing circuits, parameters, and MCMC results.
+    circuits: pd.DataFrame
+        Dataframe containing circuits, parameters, and inference results.
     """
+    raise NotImplementedError(
+        "This function has some issues and is not yet ready to use. "
+        "Regardless, it is recommended to use the step-by-step approach for "
+        "more control. Please refer to the documentation for more details."
+    )
+
     # Filter out bad impedance data
     freq, Z = utils.preprocess_impedance_data(freq, Z, tol_linKK=tol_linKK)
 
