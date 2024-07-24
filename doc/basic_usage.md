@@ -1,16 +1,30 @@
 # Basic usage
+
+:::{warning}
+The envelope function, `perform_full_analysis` has some issues since it was doing too much all at once. For now, we've deprecated the function until it's made robust. We recommend using the step-by-step approach since it gives more control. That said, since a one-stop-shop function is what many users, especially experimentlists, would like, we're working on making it robust. We'll update this page once the function is ready.
+:::
+
 To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is a minimal example of how to use the `perform_full_analysis` function.
 
 ```python
 import autoeis as ae
 
 # Load and visualize the test dataset
-Z, freq = ae.io.load_test_dataset()
-ae.visualization.plot_impedance_combo(Z, freq)
+freq, Z = ae.io.load_test_dataset()
+ae.visualization.plot_impedance_combo(freq, Z)
 
-# Perform the full analysis
-circuits = ae.perform_full_analysis(Z, freq, iters=12, parallel=True)
-print(circuits)
+# Perform automated EIS analysis
+circuits = ae.perform_full_analysis(freq, Z, iters=24, parallel=True)
+
+# Print summary of the inference for each circuit model
+for i, row in circuits.iterrows():
+    circuit = row["circuit"]
+    mcmc = row["InferenceResult"].mcmc
+    if row["converged"]:
+        ae.visualization.print_summary_statistics(mcmc, circuit)
+
+# Print summary of all circuit models
+ae.visualization.print_inference_results(circuits)
 ```
 
 :::{seealso}

@@ -1,6 +1,6 @@
+import autoeis as ae
 import numpy as np
-
-from autoeis import julia_helpers, parser, utils
+import pytest
 
 # Real numbers
 x1 = np.random.rand(10)
@@ -11,15 +11,37 @@ y2 = x2 + np.zeros(10) * 1j
 
 # Simulated EIS data
 circuit_string = "R1-[P2,R3]"
-p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10}
+p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10.0}
 p0_vals = list(p0_dict.values())
-circuit_fn_gt = utils.generate_circuit_fn_impedance_backend(circuit_string)
+circuit_fn_gt = ae.utils.generate_circuit_fn_impedance_backend(circuit_string)
 freq = np.logspace(-3, 3, 1000)
-Z = circuit_fn_gt(p0_vals, freq)
+Z = circuit_fn_gt(freq, p0_vals)
+
+
+def test_preprocess_impedance_data():
+    freq, Z = ae.io.load_test_dataset()
+    # Test various tolerances for linKK validation
+    freq_prep, Z_prep = ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+    assert len(Z_prep) == len(freq_prep)
+    assert len(Z_prep) == 60
+    freq_prep, Z_prep = ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-3)
+    assert len(Z_prep) == len(freq_prep)
+    assert len(Z_prep) == 50
+    # Test return_aux=True
+    _, _, aux = ae.utils.preprocess_impedance_data(freq, Z, return_aux=True)
+    assert list(aux.keys()) == ["res", "rmse"]
+    assert list(aux["res"].keys()) == ["real", "imag"]
+
+
+def test_preprocess_impedance_data_no_high_freq():
+    # This is to ensure AUTODIAL/AutoEIS/#122 is fixed
+    freq, Z = ae.io.load_test_dataset()
+    # Pass high_freq_threshold=1e10 to simulate missing high frequency data
+    ae.utils.preprocess_impedance_data(freq, Z, high_freq_threshold=1e10)
 
 
 def test_fit_circuit_parameters_without_x0():
-    p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq)
+    p_dict = ae.utils.fit_circuit_parameters(circuit_string, freq, Z, iters=25)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
 
@@ -27,19 +49,27 @@ def test_fit_circuit_parameters_without_x0():
 def test_fit_circuit_parameters_with_x0():
     # Add some noise to the initial guess to test robustness
     p0 = p0_vals + np.random.rand(len(p0_vals)) * p0_vals * 0.5
-    p_dict = utils.fit_circuit_parameters(circuit_string, Z, freq, p0)
+    p_dict = ae.utils.fit_circuit_parameters(circuit_string, freq, Z, p0)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
 
 
+def test_fit_circuit_parameters_with_bounds():
+    # Pass incorrect bounds to ensure bounds are being used (Exception should be raised)
+    bounds = [(0, 0, 0, 0), (1e-6, 1e-6, 1e-6, 1e-6)]
+    with pytest.raises(Exception):
+        ae.utils.fit_circuit_parameters(circuit_string, freq, Z, iters=25, bounds=bounds)
+
+
 def test_generate_circuit_fn():
     circuit = "R0-C1-[P2,R3]-[P4-[P5,C6],[L7,R8]]"
-    num_params = parser.count_parameters(circuit)
+    num_params = ae.parser.count_parameters(circuit)
     freq = np.array([1, 10, 100])
     p = np.random.rand(num_params)
-    circuit_fn = utils.generate_circuit_fn(circuit)
-    Z_py = circuit_fn(p, freq)
-    ec = julia_helpers.import_backend()
+    circuit_fn = ae.utils.generate_circuit_fn(circuit)
+    Z_py = circuit_fn(freq, p)
+    Main = ae.julia_helpers.init_julia()
+    ec = ae.julia_helpers.import_backend(Main)
     Z_jl = np.array([ec.get_target_impedance(circuit, p, f) for f in freq])
     np.testing.assert_allclose(Z_py, Z_jl)
 
@@ -54,7 +84,7 @@ def test_circuit_complexity():
         "R1-[R2,R3]-[[C4,L5]-P6]-[R7,[R8,[C9,L10]]]": [0, 1, 1, 2, 2, 1, 1, 2, 3, 3],
     }
     for cstr, cc in circuit_complexity_dict.items():
-        assert utils.circuit_complexity(cstr) == cc
+        assert ae.utils.circuit_complexity(cstr) == cc
 
 
 def test_are_circuits_equivalent():
@@ -67,4 +97,25 @@ def test_are_circuits_equivalent():
     ]
     for row in testset:
         c1, c2, eq = row
-        assert utils.are_circuits_equivalent(c1, c2) == eq
+        assert ae.utils.are_circuits_equivalent(c1, c2) == eq
+
+
+def test_eval_posterior_predictive():
+    # Load test dataset
+    freq, Z = ae.io.load_test_dataset()
+    circuits = ae.io.load_test_circuits(filtered=True)
+    circuit = circuits.iloc[0].circuitstring
+    p0 = circuits.iloc[0].Parameters
+
+    # Perform Bayesian inference on a single ECM
+    kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
+    result = ae.core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+
+    # Evaluate the posterior predictive distribution with priors
+    priors = ae.utils.initialize_priors(p0)
+    Z_pred = ae.utils.eval_posterior_predictive(result.samples, circuit, freq, priors)
+    assert Z_pred.shape == (1000, len(freq))
+
+    # Evaluate the posterior predictive distribution without priors
+    Z_pred = ae.utils.eval_posterior_predictive(result.samples, circuit, freq)
+    assert Z_pred.shape == (1000, len(freq))

@@ -19,13 +19,21 @@ AutoEIS is a Python package that automatically proposes statistically plausible 
 
 AutoEIS is still under development and therefore, the API is still not stable. If you find any bugs or have any suggestions, please file an `issue <https://github.com/AUTODIAL/AutoEIS/issues>`_ or directly submit a `pull request <https://github.com/AUTODIAL/AutoEIS/pulls>`_. We would greatly appreciate any contributions from the community.
 
-Contents
-########
+.. figure:: ../assets/workflow.png
+   :name: banner
+   :align: center
+
+   Typical workflow of AutoEIS
+
+.. Contents
+.. ########
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
 
    installation.md
    basic_usage.md
    circuit.md
+   examples
    modules.rst

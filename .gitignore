@@ -165,4 +165,14 @@ cython_debug/
 examples/**/*.png
 examples/**/*.csv
 examples/**/*.txt
-results*/
+doc/examples/**
+results/
+*.pkl
+
+# Local development
+tmp/*
+requirements-dev.lock
+requirements.lock
+
+# macOS
+.DS_Store

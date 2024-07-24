@@ -9,23 +9,31 @@ on:
 jobs:
   deploy-docs:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v4
       - name: "Set up Python"
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: pip
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
       - name: "Install AutoEIS"
         run: |
+            brew install pandoc  # Required by nbsphinx
             python -m pip install --upgrade pip
             pip install -e .[doc]
+            # Install Julia dependencies at first import
+            python -c "import autoeis"
+            # Install TexLive for lcapy to work
+            brew install texlive
 
       # Build the documentation
       - name: Build the documentation
         run: |
+          jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb
           cd doc
           make html
 

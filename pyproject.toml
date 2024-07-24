@@ -1,13 +1,9 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "autoeis"
 dynamic = ["version"]
 description = "A tool for automated EIS analysis by proposing statistically plausible ECMs."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "Runze Zhang", email = "runzee.zhang@mail.utoronto.ca" },
@@ -15,9 +11,7 @@ authors = [
     { name = "Robert Black", email = "robert.black@nrc-cnrc.gc.ca" },
     { name = "Jason Hattrick-Simpers", email = "jason.hattrick.simpers@utoronto.ca" },
 ]
-maintainers = [
-  { name = "Amin Sadeghi", email = "amin.sadeghi@live.com" }
-]
+maintainers = [{ name = "Amin Sadeghi", email = "amin.sadeghi@live.com" }]
 keywords = [
     "bayesian inference",
     "electrochemical impedance spectroscopy",
@@ -32,51 +26,97 @@ classifiers = [
 dependencies = [
     "arviz",
     "click",
+    "deprecated",
     "dill",
     "impedance",
+    # "impedance @ git+https://github.com/ma-sadeghi/impedance.py@fix-numpy2",
     "ipython",
+    "ipykernel",
     "ipywidgets",
     "jax",
+    "jinja2>=3.1.2",
     "julia",
+    "juliacall",
+    "juliapkg",
     "matplotlib",
-    "mpire",
-    "numpy",
+    "mpire[dill]",
+    "numpy<2",
     "numpyro",
     "pandas",
-    "pyparsing",
+    "python-box",
+    "psutil",
+    "pyparsing>=3",
     "rich",
-    "scikit-learn",
+    "scikit-learn>=1.4",
     "seaborn",
     "tqdm",
 ]
 [project.optional-dependencies]
-test = [
-  "pytest",
-]
+build = ["hatch"]
+test = ["nbmake", "pytest"]
 doc = [
     "furo",
+    "lcapy",
     "linkify-it-py",
+    "myst-nb",
     "myst-parser",
+    "nbsphinx",
+    "nbconvert",
     "sphinx",
     "sphinx-copybutton",
     "sphinx-autodoc2",
+    "sphinx-autobuild",
 ]
 [project.urls]
 "Homepage" = "https://github.com/AUTODIAL/AutoEIS"
+Repository = "https://github.com/AUTODIAL/AutoEIS"
 "Bug Tracker" = "https://github.com/AUTODIAL/AutoEIS/issues"
+Documentation = "https://autodial.github.io/AutoEIS"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "furo>=2024.1.29",
+    "hatch>=1.9.4",
+    "jupyterlab>=4.1.5",
+    "lcapy>=1.22",
+    "linkify-it-py>=2.0.3",
+    "myst-nb>=1.0.0",
+    "myst-parser>=2.0.0",
+    "nbmake>=1.5.3",
+    "nbsphinx>=0.9.3",
+    "nbconvert>=7.16.3",
+    "pytest>=8.1.1",
+    "sphinx>=7.2.6",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-autodoc2>=0.5.0",
+    "sphinx-autobuild>=2024.2.4",
+]
 
 [tool.hatch.version]
-path = "autoeis/version.py"
+path = "src/autoeis/version.py"
 
 [tool.hatch.build.targets.sdist]
-include = [
-    "/autoeis",
-]
+include = ["src/autoeis"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -v"
-testpaths = [
-    "tests",
-    "integration",
-]
+addopts = "-ra -vv --durations=5"
+python_files = "*.py"
+python_classes = "*Test"
+python_functions = "test_*"
+testpaths = ["tests", "integration"]
+norecursedirs = [".git", ".github", ".ipynb_checkpoints", "build", "dist"]
+
+[tool.ruff]
+exclude = [".git", ".github", ".venv", "build"]
+line-length = 92
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401", "F403"]
