@@ -35,6 +35,9 @@ It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesi
 
 ## Usage
 
+> [!WARNING]
+> The envelope functin, `perform_full_analysis` has some issues since it was doing too much all at once. For now, we've deprecated the function until it's made robust. We recommend using the step-by-step approach since it gives more control. That said, since a one-stop-shop function is what many users, especially experimentlists, would like, we're working on making it robust. We'll update this page once the function is ready.
+
 To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function:
 
 ```python
@@ -50,8 +53,10 @@ ae.visualization.print_inference_results(circuits)
 
 # Print summary of the results
 for i, row in circuits.iterrows():
-    if row["success"]:
-        ae.visualization.print_summary_statistics(row["MCMC"], row["circuitstring"])
+    if row["converged"]:
+        circuit = row["circuitstring"]
+        mcmc = row["InferenceResult"].mcmc
+        ae.visualization.print_summary_statistics(mcmc, circuit)
 ```
 
 - `freq`: Frequencies corresponding to the impedance measurements
