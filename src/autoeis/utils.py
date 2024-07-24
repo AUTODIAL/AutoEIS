@@ -435,6 +435,7 @@ def fit_circuit_parameters(
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
     iters: int = 1,
+    bounds: Iterable[tuple] = None,
     maxfev: int = None,
     ftol: float = 1e-8,
     xtol: float = 1e-8,
@@ -454,6 +455,11 @@ def fit_circuit_parameters(
         Initial guess for the circuit parameters. Default is None.
     iters : int, optional
         Maximum number of iterations for the circuit fitter. Default is 1.
+    bounds : Iterable[tuple], optional
+        List of two tuples, each containing the lower and upper bounds,
+        respectively, for the circuit parameters. Default is None. The order
+        of the values should match the order of the circuit parameters as
+        returned by ``parser.get_parameter_labels``.
     maxfev : int, optional
         Maximum number of function evaluations for the circuit fitter.
         Default is None. See ``scipy.optimize.leastsq`` for details.
@@ -492,7 +498,7 @@ def fit_circuit_parameters(
     # TODO: Remove the next two lines once `get_parameter_bounds` is tested
     # circuit_impy = parser.convert_to_impedance_format(circuit)
     # bounds = set_default_bounds(circuit_impy)
-    bounds = get_parameter_bounds(circuit)
+    bounds = get_parameter_bounds(circuit) if bounds is None else bounds
     kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol, "xtol": xtol}
 
     # Fit circuit parameters by brute force

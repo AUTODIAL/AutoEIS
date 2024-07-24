@@ -1,5 +1,6 @@
 import autoeis as ae
 import numpy as np
+import pytest
 
 # Real numbers
 x1 = np.random.rand(10)
@@ -29,6 +30,13 @@ def test_fit_circuit_parameters_with_x0():
     p_dict = ae.utils.fit_circuit_parameters(circuit_string, freq, Z, p0)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
+
+
+def test_fit_circuit_parameters_with_bounds():
+    # Pass incorrect bounds to ensure bounds are being used (Exception should be raised)
+    bounds = [(0, 0, 0, 0), (1e-6, 1e-6, 1e-6, 1e-6)]
+    with pytest.raises(Exception):
+        ae.utils.fit_circuit_parameters(circuit_string, freq, Z, iters=10, bounds=bounds)
 
 
 def test_generate_circuit_fn():
