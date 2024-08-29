@@ -178,12 +178,19 @@ def is_backend_installed(Main=None, error=False):
     return False
 
 
-def ensure_julia_deps_ready(quiet=True):
+def ensure_julia_deps_ready(quiet=True, max_retries=1):
     """Ensures Julia and EquivalentCircuits.jl are installed."""
-    if not is_julia_installed(error=False):
-        log.warning("Julia not found, installing Julia...")
-        install_julia(quiet=quiet)
-    Main = init_julia(quiet=quiet)
-    if not is_backend_installed(Main=Main, error=False):
-        log.warning("Julia dependencies not found, installing EquivalentCircuits.jl...")
-        install_backend(quiet=quiet)
+    try:
+        if not is_julia_installed(error=False):
+            log.warning("Julia not found, installing Julia...")
+            install_julia(quiet=quiet)
+        Main = init_julia(quiet=quiet)
+        if not is_backend_installed(Main=Main, error=False):
+            log.warning("Julia dependencies not found, installing EquivalentCircuits.jl...")
+            install_backend(quiet=quiet)
+    except Exception as e:
+        remove_julia_env()
+        if max_retries > 0:
+            ensure_julia_deps_ready(quiet=quiet, max_retries=max_retries - 1)
+        else:
+            raise e
