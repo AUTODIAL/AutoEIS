@@ -472,10 +472,10 @@ def find_ohmic_resistors(circuit: str) -> list[str]:
 
 def generate_mathematical_expr(circuit: str) -> str:
     """Converts a circuit string to a mathematical expression, parameterized
-    by frequency and the circuit parameters, i.e., func(f, p).
+    by frequency and the circuit parameters, i.e., func(freq, p).
 
     The returned string can be evaluated assuming 'p' is an array of
-    parameter values and 'f' is the frequency (scalar/array).
+    parameter values and 'freq' is the frequency (scalar/array).
 
     Parameters
     ----------
@@ -491,7 +491,7 @@ def generate_mathematical_expr(circuit: str) -> str:
     Examples
     --------
     >>> generate_mathematical_expr("R1-R2")
-    'p[0]+(1/(p[1]*(2*1j*pi*f)**p[2]))'
+    'p[0]+(1/(p[1]*(2*1j*pi*freq)**p[2]))'
     """
     # Apply series-parallel conversion, e.g., [R1,R2] -> (1/R1+1/R2)**(-1)
     replacements = {
