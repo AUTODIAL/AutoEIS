@@ -539,7 +539,9 @@ def fit_circuit_parameters(
     return dict(zip(variables, p0))
 
 
-def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarray[complex]:
+def eval_circuit(
+    circuit: str, freq: np.ndarray | float, p: np.ndarray, jit: bool = False
+) -> np.ndarray[complex]:
     """Returns the impedance of a circuit at a given frequency and parameters.
 
     Parameters
@@ -547,7 +549,7 @@ def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarr
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    f : np.ndarray | float
+    freq : np.ndarray | float
         Frequencies at which to evaluate the circuit.
     p : np.ndarray
         Circuit parameters.
@@ -558,6 +560,9 @@ def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarr
         The impedance of the circuit at the given frequency and parameters.
     """
     Z_expr = parser.generate_mathematical_expr(circuit)
+    # If circuit is frequency-independent, output is a scalar, ensure it's an array
+    freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
+    Z_expr = f"({Z_expr}) * {freq_like_ones}"
     return eval(Z_expr)
 
 
