@@ -529,6 +529,49 @@ def _validate_seed(seed, num_splits=1) -> list[jax.Array] | jax.Array:
     return subkey
 
 
+def _parse_p0_and_priors(p0, priors, datasets, circuit, refine_p0, progress_bar):
+    """Parses p0 and priors and modifies them for parallel inference if needed."""
+    if (p0 is not None) and (priors is not None):
+        log.warning("Both 'p0' and 'priors' are provided. Ignoring 'p0'.")
+
+    num_inferences = len(datasets)
+
+    if priors is not None:
+        priors = _validate_priors(priors)
+        priors = [priors] * num_inferences if isinstance(priors, Mapping) else priors
+    else:
+        # Compute p0 if needed
+        if p0 is not None:
+            p0 = _validate_p0(p0)
+            p0 = [p0] * num_inferences if isinstance(p0, (Mapping, Iterable)) else p0
+        if p0 is None or refine_p0:
+            max_iters = 10
+            freq, Z = zip(*[(dataset.freq, dataset.Z) for dataset in datasets])
+            p0 = [p0] * num_inferences if p0 is None else p0
+            args = circuit, freq, Z, p0, max_iters
+            p0 = utils.distribute_task(
+                utils.fit_circuit_parameters,
+                *args,
+                static=(4),  # static args = (max_iters)
+                progress_bar=progress_bar,
+                desc="Refining p0",
+            )
+            for i, elem in enumerate(p0):
+                if isinstance(elem, Exception):
+                    log.error(f"Failed to refine p0 for circuit {circuit[i]}: {elem}")
+                    p0[i] = None
+
+        # Convert p0 to dict if Iterable is provided
+        for i, (p0_, circuit_) in enumerate(zip(p0, circuit)):
+            if isinstance(p0_, (list, np.ndarray, jax.Array, tuple)):
+                p0[i] = {k: v for k, v in zip(parser.get_parameter_labels(circuit_), p0_)}
+
+        # Compute priors from p0; if p0 is None, initialize priors to None
+        priors = [None if p0_ is None else utils.initialize_priors(p0_) for p0_ in p0]
+
+        return p0, priors
+
+
 def perform_bayesian_inference(
     circuit: str | Iterable[str] | pd.DataFrame,
     freq: np.ndarray[float] | Iterable[float],
@@ -619,40 +662,8 @@ def perform_bayesian_inference(
     circuit = circuit * num_inferences if len(circuit) == 1 else circuit
     datasets = datasets * num_inferences if len(datasets) == 1 else datasets
 
-    # Deal with p0 or priors
-    if (p0 is not None) and (priors is not None):
-        log.warning("Both 'p0' and 'priors' are provided. Ignoring 'p0'.")
-    if priors is not None:
-        priors = _validate_priors(priors)
-        priors = [priors] * num_inferences if isinstance(priors, Mapping) else priors
-    else:
-        # Compute p0 if needed
-        if p0 is not None:
-            p0 = _validate_p0(p0)
-            p0 = [p0] * num_inferences if isinstance(p0, Mapping) else p0
-        if p0 is None or refine_p0:
-            iters = 25
-            freq, Z = zip(*[(dataset.freq, dataset.Z) for dataset in datasets])
-            args = circuit, freq, Z, [p0] * num_inferences, iters
-            p0 = utils.distribute_task(
-                utils.fit_circuit_parameters,
-                *args,
-                static=(4),  # static args = (iters)
-                progress_bar=progress_bar,
-                desc="Refining p0",
-            )
-            for i, elem in enumerate(p0):
-                if isinstance(elem, Exception):
-                    log.error(f"Failed to refine p0 for circuit {circuit[i]}: {elem}")
-                    p0[i] = None
-
-        # Convert p0 to dict if Iterable is provided
-        for i, (p0_, circuit_) in enumerate(zip(p0, circuit)):
-            if isinstance(p0_, list):
-                p0[i] = {k: v for k, v in zip(parser.get_parameter_labels(circuit_), p0_)}
-
-        # Compute priors from p0; if p0 is None, initialize priors to None
-        priors = [None if p0_ is None else utils.initialize_priors(p0_) for p0_ in p0]
+    # Parse p0 and priors and if needed, reformat them for parallel inference
+    p0, priors = _parse_p0_and_priors(p0, priors, datasets, circuit, refine_p0, progress_bar)
 
     # Generate N random seeds (one for each inference)
     seed = _validate_seed(seed, num_splits=num_inferences)
