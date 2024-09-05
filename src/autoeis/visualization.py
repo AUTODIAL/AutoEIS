@@ -24,6 +24,7 @@ from collections.abc import Iterable
 
 import arviz
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
@@ -412,20 +413,23 @@ def override_mpl_colors(override_named_colors: bool = True):
     # Define the Flexoki-Light color scheme based on the provided table
     # Original sequence: red, orange, yellow, green, cyan, blue, purple, magenta
     flexoki_light_colors = {
-        "red": "#D14D41",
-        "blue": "#4385BE",
-        "green": "#879A39",
-        "orange": "#DA702C",
-        "purple": "#8B7EC8",
-        "yellow": "#D0A215",
-        "cyan": "#3AA99F",
-        "magenta": "#CE5D97",
+        "red": mcolors.to_rgb("#D14D41"),
+        "blue": mcolors.to_rgb("#4385BE"),
+        "green": mcolors.to_rgb("#879A39"),
+        "orange": mcolors.to_rgb("#DA702C"),
+        "purple": mcolors.to_rgb("#8B7EC8"),
+        "yellow": mcolors.to_rgb("#D0A215"),
+        "cyan": mcolors.to_rgb("#3AA99F"),
+        "magenta": mcolors.to_rgb("#CE5D97"),
     }
 
     # Override default named colors
     if override_named_colors:
-        cdict = mpl.colors.get_named_colors_mapping()
-        cdict.update(flexoki_light_colors)
+        for k, v in flexoki_light_colors.items():
+            mcolors.ColorConverter.cache[(k, None)] = v
+            mcolors.ColorConverter.colors[k] = v
+            mcolors.ColorConverter.cache[(k[0], None)] = v  # k[0] is the short name
+            mcolors.ColorConverter.colors[k[0]] = v
 
     # Define the Flexoki-Light style
     flexoki_light_style = {
