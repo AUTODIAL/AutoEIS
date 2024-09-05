@@ -41,7 +41,7 @@ def test_preprocess_impedance_data_no_high_freq():
 
 
 def test_fit_circuit_parameters_without_x0():
-    p_dict = ae.utils.fit_circuit_parameters(circuit_string, freq, Z, iters=100)
+    p_dict = ae.utils.fit_circuit_parameters(circuit_string, freq, Z, max_iters=100)
     p_fit = list(p_dict.values())
     assert np.allclose(p_fit, p0_vals, rtol=0.01)
 
@@ -58,7 +58,7 @@ def test_fit_circuit_parameters_with_bounds():
     # Pass incorrect bounds to ensure bounds are being used (Exception should be raised)
     bounds = [(0, 0, 0, 0), (1e-6, 1e-6, 1e-6, 1e-6)]
     with pytest.raises(Exception):
-        ae.utils.fit_circuit_parameters(circuit_string, freq, Z, iters=25, bounds=bounds)
+        ae.utils.fit_circuit_parameters(circuit_string, freq, Z, max_iters=25, bounds=bounds)
 
 
 def test_generate_circuit_fn():
