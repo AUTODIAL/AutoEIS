@@ -169,21 +169,23 @@ def plot_nyquist(
 
 
 def plot_bode(
-    freq: np.ndarray[float],
-    Z: np.ndarray[complex],
+    freq: np.ndarray,
+    Z: np.ndarray,
     *,
     fmt=".-",
     markersize=6,
     deg: bool = True,
-    ax: plt.Axes = None,
-) -> plt.Axes:
+    ax: np.ndarray[plt.Axes] = None,
+    label: str = None,
+    log: bool = False,
+) -> np.ndarray:
     """Plots the Bode plot for the impedance data.
 
     Parameters
     ----------
-    freq: np.ndarray[float]
+    freq: np.ndarray
         Frequencies corresponding to the impedance data.
-    Z: np.ndarray[complex]
+    Z: np.ndarray
         Impedance data.
     fmt: str, optional
         Format of the markers in the plot. Default is ".-".
@@ -191,42 +193,47 @@ def plot_bode(
         Size of the markers in the plot. Default is 6.
     deg: bool, optional
         If True, plots the Bode plot in degrees. Default is True.
-    ax: plt.Axes, optional
-        Axes to plot on. Default is None.
+    ax: np.ndarray, optional
+        Array of Axes to plot on. Default is None.
+    label: str, optional
+        Label for the data series. Default is None.
+    log: bool, optional
+        If True, plots the y-axis of |Z| vs. freq in log scale. Default is False.
 
     Returns
     -------
-    plt.Axes
-        Axes object of the Bode plot.
+    np.ndarray
+        Array of Axes objects of the Bode plot.
     """
     if ax is None:
-        fig, ax = plt.subplots(figsize=(5.5, 3.5))
+        fig, ax = plt.subplots(ncols=2, figsize=(9, 3.5), tight_layout=True)
 
-    ax.plot(freq, np.abs(Z), fmt, label=r"$|Z|$", markersize=markersize)
-    ax.set_xscale("log")
-    ax2 = ax.twinx()
-    ax2.plot(
-        freq, np.angle(Z, deg=deg), fmt, markersize=markersize, color="b", label=r"$\phi$"
-    )
-    ax.set_xlabel("frequency (Hz)")
-    ax.set_ylabel(r"$|Z|$")
-    ax2.set_ylabel(rf"$\phi$ ({('deg' if deg else 'rad')})")
+    if not isinstance(ax, np.ndarray) or not isinstance(ax[0], plt.Axes):
+        raise AssertionError("Incompatible 'ax': Must be two-long subplot axes. "
+                             "Use `fig, ax = plt.subplots(ncols=2)` and pass 'ax'.")  # fmt: off
 
-    # Color y-axes for better visibility
-    ax2.yaxis.label.set_color("b")
-    for label in ax2.get_yticklabels():
-        label.set_color("b")
-    ax.yaxis.label.set_color("r")
-    for label in ax.get_yticklabels():
-        label.set_color("r")
-    # Avoid overlapping tick labels from ax2 on top of ax
-    ax2.grid(False)
-    # Combine legends
-    lines1, labels1 = ax.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax.legend(lines1 + lines2, labels1 + labels2, loc="upper center")
+    # Plot magnitude |Z|
+    ax[0].plot(freq, np.abs(Z), fmt, label=label, markersize=markersize)
+    ax[0].set_xscale("log")
+    ax[0].set_xlabel("frequency (Hz)")
+    ax[0].set_ylabel(r"$|Z|$")
+    ax[0].grid(True)
+    if label:
+        ax[0].legend()
 
-    return ax.figure, [ax, ax2]
+    # Plot phase φ
+    ax[1].plot(freq, np.angle(Z, deg=deg), fmt, label=label, markersize=markersize)
+    ax[1].set_xscale("log")
+    ax[1].set_xlabel("frequency (Hz)")
+    ax[1].set_ylabel(rf"$\phi$ ({'deg' if deg else 'rad'})")
+    ax[1].grid(True)
+    if label:
+        ax[1].legend()
+
+    if log:
+        ax[0].set_yscale("log")
+
+    return ax
 
 
 def plot_impedance_combo(
