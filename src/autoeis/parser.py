@@ -522,7 +522,7 @@ def replace_components_with_impedance(expr: str) -> str:
     The circuit expression describes describes the impedance of a circuit,
     parameterized by component impedance values, e.g., '[R1,P2]' ->
     '1 / (1/R1 + 1/P2)'. This function parameterizes the impedence terms using
-    the actual component values, e.g., R1 -> R1, P2 -> 1/(P2w*(2*1j*pi*f)**P2n)
+    the actual component values, e.g., R1 -> R1, P2 -> 1/(P2w*(2*1j*pi*freq)**P2n)
 
     Parameters
     ----------
@@ -539,23 +539,23 @@ def replace_components_with_impedance(expr: str) -> str:
     >>> replace_components_with_impedance("R1")
     'R1'
     >>> replace_components_with_impedance("P1")
-    '(1/(P1w*(2*1j*pi*f)**P1n))'
+    '(1/(P1w*(2*1j*pi*freq)**P1n))'
     >>> replace_components_with_impedance("R1+P2")
-    'R1+(1/(P2w*(2*1j*pi*f)**P2n))'
+    'R1+(1/(P2w*(2*1j*pi*freq)**P2n))'
     """
 
     def replacement(var):
         eltype = get_component_types(var)[0]
         return {
             "R": f"{var}",
-            "C": f"(1/(2*1j*pi*f*{var}))",
-            "L": f"(2*1j*pi*f*{var})",
-            "P": f"(1/({var}w*(2*1j*pi*f)**{var}n))",
+            "C": f"(1/(2*1j*pi*freq*{var}))",
+            "L": f"(2*1j*pi*freq*{var})",
+            "P": f"(1/({var}w*(2*1j*pi*freq)**{var}n))",
         }[eltype]
 
     # Get component lables
     components = get_component_labels(expr)
-    # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*pi*f*C1))
+    # Replace components with impedance expression, e.g., C1 -> (1/(2*1j*pi*freq*C1))
     for c in components:
         # Negative look-ahead to avoid replacing R10 when dealing with R1
         expr = re.sub(rf"{c}(?!\d)", replacement(c), expr)
