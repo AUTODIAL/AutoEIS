@@ -560,9 +560,10 @@ def eval_circuit(
         The impedance of the circuit at the given frequency and parameters.
     """
     Z_expr = parser.generate_mathematical_expr(circuit)
-    # If circuit is frequency-independent, output is a scalar, ensure it's an array
-    freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
-    Z_expr = f"({Z_expr}) * {freq_like_ones}"
+    # For frequency-independent circuits, ensure output is the same shape as freq
+    if not np.isscalar(freq):
+        freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
+        Z_expr = f"({Z_expr}) * {freq_like_ones}"
     return eval(Z_expr)
 
 
