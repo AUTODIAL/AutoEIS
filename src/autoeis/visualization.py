@@ -548,3 +548,57 @@ def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
         yticks = ax.yaxis.get_major_ticks()
         if len(yticks) > n:
             ax.yaxis.set_major_locator(plt.MaxNLocator(n, steps=[1, 2, 5, 10]))
+
+
+def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
+    """Convert a 2-column subplots ax object into a single-column with twinx.
+
+    Parameters
+    ----------
+    ax : numpy.ndarray
+        Array of 2-column subplot Axes objects.
+
+    Returns
+    -------
+    tuple[plt.Axes]
+        Two Axes objects with the same data from the original subplots, but
+        now combined into a single-column plot with twinx.
+    """
+    # Check that the input is a 2-column axes object
+    if ax.size != 2:
+        raise ValueError("Input 'ax' object must have 2 subplots.")
+
+    # Extract the first subplot as the base for the new single-column plot
+    ax1 = ax[0]
+
+    # Get the data and labels from the second column (right plot)
+    ax2 = ax1.twinx()  # Create a twin axis sharing the x-axis
+
+    # Copy over the data from the second subplot to the right axis
+    for line in ax[1].get_lines():
+        ax2.plot(
+            line.get_xdata(),
+            line.get_ydata(),
+            color=line.get_color(),
+            label=line.get_label(),
+            linestyle=line.get_linestyle(),
+            marker=line.get_marker(),
+        )
+
+    # Set labels and titles from the original plots
+    ax1.set_xlabel(ax[0].get_xlabel())
+    ax1.set_ylabel(ax[0].get_ylabel())
+    ax2.set_ylabel(ax[1].get_ylabel())
+
+    # Remove the right subplot to clean up the figure
+    ax[1].remove()
+
+    # Turn off grid for the 2nd axis
+    ax2.grid(False)
+
+    # Ensure the colors match between the two
+    for l1, l2 in zip(ax[0].get_lines(), ax2.get_lines()):
+        l2.set_color(l1.get_color())
+        l2.set_label(l1.get_label())
+
+    return ax1, ax2
