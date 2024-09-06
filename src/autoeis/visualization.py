@@ -206,7 +206,7 @@ def plot_bode(
         Array of Axes objects of the Bode plot.
     """
     if ax is None:
-        fig, ax = plt.subplots(ncols=2, figsize=(9, 3.5), tight_layout=True)
+        fig, ax = plt.subplots(ncols=2, figsize=(8, 3.25), layout="constrained")
 
     if not isinstance(ax, np.ndarray) or not isinstance(ax[0], plt.Axes):
         raise AssertionError("Incompatible 'ax': Must be two-long subplot axes. "
@@ -232,6 +232,7 @@ def plot_bode(
 
     if log:
         ax[0].set_yscale("log")
+    ax[0].figure.get_layout_engine().set(wspace=0.1)
 
     return ax
 
@@ -244,6 +245,7 @@ def plot_impedance_combo(
     markersize: int = 6,
     ax: Iterable[plt.Axes] = None,
     label: str = None,
+    log: bool = False,
 ) -> list[plt.Axes]:
     """Plots EIS data in Nyquist and Bode plots.
 
@@ -261,6 +263,8 @@ def plot_impedance_combo(
         Iterable of axes (must be of length 3) to plot on. Default is None.
     label: str, optional
         Label for the plot. Default is None.
+    log: bool, optional
+        If True, plots the y-axis of |Z| vs. freq in log scale. Default is False.
 
     Returns
     -------
@@ -268,15 +272,16 @@ def plot_impedance_combo(
         List of axes objects of the Nyquist and Bode plots.
     """
     if ax is None:
-        fig, ax = plt.subplots(ncols=3, figsize=(10.5, 3.5), tight_layout=True)
+        fig, ax = plt.subplots(ncols=3, figsize=(12, 3.25), layout="constrained")
     else:
-        msg = "Incompatible 'ax'. Use plt.subplots(ncols=2)"
+        msg = "Incompatible 'ax'. Use fig, ax = plt.subplots(ncols=2), and pass 'ax'."
         assert len(ax) == 3 and all(isinstance(a, Axes) for a in ax), msg
 
     plot_nyquist(Z=Z, label=label, ax=ax[0], fmt=fmt, markersize=markersize)
-    plot_bode(freq, Z, ax=ax[1:], fmt=fmt, markersize=markersize)
+    plot_bode(freq, Z, ax=ax[1:], fmt=fmt, markersize=markersize, log=log)
+    ax2 = convert_to_twinx(ax[1:])
 
-    return ax
+    return np.array([ax[0], *ax2])
 
 
 def plot_linKK_residuals(
