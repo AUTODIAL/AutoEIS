@@ -148,8 +148,8 @@ def flatten(xs: Iterable) -> list:
 def is_ndarray_like(xs: Iterable) -> bool:
     """Returns True if the input is an ndarray-like object."""
     try:
-        np.array(xs)
-    except ValueError:
+        np.asfarray(xs)
+    except (ValueError, TypeError):
         return False
     return True
 
