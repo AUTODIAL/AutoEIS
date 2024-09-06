@@ -24,6 +24,7 @@ from collections.abc import Iterable
 
 import arviz
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
@@ -117,7 +118,7 @@ def draw_circuit(circuit: str) -> mpl.figure.Figure:
 def plot_nyquist(
     Z: np.ndarray[complex],
     *,
-    fmt: str = "o-",
+    fmt: str = ".-",
     markersize: int = 6,
     color: str = None,
     alpha: int = 1,
@@ -149,7 +150,7 @@ def plot_nyquist(
         Axes object of the Nyquist plot.
     """
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(4, 3), layout="constrained")
 
     # Remove color from fmt if present
     if fmt[0] in ["b", "g", "r", "c", "m", "y", "k", "w"]:
@@ -168,21 +169,23 @@ def plot_nyquist(
 
 
 def plot_bode(
-    freq: np.ndarray[float],
-    Z: np.ndarray[complex],
+    freq: np.ndarray,
+    Z: np.ndarray,
     *,
     fmt=".-",
     markersize=6,
     deg: bool = True,
-    ax: plt.Axes = None,
-) -> plt.Axes:
+    ax: np.ndarray[plt.Axes] = None,
+    label: str = None,
+    log: bool = False,
+) -> np.ndarray:
     """Plots the Bode plot for the impedance data.
 
     Parameters
     ----------
-    freq: np.ndarray[float]
+    freq: np.ndarray
         Frequencies corresponding to the impedance data.
-    Z: np.ndarray[complex]
+    Z: np.ndarray
         Impedance data.
     fmt: str, optional
         Format of the markers in the plot. Default is ".-".
@@ -190,42 +193,48 @@ def plot_bode(
         Size of the markers in the plot. Default is 6.
     deg: bool, optional
         If True, plots the Bode plot in degrees. Default is True.
-    ax: plt.Axes, optional
-        Axes to plot on. Default is None.
+    ax: np.ndarray, optional
+        Array of Axes to plot on. Default is None.
+    label: str, optional
+        Label for the data series. Default is None.
+    log: bool, optional
+        If True, plots the y-axis of |Z| vs. freq in log scale. Default is False.
 
     Returns
     -------
-    plt.Axes
-        Axes object of the Bode plot.
+    np.ndarray
+        Array of Axes objects of the Bode plot.
     """
     if ax is None:
-        fig, ax = plt.subplots(figsize=(5.5, 3.5))
+        fig, ax = plt.subplots(ncols=2, figsize=(8, 3.25), layout="constrained")
 
-    ax.plot(freq, np.abs(Z), fmt, label=r"$|Z|$", markersize=markersize)
-    ax.set_xscale("log")
-    ax2 = ax.twinx()
-    ax2.plot(
-        freq, np.angle(Z, deg=deg), fmt, markersize=markersize, color="b", label=r"$\phi$"
-    )
-    ax.set_xlabel("frequency (Hz)")
-    ax.set_ylabel(r"$|Z|$")
-    ax2.set_ylabel(rf"$\phi$ ({('deg' if deg else 'rad')})")
+    if not isinstance(ax, np.ndarray) or not isinstance(ax[0], plt.Axes):
+        raise AssertionError("Incompatible 'ax': Must be two-long subplot axes. "
+                             "Use `fig, ax = plt.subplots(ncols=2)` and pass 'ax'.")  # fmt: off
 
-    # Color y-axes for better visibility
-    ax2.yaxis.label.set_color("b")
-    for label in ax2.get_yticklabels():
-        label.set_color("b")
-    ax.yaxis.label.set_color("r")
-    for label in ax.get_yticklabels():
-        label.set_color("r")
-    # Avoid overlapping tick labels from ax2 on top of ax
-    ax2.grid(False)
-    # Combine legends
-    lines1, labels1 = ax.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax.legend(lines1 + lines2, labels1 + labels2, loc="upper center")
+    # Plot magnitude |Z|
+    ax[0].plot(freq, np.abs(Z), fmt, label=label, markersize=markersize)
+    ax[0].set_xscale("log")
+    ax[0].set_xlabel("frequency (Hz)")
+    ax[0].set_ylabel(r"$|Z|$")
+    ax[0].grid(True)
+    if label:
+        ax[0].legend()
 
-    return ax.figure, [ax, ax2]
+    # Plot phase φ
+    ax[1].plot(freq, np.angle(Z, deg=deg), fmt, label=label, markersize=markersize)
+    ax[1].set_xscale("log")
+    ax[1].set_xlabel("frequency (Hz)")
+    ax[1].set_ylabel(rf"$\phi$ ({'deg' if deg else 'rad'})")
+    ax[1].grid(True)
+    if label:
+        ax[1].legend()
+
+    if log:
+        ax[0].set_yscale("log")
+    ax[0].figure.get_layout_engine().set(wspace=0.1)
+
+    return ax
 
 
 def plot_impedance_combo(
@@ -236,6 +245,7 @@ def plot_impedance_combo(
     markersize: int = 6,
     ax: Iterable[plt.Axes] = None,
     label: str = None,
+    log: bool = False,
 ) -> list[plt.Axes]:
     """Plots EIS data in Nyquist and Bode plots.
 
@@ -250,9 +260,11 @@ def plot_impedance_combo(
     markersize: int, optional
         Size of the markers in the plots. Default is 10.
     ax: Iterable[plt.Axes], optional
-        Iterable of axes (must be of length 2) to plot on. Default is None.
+        Iterable of axes (must be of length 3) to plot on. Default is None.
     label: str, optional
         Label for the plot. Default is None.
+    log: bool, optional
+        If True, plots the y-axis of |Z| vs. freq in log scale. Default is False.
 
     Returns
     -------
@@ -260,19 +272,16 @@ def plot_impedance_combo(
         List of axes objects of the Nyquist and Bode plots.
     """
     if ax is None:
-        fig, ax = plt.subplots(ncols=2, figsize=(9, 3.5))
+        fig, ax = plt.subplots(ncols=3, figsize=(12, 3.25), layout="constrained")
     else:
-        msg = "Incompatible 'ax'. Use plt.subplots(ncols=2)"
-        assert len(ax) == 2 and all(isinstance(a, Axes) for a in ax), msg
-        fig = ax[0].figure
+        msg = "Incompatible 'ax'. Use fig, ax = plt.subplots(ncols=2), and pass 'ax'."
+        assert len(ax) == 3 and all(isinstance(a, Axes) for a in ax), msg
 
     plot_nyquist(Z=Z, label=label, ax=ax[0], fmt=fmt, markersize=markersize)
-    plot_bode(freq, Z, ax=ax[1], fmt=fmt, markersize=markersize)
-    ax[0].set_title("Nyquist plot")
-    ax[1].set_title("Bode plot")
-    fig.tight_layout()
+    plot_bode(freq, Z, ax=ax[1:], fmt=fmt, markersize=markersize, log=log)
+    ax2 = convert_to_twinx(ax[1:])
 
-    return ax
+    return np.array([ax[0], *ax2])
 
 
 def plot_linKK_residuals(
@@ -412,20 +421,23 @@ def override_mpl_colors(override_named_colors: bool = True):
     # Define the Flexoki-Light color scheme based on the provided table
     # Original sequence: red, orange, yellow, green, cyan, blue, purple, magenta
     flexoki_light_colors = {
-        "red": "#D14D41",
-        "blue": "#4385BE",
-        "green": "#879A39",
-        "orange": "#DA702C",
-        "purple": "#8B7EC8",
-        "yellow": "#D0A215",
-        "cyan": "#3AA99F",
-        "magenta": "#CE5D97",
+        "red": mcolors.to_rgb("#D14D41"),
+        "blue": mcolors.to_rgb("#4385BE"),
+        "green": mcolors.to_rgb("#879A39"),
+        "orange": mcolors.to_rgb("#DA702C"),
+        "purple": mcolors.to_rgb("#8B7EC8"),
+        "yellow": mcolors.to_rgb("#D0A215"),
+        "cyan": mcolors.to_rgb("#3AA99F"),
+        "magenta": mcolors.to_rgb("#CE5D97"),
     }
 
     # Override default named colors
     if override_named_colors:
-        cdict = mpl.colors.get_named_colors_mapping()
-        cdict.update(flexoki_light_colors)
+        for k, v in flexoki_light_colors.items():
+            mcolors.ColorConverter.cache[(k, None)] = v
+            mcolors.ColorConverter.colors[k] = v
+            mcolors.ColorConverter.cache[(k[0], None)] = v  # k[0] is the short name
+            mcolors.ColorConverter.colors[k[0]] = v
 
     # Define the Flexoki-Light style
     flexoki_light_style = {
@@ -541,3 +553,57 @@ def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
         yticks = ax.yaxis.get_major_ticks()
         if len(yticks) > n:
             ax.yaxis.set_major_locator(plt.MaxNLocator(n, steps=[1, 2, 5, 10]))
+
+
+def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
+    """Convert a 2-column subplots ax object into a single-column with twinx.
+
+    Parameters
+    ----------
+    ax : numpy.ndarray
+        Array of 2-column subplot Axes objects.
+
+    Returns
+    -------
+    tuple[plt.Axes]
+        Two Axes objects with the same data from the original subplots, but
+        now combined into a single-column plot with twinx.
+    """
+    # Check that the input is a 2-column axes object
+    if ax.size != 2:
+        raise ValueError("Input 'ax' object must have 2 subplots.")
+
+    # Extract the first subplot as the base for the new single-column plot
+    ax1 = ax[0]
+
+    # Get the data and labels from the second column (right plot)
+    ax2 = ax1.twinx()  # Create a twin axis sharing the x-axis
+
+    # Copy over the data from the second subplot to the right axis
+    for line in ax[1].get_lines():
+        ax2.plot(
+            line.get_xdata(),
+            line.get_ydata(),
+            color=line.get_color(),
+            label=line.get_label(),
+            linestyle=line.get_linestyle(),
+            marker=line.get_marker(),
+        )
+
+    # Set labels and titles from the original plots
+    ax1.set_xlabel(ax[0].get_xlabel())
+    ax1.set_ylabel(ax[0].get_ylabel())
+    ax2.set_ylabel(ax[1].get_ylabel())
+
+    # Remove the right subplot to clean up the figure
+    ax[1].remove()
+
+    # Turn off grid for the 2nd axis
+    ax2.grid(False)
+
+    # Ensure the colors match between the two
+    for l1, l2 in zip(ax[0].get_lines(), ax2.get_lines()):
+        l2.set_color(l1.get_color())
+        l2.set_label(l1.get_label())
+
+    return ax1, ax2

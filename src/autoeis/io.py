@@ -16,7 +16,6 @@ Collection of functions for importing and exporting EIS data/results.
 
 import logging
 import os
-import re
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -66,8 +65,7 @@ def load_battery_dataset(
         noise_real = [np.random.rand(len(Z)) * Z.real * noise for freq, Z in data]
         noise_imag = [np.random.rand(len(Z)) * Z.imag * noise for freq, Z in data]
         data = [
-            (freq, Z + noise_real[i] + noise_imag[i] * 1j)
-            for i, (freq, Z) in enumerate(data)
+            (freq, Z + noise_real[i] + noise_imag[i] * 1j) for i, (freq, Z) in enumerate(data)
         ]
     return data
 
@@ -129,31 +127,65 @@ def load_test_circuits(filtered: bool = False) -> pd.DataFrame:
     return circuits
 
 
-def parse_ec_output(circuits: Iterable[str] | str) -> pd.DataFrame:
+def parse_ec_output(
+    circuits: Iterable[str] | str, ignore_invalid_inputs: bool = True
+) -> pd.DataFrame:
     """Parses the output of EquivalentCircuits.jl's ``circuit_evolution``.
 
     Parameters
     ----------
     circuits: Iterable[str] | str
-        List of stringified output of EquivalentCircuits.jl's ``circuit_evolution``.
+        List of stringified output of EquivalentCircuits.jl's
+        ``circuit_evolution``. A valid input should be in the following format:
+        'EquivalentCircuit("R1", (R1 = 1.0,))', or a list of such strings.
 
     Returns
     -------
     pd.DataFrame
         Dataframe containing ECMs (cols: "circuitstring" and "Parameters")
     """
-    # Example: 'EquivalentCircuit("R1", (R1 = 1.0,))' -> ('R1', {'R1': 1.0})
+
+    def _validate_input(ec_output: str, raise_error: bool = True):
+        """Ensures the input string can be parsed into circuit and parameters."""
+        ec_output = ec_output.replace(" ", "")
+        try:
+            assert len(ec_output.split('",(')) == 2
+            assert "EquivalentCircuit" in ec_output
+        except AssertionError:
+            if raise_error:
+                raise ValueError(f"Invalid EC output format: {ec_output}.")
+            return False
+        return True
+
+    def _split_labels_and_values(ec_output: str) -> tuple[str, dict[str, float]]:
+        """Splits the circuit string and parameters from the input string."""
+        ec_output = ec_output.removeprefix("EquivalentCircuit(").removesuffix(")")
+        ec_output = ec_output.replace(" ", "")
+        cstr, pstr = ec_output.split('",(')
+        cstr = cstr.replace('"', "")
+        # NOTE: Trailing comma in one-element tuples needs to also be removed
+        pstr = pstr.replace(")", "").replace("(", "").replace('"', "").rstrip(",").split(",")
+        # Convert parameters substring to a dict[str, float]
+        pdict = dict(pair.split("=") for pair in pstr)  # dict[str, str]
+        pdict = {p.split("=")[0]: float(p.split("=")[1]) for p in pstr}  # dict[str, float]
+        return cstr, pdict
+
     circuits = [circuits] if isinstance(circuits, str) else circuits
     parsed = []
 
+    header = "circuitstring,Parameters"
+
     for circuit in circuits:
-        circuit = circuit.removeprefix("EquivalentCircuit(").removesuffix(")")
-        cstr = re.findall(r"\"(.*?)\"", circuit)[0]
-        pstr = re.findall(r"\((.*?)\)", circuit)[0]
-        # NOTE: rstrip(",") to account for the trailing comma in one-element tuples
-        pstr = pstr.replace(" ", "").rstrip(",").split(",")
-        pdict = dict(pair.split("=") for pair in pstr)
-        pdict = {p.split("=")[0]: float(p.split("=")[1]) for p in pstr}
+        # Validate input format
+        circuit = circuit.replace(" ", "")
+        # Skip header if present
+        if circuit == header:
+            continue
+        # Skip invalid inputs if flag is set
+        if not _validate_input(circuit, raise_error=not ignore_invalid_inputs):
+            continue
+        # Finally, parse the circuit and parameters
+        cstr, pdict = _split_labels_and_values(circuit)
         parsed.append([cstr, pdict])
 
     return pd.DataFrame(parsed, columns=["circuitstring", "Parameters"])

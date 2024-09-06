@@ -65,6 +65,10 @@ log = logging.getLogger(__name__)
 # >>> General utils
 
 
+class DivergenceError(Exception):
+    pass
+
+
 def flush_streams():
     """Flushes the standard output and error streams."""
     sys.stdout.flush()
@@ -144,8 +148,8 @@ def flatten(xs: Iterable) -> list:
 def is_ndarray_like(xs: Iterable) -> bool:
     """Returns True if the input is an ndarray-like object."""
     try:
-        np.array(xs)
-    except ValueError:
+        np.asfarray(xs)
+    except (ValueError, TypeError):
         return False
     return True
 
@@ -434,7 +438,8 @@ def fit_circuit_parameters(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
-    iters: int = 1,
+    max_iters: int = 1,
+    min_iters: int = None,
     bounds: Iterable[tuple] = None,
     maxfev: int = None,
     ftol: float = 1e-8,
@@ -453,8 +458,12 @@ def fit_circuit_parameters(
         Impedance data.
     p0 : Mapping[str, float] | Iterable[float], optional
         Initial guess for the circuit parameters. Default is None.
-    iters : int, optional
+    max_iters : int, optional
         Maximum number of iterations for the circuit fitter. Default is 1.
+    min_iters : int, optional
+        Minimum number of iterations for the circuit fitter. Default is None.
+        If ``min_iters`` is reached AND circuit fitter converges, the fitting
+        process stops.
     bounds : Iterable[tuple], optional
         List of two tuples, each containing the lower and upper bounds,
         respectively, for the circuit parameters. Default is None. The order
@@ -502,26 +511,37 @@ def fit_circuit_parameters(
     kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol, "xtol": xtol}
 
     # Fit circuit parameters by brute force
+    min_iters = max_iters if min_iters is None else min_iters
     err_min = np.inf
-    for _ in range(iters):
+
+    for i in range(max_iters):
         try:
             popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-        except Exception as e:
-            continue
-        err = gmean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
-        if err < err_min:
-            err_min = err
-            p0 = popt
+            err = np.mean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
+            if err < err_min:
+                err_min = err
+                p0 = popt
+            if i + 1 >= min_iters:
+                break
+        except RuntimeError:
+            pass  # DON'T 'continue', but 'pass', otherwise p0 will not be updated!
+        except ValueError:
+            raise
         kwargs["p0"] = generate_initial_guess(circuit)
 
     if err_min == np.inf:
-        raise Exception("Failed to fit the circuit parameters. Try increasing 'iters'.")
+        raise DivergenceError(
+            "Failed to fit the circuit parameters. Try increasing 'iters' or "
+            "'maxfev', or narrow down the search by providing 'bounds'."
+        )
 
     variables = parser.get_parameter_labels(circuit)
     return dict(zip(variables, p0))
 
 
-def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarray[complex]:
+def eval_circuit(
+    circuit: str, freq: np.ndarray | float, p: np.ndarray, jit: bool = False
+) -> np.ndarray[complex]:
     """Returns the impedance of a circuit at a given frequency and parameters.
 
     Parameters
@@ -529,7 +549,7 @@ def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarr
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    f : np.ndarray | float
+    freq : np.ndarray | float
         Frequencies at which to evaluate the circuit.
     p : np.ndarray
         Circuit parameters.
@@ -540,6 +560,10 @@ def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarr
         The impedance of the circuit at the given frequency and parameters.
     """
     Z_expr = parser.generate_mathematical_expr(circuit)
+    # For frequency-independent circuits, ensure output is the same shape as freq
+    if not np.isscalar(freq):
+        freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
+        Z_expr = f"({Z_expr}) * {freq_like_ones}"
     return eval(Z_expr)
 
 
