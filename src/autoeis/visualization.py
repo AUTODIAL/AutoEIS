@@ -258,7 +258,7 @@ def plot_impedance_combo(
     markersize: int, optional
         Size of the markers in the plots. Default is 10.
     ax: Iterable[plt.Axes], optional
-        Iterable of axes (must be of length 2) to plot on. Default is None.
+        Iterable of axes (must be of length 3) to plot on. Default is None.
     label: str, optional
         Label for the plot. Default is None.
 
@@ -268,17 +268,13 @@ def plot_impedance_combo(
         List of axes objects of the Nyquist and Bode plots.
     """
     if ax is None:
-        fig, ax = plt.subplots(ncols=2, figsize=(9, 3.5))
+        fig, ax = plt.subplots(ncols=3, figsize=(10.5, 3.5), tight_layout=True)
     else:
         msg = "Incompatible 'ax'. Use plt.subplots(ncols=2)"
-        assert len(ax) == 2 and all(isinstance(a, Axes) for a in ax), msg
-        fig = ax[0].figure
+        assert len(ax) == 3 and all(isinstance(a, Axes) for a in ax), msg
 
     plot_nyquist(Z=Z, label=label, ax=ax[0], fmt=fmt, markersize=markersize)
-    plot_bode(freq, Z, ax=ax[1], fmt=fmt, markersize=markersize)
-    ax[0].set_title("Nyquist plot")
-    ax[1].set_title("Bode plot")
-    fig.tight_layout()
+    plot_bode(freq, Z, ax=ax[1:], fmt=fmt, markersize=markersize)
 
     return ax
 
