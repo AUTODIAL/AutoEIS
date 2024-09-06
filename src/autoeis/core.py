@@ -483,14 +483,13 @@ def _validate_p0(p0):
     """Validates the initial guess for the circuit parameters."""
     if p0 is None:
         return None
-    # Single initial guess
-    if isinstance(p0, (Mapping, Iterable)):
-        # return [p0]
+    # Single initial guess, i.e., array-like or dict
+    if utils.is_ndarray_like(p0) or isinstance(p0, Mapping):
         return p0
     # Multiple initial guesses
     if isinstance(p0, list):
         for p0_ in p0:
-            assert isinstance(p0_, (Mapping, Iterable)), "Invalid initial guess."
+            assert utils.is_ndarray_like(p0_) or isinstance(p0_, Mapping), f"Invalid p0: {p0_}"
         return p0
     raise ValueError("`p0` must be a dict, list[dict], or list[np.ndarray].")
 
@@ -538,12 +537,14 @@ def _parse_p0_and_priors(p0, priors, datasets, circuit, refine_p0, progress_bar)
 
     if priors is not None:
         priors = _validate_priors(priors)
-        priors = [priors] * num_inferences if isinstance(priors, Mapping) else priors
+        if isinstance(priors, Mapping):
+            priors = [priors] * num_inferences
     else:
         # Compute p0 if needed
         if p0 is not None:
             p0 = _validate_p0(p0)
-            p0 = [p0] * num_inferences if isinstance(p0, (Mapping, Iterable)) else p0
+            if utils.is_ndarray_like(p0) or isinstance(p0, Mapping):
+                p0 = [p0] * num_inferences
         if p0 is None or refine_p0:
             max_iters = 10
             freq, Z = zip(*[(dataset.freq, dataset.Z) for dataset in datasets])
