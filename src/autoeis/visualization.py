@@ -118,7 +118,7 @@ def draw_circuit(circuit: str) -> mpl.figure.Figure:
 def plot_nyquist(
     Z: np.ndarray[complex],
     *,
-    fmt: str = "o-",
+    fmt: str = ".-",
     markersize: int = 6,
     color: str = None,
     alpha: int = 1,
@@ -150,7 +150,7 @@ def plot_nyquist(
         Axes object of the Nyquist plot.
     """
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(4, 3), layout="constrained")
 
     # Remove color from fmt if present
     if fmt[0] in ["b", "g", "r", "c", "m", "y", "k", "w"]:
