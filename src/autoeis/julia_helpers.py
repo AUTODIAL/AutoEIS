@@ -193,4 +193,17 @@ def ensure_julia_deps_ready(quiet=True, max_retries=1):
         if max_retries > 0:
             ensure_julia_deps_ready(quiet=quiet, max_retries=max_retries - 1)
         else:
-            raise e
+def remove_julia_env():
+    """Removes the active Julia environment directory.
+
+    Notes
+    -----
+    When Julia or its dependencies are corrupted, this is a possible fix.
+    """
+    path_julia_env = Path(juliapkg.project())
+
+    if path_julia_env.exists():
+        log.warning(f"Removing Julia environment directory: {path_julia_env}")
+        shutil.rmtree(path_julia_env)
+    else:
+        log.warning("Julia environment directory not found.")
