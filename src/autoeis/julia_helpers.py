@@ -1,4 +1,5 @@
 import logging
+import shutil
 from pathlib import Path
 
 import juliapkg
@@ -178,12 +179,47 @@ def is_backend_installed(Main=None, error=False):
     return False
 
 
-def ensure_julia_deps_ready(quiet=True):
+def ensure_julia_deps_ready(quiet=True, retry=True):
     """Ensures Julia and EquivalentCircuits.jl are installed."""
-    if not is_julia_installed(error=False):
-        log.warning("Julia not found, installing Julia...")
-        install_julia(quiet=quiet)
-    Main = init_julia(quiet=quiet)
-    if not is_backend_installed(Main=Main, error=False):
-        log.warning("Julia dependencies not found, installing EquivalentCircuits.jl...")
-        install_backend(quiet=quiet)
+
+    def _ensure_julia_deps_ready(quiet):
+        if not is_julia_installed(error=False):
+            log.warning("Julia not found, installing Julia...")
+            install_julia(quiet=quiet)
+        Main = init_julia(quiet=quiet)
+        if not is_backend_installed(Main=Main, error=False):
+            log.warning("Julia dependencies not found, installing EquivalentCircuits.jl...")
+            install_backend(quiet=quiet)
+
+    def _reset_julia_env(quiet):
+        remove_julia_env()
+        if quiet:
+            with suppress_output():
+                juliapkg.resolve(force=True)
+        else:
+            juliapkg.resolve(force=True)
+
+    try:
+        _ensure_julia_deps_ready(quiet)
+    except Exception:
+        if retry:
+            _reset_julia_env(quiet)
+            _ensure_julia_deps_ready(quiet)
+            return
+        raise
+
+
+def remove_julia_env():
+    """Removes the active Julia environment directory.
+
+    Notes
+    -----
+    When Julia or its dependencies are corrupted, this is a possible fix.
+    """
+    path_julia_env = Path(juliapkg.project())
+
+    if path_julia_env.exists():
+        log.warning(f"Removing Julia environment directory: {path_julia_env}")
+        shutil.rmtree(path_julia_env)
+    else:
+        log.warning("Julia environment directory not found.")
