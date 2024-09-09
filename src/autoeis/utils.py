@@ -440,7 +440,7 @@ def fit_circuit_parameters(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
-    max_iters: int = 1,
+    max_iters: int = 10,
     min_iters: int = None,
     bounds: Iterable[tuple] = None,
     maxfev: int = None,
