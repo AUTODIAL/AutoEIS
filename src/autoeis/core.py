@@ -40,12 +40,12 @@ from autoeis.models import circuit_regression_complex
 
 from .utils import InferenceResult
 
-# Enforce FP64, otherwise circuit fitter fails (because FP32 gradients not sufficient?)
-config.update("jax_enable_x64", True)
-# Tell JAX to use CPUs to avoid the annoying "GPU might be present" warning
-config.update("jax_platforms", "cpu")
-# EIS datasets are not big-enough -> CPU much faster than GPU
+# FP32 gradients not sufficient for ECM fitting
+numpyro.enable_x64()
+# GPU is actually slower for typical EIS dataset sizes
 numpyro.set_platform("cpu")
+# Get rid of the JAX warning about GPU might be available
+config.update("jax_platforms", "cpu")
 
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = logging.getLogger(__name__)
