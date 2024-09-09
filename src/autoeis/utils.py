@@ -737,10 +737,8 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     return np.allclose(Z1, Z2, rtol=rtol)
 
 
-def identify_duplicate_circuits(
-    circuits: Iterable[str], rtol: float = 1e-5
-) -> list[list[int]]:
-    """Identifies duplicate circuits in a list of circuit strings.
+def find_duplicate_circuits(circuits: Iterable[str], rtol: float = 1e-5) -> list[list[int]]:
+    """Returns the indices of duplicate circuits given a list of circuit strings.
 
     Parameters
     ----------
@@ -774,6 +772,9 @@ def identify_duplicate_circuits(
             ptype = parser.parse_parameter(label)
             x0.append(values[ptype])
         return np.array(x0)
+
+    # Validate input circuits
+    assert isinstance(circuits, (list, tuple)), "Input must be a list[str] or tuple[str]."
 
     freq = np.logspace(-3, 3, 10)
     Z = [generate_circuit_fn(circuit)(freq, x0(circuit)) for circuit in circuits]
