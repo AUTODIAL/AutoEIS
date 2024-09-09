@@ -470,7 +470,7 @@ def find_ohmic_resistors(circuit: str) -> list[str]:
     return re.findall(r"R\d+", str(series_elements))
 
 
-def generate_mathematical_expr(circuit: str) -> str:
+def generate_mathematical_expression(circuit: str) -> str:
     """Converts a circuit string to a mathematical expression, parameterized
     by frequency and the circuit parameters, i.e., func(freq, p).
 

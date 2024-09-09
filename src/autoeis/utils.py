@@ -561,12 +561,12 @@ def eval_circuit(
     np.ndarray[complex]
         The impedance of the circuit at the given frequency and parameters.
     """
-    Z_expr = parser.generate_mathematical_expr(circuit)
+    expr = parser.generate_mathematical_expression(circuit)
     # For frequency-independent circuits, ensure output is the same shape as freq
     if not np.isscalar(freq):
         freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
-        Z_expr = f"({Z_expr}) * {freq_like_ones}"
-    return eval(Z_expr)
+        expr = f"({expr}) * {freq_like_ones}"
+    return eval(expr)
 
 
 def generate_circuit_fn(circuit: str, jit=False, concat=False):
