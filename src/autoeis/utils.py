@@ -734,7 +734,7 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     freq = np.logspace(-3, 3, 10)
     Z1 = generate_circuit_fn(circuit1)(freq, x0(circuit1))
     Z2 = generate_circuit_fn(circuit2)(freq, x0(circuit2))
-    return np.allclose(Z1, Z2)
+    return np.allclose(Z1, Z2, rtol=rtol)
 
 
 def identify_duplicate_circuits(
