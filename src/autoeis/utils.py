@@ -1096,14 +1096,15 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK_silent(freq, Z, **linKK_kwargs)
     rmse = metrics.rmse_score(Z, Z_linKK)
 
+    # NOTE: Attach `freq` in case user wants to plot the residuals (b/c after linKK, freq might change)
+    aux = Box(freq=freq, res=Box(real=res_real, imag=res_imag), rmse=rmse)
+
     mask = (np.abs(res_real) < tol_linKK) & (np.abs(res_imag) < tol_linKK)
     freq = freq[mask]
     Z = Z[mask]
 
     if (frac_filtered := 1 - len(freq) / n0) > 0.1:
         log.warning(f"{frac_filtered * 100:.0f}% of data filtered out.")
-
-    aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
 
     return (freq, Z, aux) if return_aux else (freq, Z)
 
