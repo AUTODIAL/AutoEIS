@@ -592,15 +592,19 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
         and returns the impedance.
     """
 
-    def Z_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
-        return eval_circuit(circuit, freq, p)
+    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
+        atleast_1d = jnp.atleast_1d if jit else np.atleast_1d
+        freq, p = atleast_1d(freq), atleast_1d(p)
+        msg = f"The parameters: {p} don't match the number of parameters in the circuit: {circuit}."
+        assert len(p) == parser.count_parameters(circuit), msg
+        return eval_circuit(circuit, freq, p, jit=jit)
 
-    def Z_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
-        Z = Z_complex(freq, p)
+    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
+        Z = fn_complex(freq, p)
         hstack = jnp.hstack if jit else np.hstack
         return hstack([Z.real, Z.imag])
 
-    fn = Z_concat if concat else Z_complex
+    fn = fn_concat if concat else fn_complex
     fn = jax.jit(fn) if jit else fn
 
     return fn

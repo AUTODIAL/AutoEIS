@@ -84,9 +84,9 @@ def test_generate_circuit_fn_frequency_independent_ecm():
     # Input: frequency array, output: array of size len(freq)
     freq = np.array([1, 10, 100])
     assert len(circuit_fn(freq, p)) == len(freq)
-    # Input: scalar frequency, output: scalar
+    # Input: scalar frequency, output: still array, but of size 1!
     freq = 10
-    assert np.isscalar(circuit_fn(freq, p))
+    assert len(circuit_fn(freq, p)) == 1
 
 
 def test_circuit_complexity():
