@@ -555,7 +555,7 @@ def _parse_p0_and_priors(p0, priors, datasets, circuit, refine_p0, progress_bar)
                 *args,
                 static=(4),  # static args = (max_iters)
                 progress_bar=progress_bar,
-                desc="Refining p0",
+                desc="Refining Initial Guess",
             )
             for i, elem in enumerate(p0):
                 if isinstance(elem, Exception):
