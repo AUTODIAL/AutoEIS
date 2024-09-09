@@ -937,7 +937,7 @@ def eval_posterior_predictive(
     # Evaluate the predictive distribution at the given frequency
     kwargs = {"freq": freq, "priors": priors, "circuit_fn": circuit_fn}
     predictions = predictive(rng_key_, **kwargs)
-    Z_pred = predictions["obs_real"] + predictions["obs_imag"] * 1j
+    Z_pred = predictions["obs.real"] + predictions["obs.imag"] * 1j
 
     return Z_pred
 
