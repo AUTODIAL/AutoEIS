@@ -319,7 +319,7 @@ def parse_initial_guess(
     raise ValueError(f"Invalid initial guess: {p0}")
 
 
-def generate_initial_guess(circuit: str) -> np.ndarray:
+def generate_initial_guess(circuit: str, seed=None) -> np.ndarray:
     """Generates a random initial guess for the circuit parameters.
 
     Parameters
@@ -334,6 +334,8 @@ def generate_initial_guess(circuit: str) -> np.ndarray:
         A random initial guess for the circuit parameters.
     """
     num_params = parser.count_parameters(circuit)
+    if seed is not None:
+        np.random.seed(seed)
     return np.random.rand(num_params)
 
 
