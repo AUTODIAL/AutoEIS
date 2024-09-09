@@ -44,7 +44,6 @@ import pandas as pd
 import psutil
 from box import Box
 from impedance.models.circuits import CustomCircuit
-from impedance.models.circuits.fitting import set_default_bounds
 from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
