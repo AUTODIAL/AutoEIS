@@ -27,7 +27,6 @@ import numpyro
 import pandas as pd
 import psutil
 from deprecated import deprecated
-
 from jax import config
 from mpire import WorkerPool
 from numpyro.distributions import Distribution
@@ -35,8 +34,7 @@ from numpyro.infer import MCMC, NUTS
 from scipy.optimize import curve_fit
 from tqdm.auto import tqdm
 
-from autoeis import io, julia_helpers, metrics, parser, utils
-from autoeis.models import circuit_regression_complex
+from autoeis import io, julia_helpers, metrics, models, parser, utils
 
 from .utils import InferenceResult
 
@@ -589,7 +587,7 @@ def perform_bayesian_inference(
     progress_bar: bool = True,
     refine_p0: bool = False,
     parallel: bool = True,
-) -> list[InferenceResult] | InferenceResult:
+) -> InferenceResult | list[InferenceResult]:
     """Performs Bayesian inference on the circuits based on impedance data.
 
     Parameters
@@ -749,7 +747,7 @@ def _perform_bayesian_inference_SCSD(
     circuit_fn = utils.generate_circuit_fn(circuit, jit=True)
 
     nuts_kernel = NUTS(
-        model=circuit_regression_complex,
+        model=models.circuit_regression_bode,
         init_strategy=numpyro.infer.init_to_median,
     )
     kwargs_mcmc = {
