@@ -29,8 +29,8 @@ def test_preprocess_impedance_data():
     assert len(Z_prep) == 50
     # Test return_aux=True
     _, _, aux = ae.utils.preprocess_impedance_data(freq, Z, return_aux=True)
-    assert list(aux.keys()) == ["res", "rmse"]
-    assert list(aux["res"].keys()) == ["real", "imag"]
+    assert set(aux.keys()) == {"res", "rmse", "freq"}
+    assert set(aux["res"].keys()) == {"real", "imag"}
 
 
 def test_preprocess_impedance_data_no_high_freq():
