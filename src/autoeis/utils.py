@@ -952,6 +952,7 @@ def eval_posterior_predictive(
     circuit: str,
     freq: np.ndarray[float],
     priors: Mapping[str, Distribution] = None,
+    method: str = "bode",
     rng_key: random.PRNGKey = None,
 ) -> np.ndarray[complex]:
     """Evaluates the posterior predictive distribution of a MCMC run.
@@ -968,6 +969,9 @@ def eval_posterior_predictive(
     priors : Mapping[str, Distribution], optional
         Priors for the circuit parameters as a dictionary of parameter names
         and distributions. Default is None.
+    method : str, optional
+        Objective function that was used for inference. Default is "bode".
+        Options are "bode", "nyquist", "magnitude", and "chi-squared".
     rng_key : random.PRNGKey, optional
         Random key for the MCMC run. Default is None.
 
@@ -988,12 +992,22 @@ def eval_posterior_predictive(
         priors = initialize_priors(p0)
 
     # Create a predictive distribution for the circuit parameters
-    model = models.circuit_regression_complex
+    method = method.replace("-", "_")
+    model = getattr(models, f"circuit_regression_{method}")
     predictive = Predictive(model, samples)
 
     # Evaluate the predictive distribution at the given frequency
     kwargs = {"freq": freq, "priors": priors, "circuit_fn": circuit_fn}
     predictions = predictive(rng_key_, **kwargs)
+
+    # Handle inference models where real/imag parts are not explicitly predicted
+    if method in ["chi-squared", "magnitude"]:
+        raise NotImplementedError(f"'method={method}' is not implemented yet.")
+    if method == "bode":
+        mag, phase = predictions["obs.mag"], predictions["obs.phase"]
+        predictions["obs.real"] = mag * jnp.cos(phase)
+        predictions["obs.imag"] = mag * jnp.sin(phase)
+
     Z_pred = predictions["obs.real"] + predictions["obs.imag"] * 1j
 
     return Z_pred
