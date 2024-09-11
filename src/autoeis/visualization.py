@@ -371,17 +371,28 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
     circuits = circuits.copy(deep=True)
 
     # Rank the circuits based on WAIC
-    circuits["WAIC (sum)"] = circuits["WAIC (real)"] + circuits["WAIC (imag)"]
+    if "WAIC (real)" in circuits.columns:
+        circuits["WAIC (sum)"] = circuits["WAIC (real)"] + circuits["WAIC (imag)"]
+    else:
+        circuits["WAIC (sum)"] = circuits["WAIC (mag)"] + circuits["WAIC (phase)"]
     circuits.sort_values(by=["WAIC (sum)"], ascending=True, inplace=True, ignore_index=True)
 
     cols_to_hide = [
-        "Parameters", "InferenceResult", "converged", "divergences", "Z_pred", "WAIC (sum)",
-        "R^2 (real)", "R^2 (imag)", "MAPE (real)", "MAPE (imag)"
-    ]  # fmt: off
+        "Parameters",
+        "InferenceResult",
+        "converged",
+        "divergences",
+        "Z_pred",
+        "WAIC (sum)",
+        "R^2 (real)",
+        "R^2 (imag)",
+        "MAPE (real)",
+        "MAPE (imag)",
+    ]
     df = circuits.style.hide(cols_to_hide, axis=1)
     fmt = {
-        "WAIC (real)": "{:.2e}",
-        "WAIC (imag)": "{:.2e}",
+        "WAIC (real)" if "WAIC (real)" in circuits.columns else "WAIC (mag)": "{:.2e}",
+        "WAIC (imag)" if "WAIC (imag)" in circuits.columns else "WAIC (phase)": "{:.2e}",
         "R^2 (ravg)": "{:.3f}",
         "R^2 (iavg)": "{:.3f}",
         "MAPE (ravg)": "{:.2e}",
@@ -394,9 +405,15 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
 
     # Add columns to the table
     columns = [
-        "Circuit", "WAIC (re)", "WAIC (im)", "R2 (re)", "R2 (im)",
-        "MAPE (re)", "MAPE (im)", "Np"
-    ]  # fmt: off
+        "Circuit",
+        "WAIC (real)" if "WAIC (real)" in circuits.columns else "WAIC (mag)",
+        "WAIC (imag)" if "WAIC (imag)" in circuits.columns else "WAIC (phase)",
+        "R2 (re)",
+        "R2 (im)",
+        "MAPE (re)",
+        "MAPE (im)",
+        "Np",
+    ]
     for column in columns:
         table.add_column(column, justify="right")
 
@@ -404,8 +421,8 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
     for i, row in df.data.iterrows():
         table.add_row(
             row["circuitstring"],
-            f"{row['WAIC (real)']:.2e}",
-            f"{row['WAIC (imag)']:.2e}",
+            f"{row['WAIC (real)' if 'WAIC (real)' in circuits.columns else 'WAIC (mag)']:.2e}",
+            f"{row['WAIC (imag)' if 'WAIC (imag)' in circuits.columns else 'WAIC (phase)']:.2e}",
             f"{row['R^2 (ravg)']:.3f}",
             f"{row['R^2 (iavg)']:.3f}",
             f"{row['MAPE (ravg)']:.2e}",
