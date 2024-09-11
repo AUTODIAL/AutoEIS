@@ -1198,9 +1198,7 @@ def distribute_task(
         ]
         if np.unique(iters).size == 0:
             raise RuntimeError("Couldn't infer `iters` from args, specify `iters`")
-        assert (
-            np.unique(iters).size == 1
-        ), "All iterable arguments must have the same length"
+        assert np.unique(iters).size == 1, "All iterable arguments must have the same length"
         iters = iters[0]
 
     args = list(args)
