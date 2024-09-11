@@ -477,35 +477,43 @@ def _validate_impedance_data(freq, Z):
     return freq, Z
 
 
-def _validate_p0(p0):
-    """Validates the initial guess for the circuit parameters."""
-    if p0 is None:
-        return None
-    # Single initial guess, i.e., array-like or dict
-    if utils.is_ndarray_like(p0) or isinstance(p0, Mapping):
-        return p0
-    # Multiple initial guesses
-    if isinstance(p0, list):
-        for p0_ in p0:
-            assert utils.is_ndarray_like(p0_) or isinstance(p0_, Mapping), f"Invalid p0: {p0_}"
-        return p0
-    raise ValueError("`p0` must be a dict, list[dict], or list[np.ndarray].")
+def _validate_p0(p0, broadcast_to: int = 1):
+    """Validates the initial guess for ECM parameters, and broadcasts to a list."""
+    # Validate input data type
+    if not (isinstance(p0, (dict, list)) or utils.is_ndfarray_like(p0) or p0 is None):
+        raise ValueError("'p0' must be an ndarray/dict or list[ndarray/dict].")
+
+    # If single p0 is provided, broadcast
+    if p0 is None or utils.is_ndfarray_like(p0) or isinstance(p0, dict):
+        p0 = [deepcopy(p0) for _ in range(broadcast_to)]
+
+    # If a list of p0 is provided, validate
+    assert isinstance(p0, list), "Something went wrong. Please report!"
+    for p0_ in p0:
+        msg = f"Invalid p0: {p0_}"
+        assert utils.is_ndfarray_like(p0_) or isinstance(p0_, dict), msg
+
+    return p0
 
 
-def _validate_priors(priors):
-    """Validates the priors for the circuit parameters."""
-    if priors is None:
-        return None
-    msg = "'priors' must be a dict of NumPyro distributions."
-    # Single prior
-    if isinstance(priors, Mapping):
-        assert all(isinstance(v, Distribution) for v in priors.values()), msg
-        return priors
-    # Multiple priors
-    if isinstance(priors, Iterable):
-        assert all(isinstance(prior, Mapping) for prior in priors), msg
-        return priors
-    raise ValueError("'priors' must be a dict[Distribution] or list[dict[Distribution]].")
+def _validate_priors(priors, broadcast_to: int = 1):
+    """Validates the priors for the ECM parameters, and broadcasts to a list."""
+    # Validate input data type
+    if not isinstance(priors, (Mapping, list, type(None))):
+        raise ValueError("'priors' must be a dict or list[dict].")
+
+    # If single priors is provided, broadcast
+    if priors is None or isinstance(priors, Mapping):
+        priors = [deepcopy(priors) for _ in range(broadcast_to)]
+
+    # Ensure all priors are valid
+    assert isinstance(priors, list), "Something went wrong. Please report!"
+    for priors_ in priors:
+        msg = "'priors' must be a dict of NumPyro Distribution objects."
+        assert isinstance(priors_, Mapping), msg
+        assert all(isinstance(v, Distribution) for v in priors_.values()), msg
+
+    return priors
 
 
 def _validate_seed(seed, num_splits=1) -> list[jax.Array] | jax.Array:
@@ -526,49 +534,33 @@ def _validate_seed(seed, num_splits=1) -> list[jax.Array] | jax.Array:
     return subkey
 
 
-def _parse_p0_and_priors(p0, priors, datasets, circuit, refine_p0, progress_bar):
-    """Parses p0 and priors and modifies them for parallel inference if needed."""
-    if (p0 is not None) and (priors is not None):
-        log.warning("Both 'p0' and 'priors' are provided. Ignoring 'p0'.")
+def _refine_p0(p0, circuit, datasets, progress_bar):
+    """"""
+    if p0 is None:
+        p0 = [None] * len(datasets)
+    if len(p0) != len(circuit) != len(datasets):
+        raise ValueError("Length of 'p0', 'circuit', and 'datasets' must be the same.")
 
-    num_inferences = len(datasets)
+    max_iters = 10
+    p0 = utils.distribute_task(
+        utils.fit_circuit_parameters,
+        circuit,
+        [dataset.freq for dataset in datasets],
+        [dataset.Z for dataset in datasets],
+        p0,
+        max_iters,
+        static=(4),  # static args = (circuit, freq, Z, max_iters)
+        progress_bar=progress_bar,
+        desc="Refining Initial Guess",
+    )
 
-    if priors is not None:
-        priors = _validate_priors(priors)
-        if isinstance(priors, Mapping):
-            priors = [priors] * num_inferences
-    else:
-        # Compute p0 if needed
-        if p0 is not None:
-            p0 = _validate_p0(p0)
-            if utils.is_ndarray_like(p0) or isinstance(p0, Mapping):
-                p0 = [p0] * num_inferences
-        if p0 is None or refine_p0:
-            max_iters = 10
-            freq, Z = zip(*[(dataset.freq, dataset.Z) for dataset in datasets])
-            p0 = [p0] * num_inferences if p0 is None else p0
-            args = circuit, freq, Z, p0, max_iters
-            p0 = utils.distribute_task(
-                utils.fit_circuit_parameters,
-                *args,
-                static=(4),  # static args = (max_iters)
-                progress_bar=progress_bar,
-                desc="Refining Initial Guess",
-            )
-            for i, elem in enumerate(p0):
-                if isinstance(elem, Exception):
-                    log.error(f"Failed to refine p0 for circuit {circuit[i]}: {elem}")
-                    p0[i] = None
+    # Handle failed refinements
+    for i, elem in enumerate(p0):
+        if isinstance(elem, Exception):
+            log.error(f"Failed to refine p0 for circuit {circuit}: {elem}")
+            p0[i] = None
 
-        # Convert p0 to dict if Iterable is provided
-        for i, (p0_, circuit_) in enumerate(zip(p0, circuit)):
-            if isinstance(p0_, (list, np.ndarray, jax.Array, tuple)):
-                p0[i] = {k: v for k, v in zip(parser.get_parameter_labels(circuit_), p0_)}
-
-        # Compute priors from p0; if p0 is None, initialize priors to None
-        priors = [None if p0_ is None else utils.initialize_priors(p0_) for p0_ in p0]
-
-        return p0, priors
+    return p0
 
 
 def perform_bayesian_inference(
@@ -584,6 +576,7 @@ def perform_bayesian_inference(
     num_samples: int = 1000,
     num_chains: int = 1,
     seed: int | jax.Array = None,
+    method: str = "bode",
     progress_bar: bool = True,
     refine_p0: bool = False,
     parallel: bool = True,
@@ -618,6 +611,9 @@ def perform_bayesian_inference(
         Number of MCMC chains (default is 1).
     seed : int, optional
         Random seed for reproducibility (default is None).
+    method : str, optional
+        Objective function to minimize (default is "bode"). Choose from "bode",
+        "nyquist", "magnitude", or "chi-squared".
     progress_bar : bool, optional
         If True, a progress bar will be displayed (default is True).
     refine_p0 : bool, optional
@@ -661,8 +657,13 @@ def perform_bayesian_inference(
     circuit = circuit * num_inferences if len(circuit) == 1 else circuit
     datasets = datasets * num_inferences if len(datasets) == 1 else datasets
 
-    # Parse p0 and priors and if needed, reformat them for parallel inference
-    p0, priors = _parse_p0_and_priors(p0, priors, datasets, circuit, refine_p0, progress_bar)
+    # Ensure p0 and priors are valid and ready for parallel inference
+    p0 = _validate_p0(p0, broadcast_to=num_inferences)
+    if refine_p0 or (p0[0] is None):
+        p0 = _refine_p0(p0, circuit, datasets, progress_bar)
+    if priors is None:
+        priors = [utils.initialize_priors(p0_) for p0_ in p0]
+    priors = _validate_priors(priors, broadcast_to=num_inferences)
 
     # Generate N random seeds (one for each inference)
     seed = _validate_seed(seed, num_splits=num_inferences)
@@ -678,6 +679,7 @@ def perform_bayesian_inference(
             num_warmup=num_warmup,
             num_samples=num_samples,
             num_chains=num_chains,
+            method=method,
             seed=seed,
             progress_bar=progress_bar,
         )
@@ -693,6 +695,7 @@ def perform_bayesian_inference(
                 num_samples=num_samples,
                 num_chains=num_chains,
                 seed=seed[i],
+                method=method,
                 progress_bar=progress_bar,
             )
             results.append(result)
@@ -706,48 +709,21 @@ def _perform_bayesian_inference_SCSD(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     priors: Mapping[str, Distribution],
-    num_warmup: int = 2500,
-    num_samples: int = 1000,
-    num_chains: int = 1,
-    seed: int | jax.Array = None,
+    num_warmup: int,
+    num_samples: int,
+    num_chains: int,
+    method: str,
+    seed: int | jax.Array,
     progress_bar: bool = False,
 ) -> InferenceResult:
-    """Performs Bayesian inference on the circuit based on impedance data.
-
-    Parameters
-    ----------
-    circuit : str
-        CDC string representation of the input circuit. See
-        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    freq : np.ndarray[float]
-        Frequencies corresponding to the impedance data.
-    Z : np.ndarray[complex]
-        Complex impedance data.
-    priors: Mapping[str, Distribution], optional
-        Priors for the circuit parameters (default is None).
-    num_warmup : int, optional
-        Number of warmup samples for the MCMC (default is 2500).
-    num_samples : int, optional
-        Number of samples for the MCMC (default is 1000).
-    num_chains : int, optional
-        Number of MCMC chains (default is 1).
-    seed : int | jax.Array, optional
-        Random seed for reproducibility (default is None).
-    progress_bar : bool, optional
-        If True, a progress bar will be displayed (default is False).
-
-    Returns
-    -------
-    InferenceResult
-        InferenceResult object.
-    """
     log.info("Performing Bayesian inference on the circuit {circuit}.")
 
     subkey = _validate_seed(seed)
     circuit_fn = utils.generate_circuit_fn(circuit, jit=True)
+    method = method.replace("-", "_")
 
     nuts_kernel = NUTS(
-        model=models.circuit_regression_bode,
+        model=getattr(models, f"circuit_regression_{method}"),
         init_strategy=numpyro.infer.init_to_median,
     )
     kwargs_mcmc = {
@@ -788,6 +764,7 @@ def _perform_bayesian_inference_MCMD(
     num_warmup: int,
     num_samples: int,
     num_chains: int,
+    method: str,
     seed: jax.Array,
     progress_bar: bool,
 ) -> list[InferenceResult]:
@@ -809,6 +786,7 @@ def _perform_bayesian_inference_MCMD(
             num_warmup=num_warmup,
             num_samples=num_samples,
             num_chains=num_chains,
+            method=method,
             seed=seed[0],
             progress_bar=False,
         )
@@ -824,9 +802,10 @@ def _perform_bayesian_inference_MCMD(
             num_warmup,  # 4
             num_samples,  # 5
             num_chains,  # 6
-            seed,  # 7
+            method,  # 7
+            seed,  # 8
             # --- distribute_task kwargs ---
-            static=(4, 5, 6),  # indices of static args
+            static=(4, 5, 6, 7),  # indices of static args
             progress_bar=progress_bar,
             desc="Performing Bayesian Inference",
         )
