@@ -314,7 +314,7 @@ def parse_initial_guess(
     """
     if isinstance(p0, dict):
         return np.fromiter(p0.values(), dtype=float)
-    if is_ndarray_like(p0):
+    if is_ndfarray_like(p0):
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
