@@ -18,6 +18,7 @@ import os
 import time
 import warnings
 from collections.abc import Iterable, Mapping
+from copy import deepcopy
 
 import arviz as az
 import jax
@@ -406,37 +407,45 @@ def compute_fitness_metrics(
     circuits["converged"] = [result.converged for result in results]
     circuits["divergences"] = [result.num_divergences for result in results]
 
-    # Compute WAIC and add to the dataframe
-    waic_re = [az.waic(x, var_name="obs_real", scale="deviance") for x in mcmcs]
-    waic_im = [az.waic(x, var_name="obs_imag", scale="deviance") for x in mcmcs]
-    circuits["WAIC (real)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_re]
-    circuits["WAIC (imag)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_im]
-
     # Compute the posterior predictive and add to the dataframe
-    # NOTE: axis=1 because posterior is of shape (num_samples, num_obs)
-    fn = lambda r: utils.eval_posterior_predictive(r.InferenceResult.samples, r.circuitstring, freq)  # fmt: off
-    circuits["Z_pred"] = circuits.apply(fn, axis=1)
+    Z_pred = [utils.eval_posterior_predictive(r.samples, r.circuit, freq) for r in results]
+    circuits["Z_pred"] = Z_pred
+
+    # FIXME: This function doesn't work with Bode as objective function
+    # TODO: Extract log-likelihood of mag/phase, and turn it into that for real/imag
+
+    # Compute WAIC and add to the dataframe
+    if "sigma.real" in mcmcs[0].get_samples().keys():
+        waic_re = [az.waic(x, var_name="obs.real", scale="deviance") for x in mcmcs]
+        waic_im = [az.waic(x, var_name="obs.imag", scale="deviance") for x in mcmcs]
+        circuits["WAIC (real)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_re]
+        circuits["WAIC (imag)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_im]
+    else:
+        waic_mag = [az.waic(x, var_name="obs.mag", scale="deviance") for x in mcmcs]
+        waic_phase = [az.waic(x, var_name="obs.phase", scale="deviance") for x in mcmcs]
+        circuits["WAIC (mag)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_mag]
+        circuits["WAIC (phase)"] = [x["elpd_waic"] + 2 * x["p_waic"] for x in waic_phase]
 
     # Compute R^2 and add to the dataframe
-    fn = lambda r: metrics.r2_score(Z.real, r.Z_pred.real, axis=1)
+    fn = lambda row: metrics.r2_score(Z.real, row.Z_pred.real, axis=1)
     circuits["R^2 (real)"] = circuits.apply(fn, axis=1)
-    fn = lambda r: metrics.r2_score(Z.imag, r.Z_pred.imag, axis=1)
+    fn = lambda row: metrics.r2_score(Z.imag, row.Z_pred.imag, axis=1)
     circuits["R^2 (imag)"] = circuits.apply(fn, axis=1)
     # Since R^2 is a vector (num_samples), also compute its mean for convenience
     circuits["R^2 (ravg)"] = circuits["R^2 (real)"].apply(np.mean)
     circuits["R^2 (iavg)"] = circuits["R^2 (imag)"].apply(np.mean)
 
     # Compute MAPE and add to the dataframe
-    fn = lambda r: metrics.mape_score(Z.real, r.Z_pred.real, axis=1)
+    fn = lambda row: metrics.mape_score(Z.real, row.Z_pred.real, axis=1)
     circuits["MAPE (real)"] = circuits.apply(fn, axis=1)
-    fn = lambda r: metrics.mape_score(Z.imag, r.Z_pred.imag, axis=1)
+    fn = lambda row: metrics.mape_score(Z.imag, row.Z_pred.imag, axis=1)
     circuits["MAPE (imag)"] = circuits.apply(fn, axis=1)
     # Since MAPE is a vector (num_samples), also compute its mean for convenience
     circuits["MAPE (ravg)"] = circuits["MAPE (real)"].apply(np.mean)
     circuits["MAPE (iavg)"] = circuits["MAPE (imag)"].apply(np.mean)
 
     # Add number of parameters to the dataframe
-    circuits["n_params"] = circuits.apply(lambda r: len(r.Parameters), axis=1)
+    circuits["n_params"] = circuits.apply(lambda row: len(row.Parameters), axis=1)
 
     return circuits
 
