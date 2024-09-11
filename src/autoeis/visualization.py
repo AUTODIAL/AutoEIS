@@ -421,8 +421,8 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
     for i, row in df.data.iterrows():
         table.add_row(
             row["circuitstring"],
-            f"{row["WAIC (real)" if "WAIC (real)" in circuits.columns else "WAIC (mag)"]:.2e}",
-            f"{row["WAIC (imag)" if "WAIC (imag)" in circuits.columns else "WAIC (phase)"]:.2e}",
+            f"{row['WAIC (real)' if 'WAIC (real)' in circuits.columns else 'WAIC (mag)']:.2e}",
+            f"{row['WAIC (imag)' if 'WAIC (imag)' in circuits.columns else 'WAIC (phase)']:.2e}",
             f"{row['R^2 (ravg)']:.3f}",
             f"{row['R^2 (iavg)']:.3f}",
             f"{row['MAPE (ravg)']:.2e}",
