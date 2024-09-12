@@ -587,7 +587,7 @@ def perform_bayesian_inference(
     seed: int | jax.Array = None,
     method: str = "bode",
     progress_bar: bool = True,
-    refine_p0: bool = False,
+    refine_p0: bool = True,
     parallel: bool = True,
 ) -> InferenceResult | list[InferenceResult]:
     """Performs Bayesian inference on the circuits based on impedance data.
@@ -627,7 +627,7 @@ def perform_bayesian_inference(
         If True, a progress bar will be displayed (default is True).
     refine_p0 : bool, optional
         If True, the initial guess for the circuit parameters will be refined
-        using the circuit fitter (default is False).
+        using the circuit fitter (default is True).
     parallel : bool, optional
         If True, the MCMC chains will be run in parallel (default is True).
 
