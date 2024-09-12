@@ -566,8 +566,7 @@ def _refine_p0(p0, circuit, datasets, progress_bar):
     # Handle failed refinements
     for i, elem in enumerate(p0):
         if isinstance(elem, Exception):
-            log.error(f"Failed to refine p0 for circuit {circuit}: {elem}")
-            p0[i] = None
+            raise RuntimeError(f"Failed to refine p0 for circuit {circuit[i]}: {elem}")
 
     return p0
 
