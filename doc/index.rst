@@ -33,7 +33,6 @@ AutoEIS is still under development and therefore, the API is still not stable. I
    :maxdepth: 1
 
    installation.md
-   basic_usage.md
    circuit.md
    examples
    modules.rst

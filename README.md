@@ -36,36 +36,9 @@ It includes: data pre-processing, ECM generation, circuit post-filtering, Bayesi
 ## Usage
 
 > [!WARNING]
-> The envelope function, `perform_full_analysis` has some issues since it was doing too much all at once. For now, we've deprecated the function until it's made robust. We recommend using the step-by-step approach since it gives more control. That said, since a one-stop-shop function is what many users, especially experimentlists, would like, we're working on making it robust. We'll update this page once the function is ready.
+> The envelope function, `perform_full_analysis`, has some issues since it was doing too much all at once. For now, we've deprecated it until it's made robust. The recommended way to use AutoEIS is the step-by-step approach anyway, since it gives more granular control. That said, since a one-stop-shop function is what many users, especially experimentlists, would like, we're working on making it robust. We'll update this page once the function is ready. **For now, please use the step-by-step approach**.
 
-To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to perform the whole process automatically. The following is an example of how to use the `perform_full_analysis` function:
-
-```python
-import numpy as np
-import autoeis as ae
-
-# Load test dataset shipped with AutoEIS
-freq, Z = ae.io.load_test_dataset()
-
-# Perform automated EIS analysis
-circuits = ae.perform_full_analysis(freq, Z, iters=100, parallel=True)
-ae.visualization.print_inference_results(circuits)
-
-# Print summary of the results
-for i, row in circuits.iterrows():
-    if row["converged"]:
-        circuit = row["circuitstring"]
-        mcmc = row["InferenceResult"].mcmc
-        ae.visualization.print_summary_statistics(mcmc, circuit)
-```
-
-- `freq`: Frequencies corresponding to the impedance measurements
-- `Z`: Electrochemical impedance measurements (complex array)
-- `iters`: Numbers of equivalent circuit generation to be performed
-- `tol`: Tolerance for the evolutionary algorithm for generating equivalent circuits
-- `parallel`: Whether to use parallel processing to speed up the analysis
-  
-An example notebook that demonstrates how to use AutoEIS can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb).
+To use AutoEIS, you can either perform the circuit generation and Bayesian inference step by step or use the `perform_full_analysis` function to automate the whole process. Please visit our [examples'](https://autodial.github.io/AutoEIS/examples.html) page to learn how to use AutoEIS.
 
 # Acknowledgement
 
