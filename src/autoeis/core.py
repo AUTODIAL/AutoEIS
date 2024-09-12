@@ -680,7 +680,7 @@ def perform_bayesian_inference(
     seed = [seed] if not isinstance(seed, list) else seed
 
     # Perform Bayesian inference
-    if parallel:
+    if parallel and num_inferences > 1:
         results = _perform_bayesian_inference_MCMD(
             circuit=circuit,
             dataset=datasets,
@@ -694,7 +694,7 @@ def perform_bayesian_inference(
         )
     else:
         results = []
-        for i in range(num_inferences):
+        for i in tqdm(range(num_inferences), desc="Performing Bayesian Inference"):
             result = _perform_bayesian_inference_SCSD(
                 circuit=circuit[i],
                 freq=datasets[i].freq,
@@ -705,7 +705,7 @@ def perform_bayesian_inference(
                 num_chains=num_chains,
                 seed=seed[i],
                 method=method,
-                progress_bar=progress_bar,
+                progress_bar=False,
             )
             results.append(result)
 
