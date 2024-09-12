@@ -566,6 +566,11 @@ def fit_circuit_parameters(
     bounds = get_parameter_bounds(circuit) if bounds is None else bounds
     kwargs = {"x0": p0, "bounds": bounds, "max_nfev": max_nfev, "ftol": ftol, "xtol": xtol}
 
+    # Ensure p0 is not out-of-bounds
+    if p0 is not None:
+        for i, (lower, upper) in enumerate(zip(*bounds)):
+            p0[i] = np.clip(p0[i], lower, upper)
+
     # Fit circuit parameters by brute force
     min_iters = max_iters if min_iters is None else min_iters
     err_min = np.inf
