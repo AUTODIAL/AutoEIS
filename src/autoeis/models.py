@@ -186,6 +186,14 @@ def circuit_regression_bode(
     numpyro.sample("obs.mag", dist_mag, obs=mag_gt)
     numpyro.sample("obs.phase", dist_phase, obs=phase_gt)
 
+    # NOTE: The following code is an alternative to the above code
+    # error_mag = jnp.abs(jnp.log10(mag) - jnp.log10(mag_gt))
+    # sigma_mag = numpyro.sample("sigma.mag", dist.HalfNormal())
+    # numpyro.sample("obs.error.mag", dist.HalfNormal(sigma_mag), obs=error_mag)
+    # error_phase = jnp.abs(phase - phase_gt)
+    # sigma_phase = numpyro.sample("sigma.phase", dist.HalfNormal())
+    # numpyro.sample("obs.error.phase", dist.HalfNormal(sigma_phase), obs=error_phase)
+
 
 def _posterior_predictive(Z: np.ndarray[complex]):
     """Private helper to compute the posterior predictive distribution."""
