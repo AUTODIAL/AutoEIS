@@ -179,11 +179,9 @@ def circuit_regression_bode(
         mag_gt, phase_gt = jnp.abs(Z), jnp.angle(Z)
         # Log-transform the magnitude, otherwise low-frequency values dominate
         mag, mag_gt = jnp.log10(mag), jnp.log10(mag_gt)
-        # error = jnp.log10(jnp.abs(Z - Z_pred))
-        # numpyro.sample("obs.mag", dist.HalfNormal(sigma["mag"]), obs=error)
     sigma_mag = numpyro.sample("sigma.mag", dist.Exponential(rate=1.0))
     sigma_phase = numpyro.sample("sigma.phase", dist.Exponential(rate=1.0))
-    dist_mag = dist.TruncatedDistribution(dist.Normal(mag, sigma_mag), low=0)
+    dist_mag = dist.TruncatedDistribution(dist.Normal(mag, sigma_mag), low=mag)
     dist_phase = dist.Normal(phase, sigma_phase)
     numpyro.sample("obs.mag", dist_mag, obs=mag_gt)
     numpyro.sample("obs.phase", dist_phase, obs=phase_gt)
