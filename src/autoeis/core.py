@@ -120,7 +120,7 @@ def generate_equivalent_circuits(
     Z: np.ndarray[complex],
     iters: int = 100,
     complexity: int = 12,
-    tol: float = 1e-2,
+    tol: float = 1e-3,
     parallel: bool = True,
     generations: int = 30,
     population_size: int = 100,
@@ -140,7 +140,7 @@ def generate_equivalent_circuits(
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
     tol : float, optional
-        Convergence threshold for the ECM search (default is 1e-2).
+        Convergence threshold for the ECM search (default is 1e-3).
     parallel : bool, optional
         If True, the ECM search will be performed in parallel (default is True).
     generations : int, optional
