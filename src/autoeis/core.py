@@ -181,8 +181,8 @@ def generate_equivalent_circuits(
 
 
 def _generate_ecm_serial(
-    freq: np.ndarray[float],
     Z: np.ndarray[complex],
+    freq: np.ndarray[float],
     iters: int,
     ec_kwargs: dict,
     seed: int,
@@ -208,8 +208,8 @@ def _generate_ecm_serial(
 
 
 def _generate_ecm_parallel_julia(
-    freq: np.ndarray[float],
     Z: np.ndarray[complex],
+    freq: np.ndarray[float],
     iters: int,
     ec_kwargs: dict,
     seed: int,
@@ -254,8 +254,8 @@ def _generate_ecm_parallel_julia(
 
 @deprecated(reason="This function is deprecated, use _generate_ecm_parallel_julia instead")
 def _generate_ecm_parallel_mpire(
-    freq: np.ndarray[float],
     Z: np.ndarray[complex],
+    freq: np.ndarray[float],
     iters: int,
     ec_kwargs: dict,
     seed: int,
