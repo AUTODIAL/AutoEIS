@@ -169,7 +169,7 @@ def generate_equivalent_circuits(
     }
 
     ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
-    circuits = ecm_generator(Z, freq, iters, ec_kwargs, seed)
+    circuits = ecm_generator(freq, Z, iters, ec_kwargs, seed)
 
     # Convert output to DataFrame with columns ("circuitstring", "Parameters")
     circuits = io.parse_ec_output(circuits)
