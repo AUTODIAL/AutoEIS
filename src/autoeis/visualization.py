@@ -574,6 +574,7 @@ def show_nticks(ax: plt.Axes, x: bool = True, y: bool = False, n: int = 10):
 
 def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
     """Convert a 2-column subplots ax object into a single-column with twinx.
+    Left axis is always red, right axis is always blue.
 
     Parameters
     ----------
@@ -601,7 +602,7 @@ def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
         ax2.plot(
             line.get_xdata(),
             line.get_ydata(),
-            color=line.get_color(),
+            color='b',  # Set twin axis plot to blue
             label=line.get_label(),
             linestyle=line.get_linestyle(),
             marker=line.get_marker(),
@@ -609,8 +610,8 @@ def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
 
     # Set labels and titles from the original plots
     ax1.set_xlabel(ax[0].get_xlabel())
-    ax1.set_ylabel(ax[0].get_ylabel())
-    ax2.set_ylabel(ax[1].get_ylabel())
+    ax1.set_ylabel(ax[0].get_ylabel(), color='r')  # Set left axis label to red
+    ax2.set_ylabel(ax[1].get_ylabel(), color='b')  # Set right axis label to blue
 
     # Remove the right subplot to clean up the figure
     ax[1].remove()
@@ -618,9 +619,14 @@ def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
     # Turn off grid for the 2nd axis
     ax2.grid(False)
 
-    # Ensure the colors match between the two
-    for l1, l2 in zip(ax[0].get_lines(), ax2.get_lines()):
-        l2.set_color(l1.get_color())
-        l2.set_label(l1.get_label())
+    # Set tick parameters to match the axis colors
+    ax1.tick_params(axis='y', colors='r')  # Left axis red ticks
+    ax2.tick_params(axis='y', colors='b')  # Right axis blue ticks
+
+    # Ensure the lines match the designated axis colors
+    for l1 in ax[0].get_lines():
+        l1.set_color('r')  # Set left axis lines to red
+    for l2 in ax2.get_lines():
+        l2.set_color('b')  # Set right axis lines to blue
 
     return ax1, ax2
