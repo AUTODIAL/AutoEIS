@@ -192,7 +192,7 @@ def _generate_ecm_serial(
     jl.seval(f"import Random; Random.seed!({seed})")
 
     circuits = []
-    for _ in tqdm(range(iters), desc="Circuit Evolution"):
+    for _ in tqdm(range(iters), desc="Generating Candidate ECMs", leave=False):
         utils.flush_streams()
         try:
             circuit = ec.circuit_evolution(Z, freq, **ec_kwargs, quiet=True)
@@ -234,7 +234,7 @@ def _generate_ecm_parallel_julia(
     # Perform parallelized GEP in chunks
     circuits = []
 
-    with tqdm(total=iters, desc="Circuit Evolution", miniters=1) as pbar:
+    with tqdm(total=iters, desc="Generating Candidate ECMs", miniters=1, leave=False) as pbar:
         utils.flush_streams()
         for iters_ in iters_chunked:
             try:
@@ -693,7 +693,7 @@ def perform_bayesian_inference(
         )
     else:
         results = []
-        for i in tqdm(range(num_inferences), desc="Performing Bayesian Inference"):
+        for i in tqdm(range(num_inferences), desc="Running Bayesian Inference", leave=False):
             result = _perform_bayesian_inference_SCSD(
                 circuit=circuit[i],
                 freq=datasets[i].freq,
