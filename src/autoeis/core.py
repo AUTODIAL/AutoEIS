@@ -120,7 +120,7 @@ def generate_equivalent_circuits(
     Z: np.ndarray[complex],
     iters: int = 100,
     complexity: int = 12,
-    tol: float = 1e-2,
+    tol: float = 1e-3,
     parallel: bool = True,
     generations: int = 30,
     population_size: int = 100,
@@ -140,7 +140,7 @@ def generate_equivalent_circuits(
     complexity : int, optional
         Complexity of the ECM search space (default is 12).
     tol : float, optional
-        Convergence threshold for the ECM search (default is 1e-2).
+        Convergence threshold for the ECM search (default is 1e-3).
     parallel : bool, optional
         If True, the ECM search will be performed in parallel (default is True).
     generations : int, optional
@@ -169,7 +169,7 @@ def generate_equivalent_circuits(
     }
 
     ecm_generator = _generate_ecm_parallel_julia if parallel else _generate_ecm_serial
-    circuits = ecm_generator(Z, freq, iters, ec_kwargs, seed)
+    circuits = ecm_generator(freq, Z, iters, ec_kwargs, seed)
 
     # Convert output to DataFrame with columns ("circuitstring", "Parameters")
     circuits = io.parse_ec_output(circuits)
