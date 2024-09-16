@@ -550,7 +550,7 @@ def _refine_p0(p0, circuit, datasets, progress_bar):
     if len(p0) != len(circuit) != len(datasets):
         raise ValueError("Length of 'p0', 'circuit', and 'datasets' must be the same.")
 
-    max_iters = 10
+    max_iters = 50
     p0 = utils.distribute_task(
         utils.fit_circuit_parameters,
         circuit,

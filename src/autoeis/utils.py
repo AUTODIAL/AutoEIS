@@ -440,8 +440,8 @@ def fit_circuit_parameters(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
-    max_iters: int = 10,
-    min_iters: int = 5,
+    max_iters: int = 50,
+    min_iters: int = 25,
     bounds: Iterable[tuple] = None,
     max_nfev: int = None,
     ftol: float = 1e-15,
@@ -585,8 +585,13 @@ def fit_circuit_parameters(
             break
         kwargs["x0"] = generate_initial_guess(circuit)
 
-    r2 = metrics.r2_score(jnp.abs(Z), jnp.abs(fn(freq, p0)))
-    log.info(f"Converged in {i + 1} iterations with X^2 = {X2:.3e}, R^2 = {r2:.4f}.")
+    r2_mag = metrics.r2_score(jnp.abs(Z), jnp.abs(fn(freq, p0)))
+    r2_phase = metrics.r2_score(jnp.angle(Z), jnp.angle(fn(freq, p0)))
+    X2 = obj_chi_squared(p0).mean()
+    log.info(
+        f"Converged in {i+1} iterations with "
+        f"X^2 = {X2:.3e}, R^2 (|Z|) = {r2_mag:.4f}, R^2 (phase) = {r2_phase:.4f}"
+    )
 
     if err_min == np.inf:
         raise DivergenceError(
