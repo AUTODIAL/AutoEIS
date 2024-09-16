@@ -121,7 +121,7 @@ def plot_nyquist(
     fmt: str = ".-",
     markersize: int = 6,
     color: str = None,
-    alpha: int = 1,
+    alpha: float = 1,
     label: str = None,
     ax: plt.Axes = None,
 ) -> plt.Axes:
@@ -137,7 +137,7 @@ def plot_nyquist(
         Size of the markers in the plot. Default is 6.
     color: str, optional
         Color of the markers in the plot. Default is None.
-    alpha: int, optional
+    alpha: float, optional
         Transparency of the markers in the plot. Default is 1.
     label: str, optional
         Label for the plot. Default is None.
@@ -178,6 +178,7 @@ def plot_bode(
     ax: np.ndarray[plt.Axes] = None,
     label: str = None,
     log: bool = False,
+    alpha: float = 1,
 ) -> np.ndarray:
     """Plots the Bode plot for the impedance data.
 
@@ -199,6 +200,8 @@ def plot_bode(
         Label for the data series. Default is None.
     log: bool, optional
         If True, plots the y-axis of |Z| vs. freq in log scale. Default is False.
+    alpha: float, optional
+        Transparency of the markers in the plot. Default is 1.
 
     Returns
     -------
@@ -213,7 +216,7 @@ def plot_bode(
                              "Use `fig, ax = plt.subplots(ncols=2)` and pass 'ax'.")  # fmt: off
 
     # Plot magnitude |Z|
-    ax[0].plot(freq, np.abs(Z), fmt, label=label, markersize=markersize)
+    ax[0].plot(freq, np.abs(Z), fmt, label=label, markersize=markersize, alpha=alpha)
     ax[0].set_xscale("log")
     ax[0].set_xlabel("frequency (Hz)")
     ax[0].set_ylabel(r"$|Z|$")
@@ -222,7 +225,9 @@ def plot_bode(
         ax[0].legend()
 
     # Plot phase φ
-    ax[1].plot(freq, np.angle(Z, deg=deg), fmt, label=label, markersize=markersize)
+    ax[1].plot(
+        freq, np.angle(Z, deg=deg), fmt, label=label, markersize=markersize, alpha=alpha
+    )
     ax[1].set_xscale("log")
     ax[1].set_xlabel("frequency (Hz)")
     ax[1].set_ylabel(rf"$\phi$ ({'deg' if deg else 'rad'})")
@@ -602,7 +607,7 @@ def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
         ax2.plot(
             line.get_xdata(),
             line.get_ydata(),
-            color='b',  # Set twin axis plot to blue
+            color="b",  # Set twin axis plot to blue
             label=line.get_label(),
             linestyle=line.get_linestyle(),
             marker=line.get_marker(),
@@ -610,8 +615,8 @@ def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
 
     # Set labels and titles from the original plots
     ax1.set_xlabel(ax[0].get_xlabel())
-    ax1.set_ylabel(ax[0].get_ylabel(), color='r')  # Set left axis label to red
-    ax2.set_ylabel(ax[1].get_ylabel(), color='b')  # Set right axis label to blue
+    ax1.set_ylabel(ax[0].get_ylabel(), color="r")  # Set left axis label to red
+    ax2.set_ylabel(ax[1].get_ylabel(), color="b")  # Set right axis label to blue
 
     # Remove the right subplot to clean up the figure
     ax[1].remove()
@@ -620,13 +625,13 @@ def convert_to_twinx(ax: np.ndarray[plt.Axes]) -> tuple[plt.Axes]:
     ax2.grid(False)
 
     # Set tick parameters to match the axis colors
-    ax1.tick_params(axis='y', colors='r')  # Left axis red ticks
-    ax2.tick_params(axis='y', colors='b')  # Right axis blue ticks
+    ax1.tick_params(axis="y", colors="r")  # Left axis red ticks
+    ax2.tick_params(axis="y", colors="b")  # Right axis blue ticks
 
     # Ensure the lines match the designated axis colors
     for l1 in ax[0].get_lines():
-        l1.set_color('r')  # Set left axis lines to red
+        l1.set_color("r")  # Set left axis lines to red
     for l2 in ax2.get_lines():
-        l2.set_color('b')  # Set right axis lines to blue
+        l2.set_color("b")  # Set right axis lines to blue
 
     return ax1, ax2
