@@ -520,7 +520,8 @@ def set_plot_style(
     # Matplotlib
     label_size = 11
     tick_size = label_size - 1
-    title_size = label_size + 1
+    ax_title_size = label_size + 1
+    fig_title_size = ax_title_size + 2
     legend_size = label_size - 1
 
     plt.rcParams["font.family"] = "sans-serif"
@@ -530,7 +531,8 @@ def set_plot_style(
     plt.rcParams["xtick.labelsize"] = tick_size
     plt.rcParams["ytick.labelsize"] = tick_size
     plt.rcParams["axes.labelsize"] = label_size
-    plt.rcParams["axes.titlesize"] = title_size
+    plt.rcParams["axes.titlesize"] = ax_title_size
+    plt.rcParams["figure.titlesize"] = fig_title_size
     plt.rcParams["legend.fontsize"] = legend_size
     plt.rcParams["legend.frameon"] = False
 
