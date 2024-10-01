@@ -367,12 +367,13 @@ def get_parameter_bounds(circuit: str) -> tuple:
     tuple
         A 2-element tuple of lower and upper bounds for the circuit parameters.
     """
+    # NOTE: Using np.inf actually works better than physical bounds!
     bounds_dict = {
-        "R": (0.0, 1e9),
-        "C": (0.0, 10.0),
-        "Pw": (0.0, 1e9),
-        "Pn": (0.0, 1.0),
-        "L": (0.0, 5.0),
+        "R": (0.0, np.inf),  # 1e9
+        "C": (0.0, np.inf),  # 10.0
+        "Pw": (0.0, np.inf),  # 1e9
+        "Pn": (0.0, np.inf),  # 1.0
+        "L": (0.0, np.inf),  # 5.0
     }
     types = parser.get_parameter_types(circuit)
     bounds = [bounds_dict[type_] for type_ in types]
