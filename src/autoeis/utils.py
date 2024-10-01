@@ -550,22 +550,30 @@ def fit_circuit_parameters(
         # res = jnp.hstack((mag - mag_gt, phase - phase_gt))
         return res
 
-    def obj_mag(p):
+    def obj_magnitude(p):
         """Computes ECM error based on the magnitude of impedance deviation."""
         Z_pred = fn(freq, p)
         res = jnp.abs(Z - Z_pred)
         return res
 
-    msg = f"Invalid method: {method}. Use 'chi-squared', 'nyquist', 'bode', or 'magnitude'."
-    assert method in ["chi-squared", "nyquist", "bode", "magnitude"], msg
+    def obj_phase(p):
+        """Computes ECM error based on the phase of impedance deviation."""
+        Z_pred = fn(freq, p)
+        res = jnp.abs(jnp.angle(Z) - jnp.angle(Z_pred))
+        return res
+
+    msg = f"Invalid method: {method}. Use 'chi-squared', 'nyquist', 'bode', 'magnitude', or 'phase'."
+    assert method in ["chi-squared", "nyquist", "bode", "magnitude", "phase"], msg
     assert len(freq) == len(Z), "Length of frequency and impedance data must match."
 
+    variables = parser.get_parameter_labels(circuit)
     fn = generate_circuit_fn(circuit, jit=True)
     obj = {
         "nyquist": obj_nyquist,
         "bode": obj_bode,
         "chi-squared": obj_chi_squared,
-        "magnitude": obj_mag,
+        "magnitude": obj_magnitude,
+        "phase": obj_phase,
     }[method]
 
     mag_gt = jnp.abs(Z)
