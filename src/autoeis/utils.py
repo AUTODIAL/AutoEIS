@@ -910,7 +910,7 @@ def initialize_priors(p0: Mapping[str, float]) -> dict[str, Distribution]:
             priors[var] = dist.Uniform(0, 1)
         else:
             # Search over a log-normal dist spanning [0.01*u0, 100*u0]
-            mean, std_dev = jnp.log(value), jnp.log(10)
+            mean, std_dev = jnp.log(value), jnp.log(100)
             priors[var] = dist.LogNormal(mean, std_dev)
     return priors
 
