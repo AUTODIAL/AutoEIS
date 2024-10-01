@@ -55,6 +55,7 @@ from scipy import stats
 from scipy.optimize import least_squares
 from scipy.stats import loguniform
 from scipy.stats.mstats import gmean
+from tqdm.auto import tqdm
 
 import __main__
 
@@ -597,8 +598,10 @@ def fit_circuit_parameters(
     min_iters = max_iters if min_iters is None else min_iters
     err_min = np.inf
 
-    for i in range(max_iters):
-        res = least_squares(obj, verbose=verbose, **kwargs)
+    for i in tqdm(
+        range(max_iters), desc="Fitting ECM Parameters", disable=not verbose, leave=False
+    ):
+        res = least_squares(obj, verbose=False, **kwargs)
         if (err := norm(obj(res.x))) < err_min:
             err_min = err
             p0 = res.x
@@ -607,12 +610,14 @@ def fit_circuit_parameters(
             break
         kwargs["x0"] = generate_initial_guess(circuit)
 
+    converged = True if err_min != np.inf else False
+
     r2_mag = metrics.r2_score(jnp.abs(Z), jnp.abs(fn(freq, p0)))
     r2_phase = metrics.r2_score(jnp.angle(Z), jnp.angle(fn(freq, p0)))
-    X2 = obj_chi_squared(p0).mean()
+    X2 = np.mean(obj_chi_squared(p0))
     log.info(
         f"Converged in {i+1} iterations with "
-        f"X^2 = {X2:.3e}, R^2 (|Z|) = {r2_mag:.4f}, R^2 (phase) = {r2_phase:.4f}"
+        f"𝛘² = {X2:.3e}, R² (|Z|) = {r2_mag:.4f}, R² (phase) = {r2_phase:.4f}"
     )
 
     if err_min == np.inf:
@@ -621,7 +626,6 @@ def fit_circuit_parameters(
             "'maxfev', or narrow down the search by providing 'bounds'."
         )
 
-    variables = parser.get_parameter_labels(circuit)
     return dict(zip(variables, p0))
 
 
