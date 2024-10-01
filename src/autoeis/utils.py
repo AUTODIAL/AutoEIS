@@ -53,6 +53,7 @@ from numpyro.distributions import Distribution
 from numpyro.infer import MCMC, Predictive
 from scipy import stats
 from scipy.optimize import least_squares
+from scipy.stats import loguniform
 from scipy.stats.mstats import gmean
 
 import __main__
@@ -319,7 +320,7 @@ def parse_initial_guess(
     raise ValueError(f"Invalid initial guess: {p0}")
 
 
-def generate_initial_guess(circuit: str, seed=None) -> np.ndarray:
+def generate_initial_guess(circuit: str, seed=None, log=True) -> np.ndarray:
     """Generates a random initial guess for the circuit parameters.
 
     Parameters
@@ -327,6 +328,10 @@ def generate_initial_guess(circuit: str, seed=None) -> np.ndarray:
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    seed : int, optional
+        Seed for the random number generator. Default is None.
+    log : bool, optional
+        If True, samples the parameters in log-space. Default is True.
 
     Returns
     -------
@@ -336,7 +341,15 @@ def generate_initial_guess(circuit: str, seed=None) -> np.ndarray:
     num_params = parser.count_parameters(circuit)
     if seed is not None:
         np.random.seed(seed)
-    return np.random.rand(num_params)
+    if not log:
+        return np.random.rand(num_params)
+    # Sample in log-space for better coverage ~ 1e-9 to 1
+    p = loguniform(1e-9, 1).rvs(num_params)
+    # Except for Pn, which is sampled from 0 to 1
+    ptypes = parser.get_parameter_types(circuit)
+    for i, ptype in enumerate(ptypes):
+        p[i] = np.random.rand() if ptype == "Pn" else p[i]
+    return p
 
 
 def get_parameter_bounds(circuit: str) -> tuple:
