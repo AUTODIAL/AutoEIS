@@ -460,7 +460,7 @@ def fit_circuit_parameters(
     max_nfev: int = None,
     ftol: float = 1e-15,
     xtol: float = 1e-15,
-    tol_chi_squared: float = 1e-3,
+    tol_chi_squared: float = 1e-4,
     method: str = "bode",
     verbose: bool = False,
 ) -> dict[str, float]:
