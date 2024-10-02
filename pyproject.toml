@@ -52,21 +52,7 @@ dependencies = [
     "tqdm",
 ]
 [project.optional-dependencies]
-build = ["hatch"]
-test = ["nbmake", "pytest"]
-doc = [
-    "furo",
-    "lcapy",
-    "linkify-it-py",
-    "myst-nb",
-    "myst-parser",
-    "nbsphinx",
-    "nbconvert",
-    "sphinx",
-    "sphinx-copybutton",
-    "sphinx-autodoc2",
-    "sphinx-autobuild",
-]
+lcapy = ["lcapy"]
 [project.urls]
 "Homepage" = "https://github.com/AUTODIAL/AutoEIS"
 Repository = "https://github.com/AUTODIAL/AutoEIS"
@@ -76,26 +62,6 @@ Documentation = "https://autodial.github.io/AutoEIS"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.rye]
-managed = true
-dev-dependencies = [
-    "furo>=2024.1.29",
-    "hatch>=1.9.4",
-    "jupyterlab>=4.1.5",
-    "lcapy>=1.22",
-    "linkify-it-py>=2.0.3",
-    "myst-nb>=1.0.0",
-    "myst-parser>=2.0.0",
-    "nbmake>=1.5.3",
-    "nbsphinx>=0.9.3",
-    "nbconvert>=7.16.3",
-    "pytest>=8.1.1",
-    "sphinx>=7.2.6",
-    "sphinx-copybutton>=0.5.2",
-    "sphinx-autodoc2>=0.5.0",
-    "sphinx-autobuild>=2024.2.4",
-]
 
 [tool.hatch.version]
 path = "src/autoeis/version.py"
@@ -120,3 +86,22 @@ exclude = [".git", ".github", ".venv", "build"]
 line-length = 92
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402", "F401", "F403"]
+
+[tool.uv]
+dev-dependencies = [
+    "hatch>=1.12.0",
+    "pytest>=8.3.2",
+    "furo>=2024.8.6",
+    "sphinx>=8.0.2",
+    "sphinx-autobuild>=2024.4.16",
+    "sphinx-autodoc2>=0.5.0",
+    "sphinx-copybutton>=0.5.2",
+    "linkify-it-py>=2.0.3",
+    "myst-nb>=1.1.1",
+    "myst-parser>=4.0.0",
+    "jupyterlab>=4.2.5",
+    "nbmake>=1.5.4",
+    "nbsphinx>=0.9.5",
+    "nbconvert>=7.16.4",
+    "nbstripout>=0.7.1",
+]
