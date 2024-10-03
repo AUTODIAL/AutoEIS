@@ -124,6 +124,7 @@ def generate_equivalent_circuits(
     parallel: bool = True,
     generations: int = 30,
     population_size: int = 100,
+    terminals: str = "RLP",
     seed: int = None,
 ) -> pd.DataFrame:
     """Generates candidate circuits that fit the impedance data using
@@ -147,6 +148,9 @@ def generate_equivalent_circuits(
         Number of generations for the ECM search (default is 30).
     population_size : int, optional
         Number of ECMs to generate per generation (default is 100).
+    terminals : str, optional
+        Circuit components to consider (default is "RLP"). R: resistor,
+        L: inductor, C: capacitor, P: constant-phase element.
     seed : int, optional
         Random seed for reproducibility (default is None).
 
@@ -162,7 +166,7 @@ def generate_equivalent_circuits(
 
     ec_kwargs = {
         "head": complexity,
-        "terminals": "RLP",
+        "terminals": terminals,
         "convergence_threshold": tol,
         "generations": generations,
         "population_size": population_size,
