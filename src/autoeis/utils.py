@@ -601,7 +601,12 @@ def fit_circuit_parameters(
     for i in tqdm(
         range(max_iters), desc="Fitting ECM Parameters", disable=not verbose, leave=False
     ):
-        res = least_squares(obj, verbose=False, **kwargs)
+        # HACK: Occasionally, least_squares throws ValueError
+        try:
+            res = least_squares(obj, verbose=False, **kwargs)
+        except ValueError:
+            kwargs["x0"] = generate_initial_guess(circuit)
+            continue
         if (err := norm(obj(res.x))) < err_min:
             err_min = err
             p0 = res.x
