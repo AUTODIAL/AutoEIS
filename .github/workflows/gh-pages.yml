@@ -41,6 +41,9 @@ jobs:
 
       - name: Install TeX Live
         uses: teatimeguest/setup-texlive-action@v3
+        with:
+          packages: |
+            collection-latexextr
 
       - name: Install AutoEIS
         run: |
@@ -52,7 +55,7 @@ jobs:
         run: |
           uv run jupyter nbconvert \
             --ExecutePreprocessor.timeout=3600 \
-            --to notebook --execute --inplace examples/*.ipynb
+            --to notebook --execute --inplace examples/circuit_basics.ipynb
           cd doc
           uv run make html
 
