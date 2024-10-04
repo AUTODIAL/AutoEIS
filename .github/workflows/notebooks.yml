@@ -10,13 +10,13 @@ jobs:
         shell: bash
     strategy:
       matrix:
-        julia-version: ['1.10']
-        python-version: ['3.10']
+        julia-version: ["1.10"]
+        python-version: ["3.10"]
         os: [macos-latest]
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Julia
         uses: julia-actions/setup-julia@v2
         with:
@@ -26,22 +26,29 @@ jobs:
         uses: julia-actions/cache@v2
         with:
           cache-name: ${{ matrix.os }}-test-${{ matrix.julia-version }}-${{ matrix.python-version }}
-          cache-packages: false
+          cache-packages: true
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-        with: 
+        with:
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}          
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install Pandoc and TeXLive
+        run: |
+          brew install pandoc  # Required by nbsphinx
+          brew install mactex  # Required by lcapy
+          eval "$(/usr/libexec/path_helper)"
+          echo "$(dirname "$(which pdflatex)")" >> $GITHUB_PATH
 
       - name: Install AutoEIS
         run: |
-            uv sync --dev --all-extras
-            # Install Julia dependencies at first import
-            uv run python -c "import autoeis"
+          uv sync --dev --all-extras
+          # Install Julia dependencies at first import
+          uv run python -c "import autoeis"
 
       - name: Run tests
         run: |

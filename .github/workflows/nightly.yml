@@ -31,7 +31,7 @@ jobs:
         uses: julia-actions/cache@v2
         with:
           cache-name: ${{ matrix.os }}-test-${{ matrix.julia-version }}-${{ matrix.python-version }}
-          cache-packages: false
+          cache-packages: true
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
