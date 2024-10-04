@@ -36,10 +36,15 @@ jobs:
       - name: Set up Python 3.10
         run: uv python install 3.10
 
-      - name: Install AutoEIS
+      - name: Install pandoc and texlive
         run: |
           brew install pandoc  # Required by nbsphinx
-          brew install texlive  # Required by lcapy
+          brew install basictex  # Required by lcapy
+          eval "$(/usr/libexec/path_helper)"
+          sudo tlmgr install collection-latexextra
+
+      - name: Install AutoEIS
+        run: |
           uv sync --dev --all-extras
           # Install Julia dependencies at first import
           uv run python -c "import autoeis"
