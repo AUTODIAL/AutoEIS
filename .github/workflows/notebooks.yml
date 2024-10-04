@@ -41,7 +41,7 @@ jobs:
         run: |
             uv sync --dev --all-extras
             # Install Julia dependencies at first import
-            python -c "import autoeis"
+            uv run python -c "import autoeis"
 
       - name: Run tests
         run: |

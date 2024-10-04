@@ -13,31 +13,44 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: "Set up Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: pip
+      
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
-      - name: "Install AutoEIS"
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.10'
+
+      - name: Cache Julia
+        uses: julia-actions/cache@v1
+        with:
+          cache-name: 'macos-latest-test-1.10-3.10'
+          cache-packages: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with: 
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+
+      - name: Set up Python 3.10
+        run: uv python install 3.10
+
+      - name: Install AutoEIS
         run: |
             brew install pandoc  # Required by nbsphinx
-            python -m pip install --upgrade pip
-            pip install -e .[doc]
+            brew install texlive  # Required by lcapy
+            uv sync --dev --all-extras
             # Install Julia dependencies at first import
-            python -c "import autoeis"
-            # Install TexLive for lcapy to work
-            brew install texlive
+            uv run python -c "import autoeis"
 
-      # Build the documentation
       - name: Build the documentation
         run: |
-          jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb
+          uv run jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb
           cd doc
           make html
 
-      # Push the documentation's HTML to github-pages
       - name: GitHub Pages action
         uses: peaceiris/actions-gh-pages@v3
         with:
