@@ -13,9 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-
       - name: Set up Julia
         uses: julia-actions/setup-julia@v2
         with:
@@ -43,7 +40,7 @@ jobs:
         uses: teatimeguest/setup-texlive-action@v3
         with:
           packages: |
-            collection-latexextr
+            texlive-basic
 
       - name: Install AutoEIS
         run: |
