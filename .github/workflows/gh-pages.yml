@@ -41,6 +41,7 @@ jobs:
         with:
           packages: |
             scheme-basic
+            circuitikz
 
       - name: Install AutoEIS
         run: |
