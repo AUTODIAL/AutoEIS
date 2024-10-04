@@ -40,7 +40,7 @@ jobs:
         uses: teatimeguest/setup-texlive-action@v3
         with:
           packages: |
-            texlive-basic
+            scheme-basic
 
       - name: Install AutoEIS
         run: |
