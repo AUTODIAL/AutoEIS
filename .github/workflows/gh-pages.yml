@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
       - name: Set up Julia
         uses: julia-actions/setup-julia@v2
         with:
@@ -33,18 +36,10 @@ jobs:
       - name: Set up Python 3.10
         run: uv python install 3.10
 
-      - name: Install pandoc
-        uses: r-lib/actions/setup-pandoc@v2
-
-      - name: Install TeX Live
-        uses: teatimeguest/setup-texlive-action@v3
-        with:
-          packages: |
-            scheme-basic
-            circuitikz
-
       - name: Install AutoEIS
         run: |
+          brew install pandoc  # Required by nbsphinx
+          brew install texlive  # Required by lcapy
           uv sync --dev --all-extras
           # Install Julia dependencies at first import
           uv run python -c "import autoeis"
