@@ -36,13 +36,10 @@ jobs:
       - name: Set up Python 3.10
         run: uv python install 3.10
 
-      - name: Install pandoc and texlive
+      - name: Install Pandoc and TeXLive
         run: |
           brew install pandoc  # Required by nbsphinx
-          brew install basictex  # Required by lcapy
-          eval "$(/usr/libexec/path_helper)"
-          sudo tlmgr update --self
-          sudo tlmgr install collection-latexextra
+          brew install mactex  # Required by lcapy
 
       - name: Install AutoEIS
         run: |
