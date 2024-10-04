@@ -41,6 +41,7 @@ jobs:
           brew install pandoc  # Required by nbsphinx
           brew install basictex  # Required by lcapy
           eval "$(/usr/libexec/path_helper)"
+          sudo tlmgr update --self
           sudo tlmgr install collection-latexextra
 
       - name: Install AutoEIS
