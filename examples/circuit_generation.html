@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Detailed Workflow" href="basic_workflow.html" /><link rel="prev" title="Circuit Models 101" href="circuit_basics.html" />
 
     <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
-        <title>Circuit Generation - AutoEIS 0.0.34 documentation</title>
+        <title>Circuit Generation - AutoEIS 0.0.35 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">AutoEIS 0.0.34 documentation</div></a>
+      <a href="../index.html"><div class="brand">AutoEIS 0.0.35 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -356,7 +356,7 @@ used, otherwise, it’ll be installed automatically.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-cyan-fg">[19:57:22]</span><span class="ansi-cyan-fg"> </span><span class="ansi-yellow-fg">WARNING </span> <span class="ansi-cyan-intense-fg ansi-bold">10</span>% of data filtered out.
+<span class="ansi-cyan-fg">[17:17:19]</span><span class="ansi-cyan-fg"> </span><span class="ansi-yellow-fg">WARNING </span> <span class="ansi-cyan-intense-fg ansi-bold">10</span>% of data filtered out.
 </pre></div></div>
 </div>
 <div class="admonition note">
@@ -386,6 +386,7 @@ used, otherwise, it’ll be installed automatically.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">iters</span></code>: Number of circuits to generate.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">complexity</span></code>: Maximum number of elements in a circuit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">terminals</span></code>: Type of circuit components to use (e.g., R, C, L, or P).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">parallel</span></code>: Whether to run the circuit generation in parallel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tol</span></code>: Tolerance for accepting a circuit as a good fit.</p></li>
 </ul>
@@ -399,6 +400,10 @@ used, otherwise, it’ll be installed automatically.</p>
 <p class="admonition-title">Note</p>
 <p>Circuit generation is a lengthy process. It may take one minute per iteration on a modern CPU. We recommend generating at least 50 circuits to get a good pool of candidate circuits, which may take about an hour.</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">terminals</span></code> is set to <code class="docutils literal notranslate"><span class="pre">&quot;RLP&quot;</span></code>, i.e., the algorithm searches for circuits with resistors, inductors, and constant-phase elements. You can add capacitors by setting <code class="docutils literal notranslate"><span class="pre">terminals=&quot;RCLP&quot;</span></code>, but since a capacitor is a special case of a constant-phase element, it’s not necessary, and it makes the search less efficient.</p>
+</div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -408,6 +413,7 @@ used, otherwise, it’ll be installed automatically.</p>
     <span class="s2">&quot;complexity&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
     <span class="s2">&quot;population_size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
     <span class="s2">&quot;generations&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="s2">&quot;terminals&quot;</span><span class="p">:</span> <span class="s2">&quot;RLP&quot;</span><span class="p">,</span>
     <span class="s2">&quot;tol&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
     <span class="s2">&quot;parallel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">}</span>
@@ -420,7 +426,7 @@ used, otherwise, it’ll be installed automatically.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "22c6c3b98511415188fac366f24b96c5", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "d8feade3cefa4c498dc3a271aaa1ebb6", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -452,53 +458,53 @@ used, otherwise, it’ll be installed automatically.</p>
   <tbody>
     <tr>
       <th>0</th>
-      <td>[R1,L2]-[[R3,P4],R5-P6]</td>
-      <td>{'R1': 139.77928223404624, 'L2': 0.19052754283...</td>
+      <td>[P1-[[R2,L3],L4],P5]</td>
+      <td>{'P1w': 1.781007767201709e-06, 'P1n': 0.952903...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>[R1-P2,L3-P4]</td>
-      <td>{'R1': 142.01403423537866, 'P2w': 1.7436695737...</td>
+      <td>[R1,[P2,R3]-P4-[L5,R6]]</td>
+      <td>{'R1': 7297359.135819122, 'P2w': 2.28178413067...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>[P1-R2,P3-[L4,R5]]</td>
-      <td>{'P1w': 1.190439940894969e-06, 'P1n': 0.306666...</td>
+      <td>P1-[P2,P3]-[L4,P5]</td>
+      <td>{'P1w': 999722396.8760437, 'P1n': 0.2141912987...</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>[P1,P2]-R3</td>
-      <td>{'P1w': 1.8153714152112119e-06, 'P1n': 0.95449...</td>
+      <td>[P1,P2-L3-P4]-R5</td>
+      <td>{'P1w': 1.7728153855091295e-06, 'P1n': 0.95896...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>[[R1,R2-P3],P4-P5-R6]</td>
-      <td>{'R1': 34125285.87648749, 'R2': 141.2080185202...</td>
+      <td>[P1,[P2,R3]]-R4</td>
+      <td>{'P1w': 4.003224186797846e-07, 'P1n': 0.163458...</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>[P1,P2-[R3,L4]]</td>
-      <td>{'P1w': 3.8092143871490213e-07, 'P1n': 0.15171...</td>
+      <td>P1-[P2-L3,P4-R5]</td>
+      <td>{'P1w': 0.00016802102404603423, 'P1n': 0.99985...</td>
     </tr>
     <tr>
       <th>6</th>
-      <td>[[P1,R2]-[L3,[R4,L5]]-P6,R7]</td>
-      <td>{'P1w': 2.463867737965456e-06, 'P1n': 0.953556...</td>
+      <td>[P1-R2,[L3,R4]-P5-R6]</td>
+      <td>{'P1w': 2.27866169648688e-06, 'P1n': 0.4004991...</td>
     </tr>
     <tr>
       <th>7</th>
-      <td>[P1-[R2-P3,L4],P5]</td>
-      <td>{'P1w': 1.7612681160120047e-06, 'P1n': 0.95817...</td>
+      <td>[P1,[L2,P3]-P4-R5]</td>
+      <td>{'P1w': 4.0375712045663117e-07, 'P1n': 0.16419...</td>
     </tr>
     <tr>
       <th>8</th>
-      <td>[[R1,P2]-R3,P4]-R5</td>
-      <td>{'R1': 3428101.086698152, 'P2w': 3.47207936058...</td>
+      <td>[[P1,R2]-R3,[P4,R5]]</td>
+      <td>{'P1w': 1.7363076885115045e-06, 'P1n': 0.96248...</td>
     </tr>
     <tr>
       <th>9</th>
-      <td>[[R1,L2]-[P3,R4],P5]</td>
-      <td>{'R1': 0.00681278298013983, 'L2': 0.2506271098...</td>
+      <td>[[R1-L2,P3],P4]-R5</td>
+      <td>{'R1': 993473916.1366141, 'L2': 4.999076070735...</td>
     </tr>
   </tbody>
 </table>
@@ -553,13 +559,18 @@ rationale).</p>
   <tbody>
     <tr>
       <th>0</th>
-      <td>[P1,P2]-R3</td>
-      <td>{'P1w': 1.8153714152112119e-06, 'P1n': 0.95449...</td>
+      <td>[P1,P2-L3-P4]-R5</td>
+      <td>{'P1w': 1.7728153855091295e-06, 'P1n': 0.95896...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>[[R1,P2]-R3,P4]-R5</td>
-      <td>{'R1': 3428101.086698152, 'P2w': 3.47207936058...</td>
+      <td>[P1,[P2,R3]]-R4</td>
+      <td>{'P1w': 4.003224186797846e-07, 'P1n': 0.163458...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>[[R1-L2,P3],P4]-R5</td>
+      <td>{'R1': 993473916.1366141, 'L2': 4.999076070735...</td>
     </tr>
   </tbody>
 </table>
@@ -574,16 +585,16 @@ rationale).</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">use_custom_circuit</span> <span class="o">=</span> <span class="kc">True</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">use_custom_circuit</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">if</span> <span class="ow">not</span> <span class="n">use_custom_circuit</span><span class="p">:</span>
-    <span class="n">circuit</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="s2">&quot;circuitstring&quot;</span><span class="p">]</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="s2">&quot;Parameters&quot;</span><span class="p">]</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;circuitstring&quot;</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Parameters&quot;</span><span class="p">]</span>
     <span class="c1"># Refine the circuit parameters</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fit_circuit_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fit_circuit_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="n">circuit</span> <span class="o">=</span> <span class="s2">&quot;R4-[P1, R3-P2]&quot;</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fit_circuit_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="s2">&quot;R4-[P1,R3-P2]&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">fit_circuit_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
 
 <span class="c1"># Simulate Z using the circuit and the fitted parameters</span>
 <span class="n">circuit_fn</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">generate_circuit_fn</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
@@ -593,18 +604,28 @@ rationale).</p>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">5.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_nyquist</span><span class="p">(</span><span class="n">Z_sim</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;simulated&quot;</span><span class="p">)</span>
 <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_nyquist</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">);</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;[P1,P2-L3-P4]-R5&#39;)
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_circuit_generation_20_0.png" class="no-scaled-link" src="../_images/examples_circuit_generation_20_0.png" style="width: 503px; height: 385px;" />
+<img alt="../_images/examples_circuit_generation_21_1.png" class="no-scaled-link" src="../_images/examples_circuit_generation_21_1.png" style="width: 503px; height: 391px;" />
 </div>
 </div>
 <script type="application/vnd.jupyter.widget-state+json">
-{"state": {"22c6c3b98511415188fac366f24b96c5": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_368e1d3e7ae3479f99915643edf68fc9", "IPY_MODEL_23667e68168d47b29e9db32ef3eb55db", "IPY_MODEL_403a9fd259a44cee808c0bd9b6f2cbb6"], "layout": "IPY_MODEL_e662c8228476419cbc7eef4225fe8e07", "tabbable": null, "tooltip": null}}, "23667e68168d47b29e9db32ef3eb55db": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_81991a368c7544b2b2362c52eb619481", "max": 12.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_50e2ade864684158868fe2f89be0ee63", "tabbable": null, "tooltip": null, "value": 12.0}}, "35799c4f842f4f97bd35b00b76169bc9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "368e1d3e7ae3479f99915643edf68fc9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_5a5bee299ceb4becb0711082f2db8bc1", "placeholder": "\u200b", "style": "IPY_MODEL_35799c4f842f4f97bd35b00b76169bc9", "tabbable": null, "tooltip": null, "value": "Generating\u2007Candidate\u2007ECMs:\u2007100%"}}, "403a9fd259a44cee808c0bd9b6f2cbb6": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_5617cd78a69345d0b35123cbad6f23bf", "placeholder": "\u200b", "style": "IPY_MODEL_5167996a2bdd441eaaa727bcf272ce4d", "tabbable": null, "tooltip": null, "value": "\u200712/12\u2007[18:04&lt;00:00,\u200789.44s/it]"}}, "50e2ade864684158868fe2f89be0ee63": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "5167996a2bdd441eaaa727bcf272ce4d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "5617cd78a69345d0b35123cbad6f23bf": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5a5bee299ceb4becb0711082f2db8bc1": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "81991a368c7544b2b2362c52eb619481": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "e662c8228476419cbc7eef4225fe8e07": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": "hidden", "width": null}}}, "version_major": 2, "version_minor": 0}
+{"state": {"4a17c19e3d294f9b83392bd1fffeb279": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_80f42330286f4590a7504823e25238de", "placeholder": "\u200b", "style": "IPY_MODEL_bd91ab0b9e3044d5a16044abed8719ce", "tabbable": null, "tooltip": null, "value": "Generating\u2007Candidate\u2007ECMs:\u2007100%"}}, "6c876c8125d642b0aa0c603d34198ef8": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "80f42330286f4590a7504823e25238de": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "86f931474b59425f9d5221841e8f1cdd": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "bd3d9e33f2ce45659f1b5ee2579ed7e0": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": "hidden", "width": null}}, "bd91ab0b9e3044d5a16044abed8719ce": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "c0c58190d7ca402da8010760cd487799": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_6c876c8125d642b0aa0c603d34198ef8", "placeholder": "\u200b", "style": "IPY_MODEL_d64df1af8c004594b773729413f2d4c1", "tabbable": null, "tooltip": null, "value": "\u200712/12\u2007[19:54&lt;00:00,\u2007104.83s/it]"}}, "c2a50a7cc87642f98ddfa810b0f9b07c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "d64df1af8c004594b773729413f2d4c1": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "d8feade3cefa4c498dc3a271aaa1ebb6": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_4a17c19e3d294f9b83392bd1fffeb279", "IPY_MODEL_f71b3c5d897d468fadfbf2f184b3ac58", "IPY_MODEL_c0c58190d7ca402da8010760cd487799"], "layout": "IPY_MODEL_bd3d9e33f2ce45659f1b5ee2579ed7e0", "tabbable": null, "tooltip": null}}, "f71b3c5d897d468fadfbf2f184b3ac58": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_86f931474b59425f9d5221841e8f1cdd", "max": 12.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_c2a50a7cc87642f98ddfa810b0f9b07c", "tabbable": null, "tooltip": null, "value": 12.0}}}, "version_major": 2, "version_minor": 0}
 </script></section>
 </section>
 
@@ -686,7 +707,7 @@ rationale).</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=9dd25805"></script>
+</div><script src="../_static/documentation_options.js?v=39aadc1c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
