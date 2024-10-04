@@ -23,7 +23,7 @@ jobs:
           version: '1.10'
 
       - name: Cache Julia
-        uses: julia-actions/cache@v1
+        uses: julia-actions/cache@v2
         with:
           cache-name: 'macos-latest-test-1.10-3.10'
           cache-packages: false
