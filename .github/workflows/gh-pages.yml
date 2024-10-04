@@ -49,7 +49,7 @@ jobs:
         run: |
           uv run jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb
           cd doc
-          make html
+          uv run make html
 
       - name: GitHub Pages action
         uses: peaceiris/actions-gh-pages@v3
