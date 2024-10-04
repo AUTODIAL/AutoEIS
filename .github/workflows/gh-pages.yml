@@ -3,34 +3,33 @@ name: Deploy Documentation
 on:
   push:
     branches:
-    - main
+      - main
   workflow_dispatch:
 
 jobs:
   deploy-docs:
-
     runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Set up Julia
         uses: julia-actions/setup-julia@v2
         with:
-          version: '1.10'
+          version: "1.10"
 
       - name: Cache Julia
         uses: julia-actions/cache@v2
         with:
-          cache-name: 'macos-latest-test-1.10-3.10'
+          cache-name: "macos-latest-test-1.10-3.10"
           cache-packages: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-        with: 
+        with:
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
 
@@ -39,15 +38,17 @@ jobs:
 
       - name: Install AutoEIS
         run: |
-            brew install pandoc  # Required by nbsphinx
-            brew install texlive  # Required by lcapy
-            uv sync --dev --all-extras
-            # Install Julia dependencies at first import
-            uv run python -c "import autoeis"
+          brew install pandoc  # Required by nbsphinx
+          brew install texlive  # Required by lcapy
+          uv sync --dev --all-extras
+          # Install Julia dependencies at first import
+          uv run python -c "import autoeis"
 
       - name: Build the documentation
         run: |
-          uv run jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb
+          uv run jupyter nbconvert \
+            --ExecutePreprocessor.timeout=3600 \
+            --to notebook --execute --inplace examples/*.ipynb
           cd doc
           uv run make html
 
