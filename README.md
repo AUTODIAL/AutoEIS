@@ -27,7 +27,7 @@ Julia dependencies will be automatically installed at first import. It's recomme
 
 ## Usage
 
-Visit our [examples'](https://autodial.github.io/AutoEIS/examples.html) page to learn how to use AutoEIS.
+Visit our [example notebooks](https://autodial.github.io/AutoEIS/examples.html) page to learn how to use AutoEIS.
 
 ## Workflow
 
