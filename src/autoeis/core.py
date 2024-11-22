@@ -592,7 +592,7 @@ def perform_bayesian_inference(
     progress_bar: bool = True,
     refine_p0: bool = True,
     parallel: bool = True,
-) -> InferenceResult | list[InferenceResult]:
+) -> list[InferenceResult]:
     """Performs Bayesian inference on the circuits based on impedance data.
 
     Parameters
@@ -636,16 +636,18 @@ def perform_bayesian_inference(
 
     Returns
     -------
-    InferenceResult | list[InferenceResult]
-        InferenceResult object. If multiple circuits are provided (with a
-        single freq/Z pair), or if multiple freq/Z pairs are provided (with a
-        single circuit), a list of InferenceResult objects will be returned.
+    list[InferenceResult]
+        List of InferenceResult object(s). Regardless of whether a single or
+        multiple circuits/datasets are provided, the output will always be a
+        list of InferenceResult objects for consistency.
 
     Notes
     -----
-    You cannot provide multiple circuits and multiple datasets together, i.e.,
-    either pass a single circuit with multiple datasets or multiple circuits
-    with a single dataset.
+    Only the following combinations of inputs are supported:
+    - Single circuit, single dataset
+    - Single circuit, multiple datasets
+    - Multiple circuits, single dataset
+
     """
     # Validate inputs data types
     circuit = _validate_circuit(circuit)
@@ -712,8 +714,7 @@ def perform_bayesian_inference(
             )
             results.append(result)
 
-    # Return a single InferenceResult object if n_inferences = 1, else a list
-    return results[0] if len(results) == 1 else results
+    return results
 
 
 def _perform_bayesian_inference_SCSD(
