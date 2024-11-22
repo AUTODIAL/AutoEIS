@@ -126,7 +126,7 @@ def test_eval_posterior_predictive():
 
     # Perform Bayesian inference on a single ECM
     kwargs_mcmc = {"num_warmup": 2500, "num_samples": 1000, "progress_bar": False}
-    result = ae.core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+    result = ae.core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)[0]
 
     # Evaluate the posterior predictive distribution with priors
     priors = ae.utils.initialize_priors(p0)
