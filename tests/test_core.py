@@ -76,7 +76,7 @@ def test_bayesian_inference_single_circuit_single_data():
     circuit = circuits.iloc[0].circuitstring
     p0 = circuits.iloc[0].Parameters
     kwargs_mcmc = {"num_warmup": 25, "num_samples": 10, "progress_bar": False}
-    result = ae.core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)
+    result = ae.core.perform_bayesian_inference(circuit, freq, Z, p0, **kwargs_mcmc)[0]
     assert isinstance(result, ae.utils.InferenceResult)
     assert result.converged
 
