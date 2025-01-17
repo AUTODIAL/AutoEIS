@@ -54,6 +54,11 @@ __all__ = [
 ]
 
 
+def is_interactive_session() -> bool:  # pragma: no cover
+    """Returns True if the code is running in an interactive session, False otherwise."""
+    return hasattr(__builtins__, "__IPYTHON__")
+
+
 def is_ipython_notebook() -> bool:  # pragma: no cover
     """Returns True if the code is running in a Jupyter notebook, False otherwise."""
     try:
@@ -540,13 +545,12 @@ def set_plot_style(
     if use_flexoki:
         override_mpl_colors()
 
-    # Set up Jupyter notebook
+    # Customize interactive sessions
     try:
-        import IPython
-        import matplotlib_inline.backend_inline
+        if is_interactive_session():
+            import matplotlib_inline.backend_inline
 
-        # IPython.display.set_matplotlib_formats("retina")
-        matplotlib_inline.backend_inline.set_matplotlib_formats("retina")
+            matplotlib_inline.backend_inline.set_matplotlib_formats("retina")
     except ImportError:
         pass
 
