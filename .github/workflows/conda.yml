@@ -14,21 +14,21 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
-        with: 
+        with:
           enable-cache: true
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Set up Python
         uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: '3.10'
+          python-version: "3.10"
           miniforge-version: latest
 
       - name: Install AutoEIS
         run: |
-            uv sync --dev
-            # Install Julia dependencies at first import
-            uv run python -c "import autoeis"
+          uv sync --dev
+          # Install Julia dependencies at first import
+          uv run python -c "import autoeis"
 
       - name: Run tests
         run: |
