@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Circuit Models 101 - AutoEIS 0.0.36 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=a35ea3b2" />
@@ -247,6 +247,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.find_duplicate_circuits.html">find_duplicate_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.initialize_priors.html">initialize_priors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.initialize_priors_from_posteriors.html">initialize_priors_from_posteriors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.eval_posterior_predictive.html">eval_posterior_predictive</a></li>
@@ -322,8 +323,8 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">autoeis</span> <span class="k">as</span> <span class="nn">ae</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">autoeis</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ae</span>
 <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">set_plot_style</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -496,11 +497,11 @@ File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:56
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([1.86956773-3.43149486e+02j, 1.86539958-7.39237929e+01j,
-       1.89265323-1.58999200e+01j, 1.9258627 -3.49471710e+00j,
-       1.79102361-9.36494464e-01j, 1.50137565-4.05880079e-01j,
-       1.29849712-1.64521542e-01j, 1.23158803-6.04547940e-02j,
-       1.20857037-2.19620732e-02j, 1.20025747-8.02722782e-03j])
+array([0.71539656-2.54737861e+02j, 0.71468956-5.48846403e+01j,
+       0.71166385-1.18346834e+01j, 0.70399073-2.57822031e+00j,
+       0.72162382-7.40854181e-01j, 0.23359123-3.97960005e-01j,
+       0.11017623-9.94829554e-02j, 0.10081635-2.25228334e-02j,
+       0.09975216-5.07602149e-03j, 0.09955657-1.14617615e-03j])
 </pre></div></div>
 </div>
 </section>
@@ -535,7 +536,7 @@ array([1.86956773-3.43149486e+02j, 1.86539958-7.39237929e+01j,
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2024, AutoEIS developers
+                Copyright &#169; 2025, AutoEIS developers
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             

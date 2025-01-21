@@ -1,0 +1,6 @@
+find\_duplicate\_circuits
+=========================
+
+.. currentmodule:: autoeis.utils
+
+.. autofunction:: find_duplicate_circuits
