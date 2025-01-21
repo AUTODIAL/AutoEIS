@@ -11,7 +11,7 @@ Collection of utility functions used throughout the package.
     generate_circuit_fn_impedance_backend
     fit_circuit_parameters
     are_circuits_equivalent
-    identify_duplicate_circuits
+    find_duplicate_circuits
     initialize_priors
     initialize_priors_from_posteriors
     eval_posterior_predictive
