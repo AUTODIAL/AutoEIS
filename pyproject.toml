@@ -74,7 +74,7 @@ allow-direct-references = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -vv --durations=5"
+addopts = "-ra -vv --durations=5 --assert=plain"
 python_files = "*.py"
 python_classes = "*Test"
 python_functions = "test_*"
