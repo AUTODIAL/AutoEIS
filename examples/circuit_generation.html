@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Detailed Workflow" href="basic_workflow.html" /><link rel="prev" title="Circuit Models 101" href="circuit_basics.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Circuit Generation - AutoEIS 0.0.36 documentation</title>
+        <title>Circuit Generation - AutoEIS 0.0.37 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -169,7 +169,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">AutoEIS 0.0.36 documentation</div></a>
+      <a href="../index.html"><div class="brand">AutoEIS 0.0.37 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -357,7 +357,7 @@ used, otherwise, it’ll be installed automatically.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-cyan-fg">[22:06:19]</span><span class="ansi-cyan-fg"> </span><span class="ansi-yellow-fg">WARNING </span> <span class="ansi-cyan-intense-fg ansi-bold">10</span>% of data filtered out.
+<span class="ansi-cyan-fg">[22:16:43]</span><span class="ansi-cyan-fg"> </span><span class="ansi-yellow-fg">WARNING </span> <span class="ansi-cyan-intense-fg ansi-bold">10</span>% of data filtered out.
 </pre></div></div>
 </div>
 <div class="admonition note">
@@ -427,7 +427,7 @@ used, otherwise, it’ll be installed automatically.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7674c027a97b4ff7a1d284d1a054c75e", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "78d249a8492e4158b02550248720b958", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -459,43 +459,53 @@ used, otherwise, it’ll be installed automatically.</p>
   <tbody>
     <tr>
       <th>0</th>
-      <td>[L1,R2]-[P3,[P4,R5]-R6]</td>
-      <td>{'L1': 0.16036630587630044, 'R2': 139.58743322...</td>
+      <td>[P1,P2-[L3,R4]]</td>
+      <td>{'P1w': 4.161022889923976e-07, 'P1n': 0.171169...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>[P1,P2]-P3-R4</td>
-      <td>{'P1w': 4.0685666164516736e-07, 'P1n': 0.16597...</td>
+      <td>P1-[P2,P3]-R4</td>
+      <td>{'P1w': 3.6971851263157196e-05, 'P1n': 0.80357...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>[L1,R2]-[P3,P4]</td>
-      <td>{'L1': 5.0, 'R2': 141.97367403517057, 'P3w': 4...</td>
+      <td>[P1,P2-P3]-R4</td>
+      <td>{'P1w': 4.495108055978664e-07, 'P1n': 0.187250...</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>[P1-R2-L3,[R4-P5,R6]]</td>
-      <td>{'P1w': 2.2714814578960026e-06, 'P1n': 0.40141...</td>
+      <td>[P1,P2]-[R3,P4]-P5</td>
+      <td>{'P1w': 2.9383320328972726e-06, 'P1n': 0.94604...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>P1-[R2,P3]-[P4,R5]</td>
-      <td>{'P1w': 0.006695886148448849, 'P1n': 0.0058691...</td>
+      <td>[P1,[R2,P3-[L4,R5]]]</td>
+      <td>{'P1w': 4.0565456005098896e-07, 'P1n': 0.16652...</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>P1-P2-[R3,[P4,[P5,R6]]]</td>
-      <td>{'P1w': 6.785933453948513e-05, 'P1n': 0.844719...</td>
+      <td>[R1-P2,P3]</td>
+      <td>{'R1': 143.54016796633147, 'P2w': 1.6530091258...</td>
     </tr>
     <tr>
       <th>6</th>
-      <td>[P1-R2,[P3,R4]]</td>
-      <td>{'P1w': 1.737289508823279e-06, 'P1n': 0.962391...</td>
+      <td>R1-[[P2,R3],P4]</td>
+      <td>{'R1': 141.70181104668026, 'P2w': 1.7336166173...</td>
     </tr>
     <tr>
       <th>7</th>
-      <td>[[R1-P2,P3-R4]-P5,R6]</td>
-      <td>{'R1': 139.15408437848245, 'P2w': 2.0058849990...</td>
+      <td>P1-[L2-P3,P4]</td>
+      <td>{'P1w': 0.006179392996424111, 'P1n': 0.0108186...</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>[P1-R2,R3-[R4,P5-R6]]</td>
+      <td>{'P1w': 2.281478445683631e-06, 'P1n': 0.402123...</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>[P1,P2-[R3,L4]]</td>
+      <td>{'P1w': 4.180243999336756e-07, 'P1n': 0.172178...</td>
     </tr>
   </tbody>
 </table>
@@ -550,8 +560,18 @@ rationale).</p>
   <tbody>
     <tr>
       <th>0</th>
-      <td>[P1,P2]-P3-R4</td>
-      <td>{'P1w': 4.0685666164516736e-07, 'P1n': 0.16597...</td>
+      <td>P1-[P2,P3]-R4</td>
+      <td>{'P1w': 3.6971851263157196e-05, 'P1n': 0.80357...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>[P1,P2-P3]-R4</td>
+      <td>{'P1w': 4.495108055978664e-07, 'P1n': 0.187250...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>R1-[[P2,R3],P4]</td>
+      <td>{'R1': 141.70181104668026, 'P2w': 1.7336166173...</td>
     </tr>
   </tbody>
 </table>
@@ -595,7 +615,7 @@ rationale).</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Text(0.5, 1.0, &#39;[P1,P2]-P3-R4&#39;)
+Text(0.5, 1.0, &#39;P1-[P2,P3]-R4&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -606,7 +626,7 @@ Text(0.5, 1.0, &#39;[P1,P2]-P3-R4&#39;)
 </div>
 </div>
 <script type="application/vnd.jupyter.widget-state+json">
-{"state": {"1782ef088e5f49ce8bec4ac8fde18ad5": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "1894dc3ba92a46ec97c90085df2ff7b8": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "2ea583a825a3400fbed1ca67909db1e3": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "341f91d1fa4a486283e230e7cb5f0b4f": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5ec98e9f5c924b978d371b8f4ebe1cab": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": "hidden", "width": null}}, "7674c027a97b4ff7a1d284d1a054c75e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_96054700fe904203b3d10ccd5692cdf4", "IPY_MODEL_e8a0399480f3402fa0c51fc1c8d964f3", "IPY_MODEL_d061167cbd064aabb61a944e8ae22a02"], "layout": "IPY_MODEL_5ec98e9f5c924b978d371b8f4ebe1cab", "tabbable": null, "tooltip": null}}, "96054700fe904203b3d10ccd5692cdf4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_1894dc3ba92a46ec97c90085df2ff7b8", "placeholder": "\u200b", "style": "IPY_MODEL_bd9ad68c895f4c67a764c1776f57ec2a", "tabbable": null, "tooltip": null, "value": "Generating\u2007Candidate\u2007ECMs:\u2007100%"}}, "bd9ad68c895f4c67a764c1776f57ec2a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "d061167cbd064aabb61a944e8ae22a02": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_2ea583a825a3400fbed1ca67909db1e3", "placeholder": "\u200b", "style": "IPY_MODEL_db93c70d3d7747b89e2d88800dc257b0", "tabbable": null, "tooltip": null, "value": "\u200712/12\u2007[24:10&lt;00:00,\u2007120.43s/it]"}}, "db93c70d3d7747b89e2d88800dc257b0": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "e8a0399480f3402fa0c51fc1c8d964f3": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_341f91d1fa4a486283e230e7cb5f0b4f", "max": 12.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_1782ef088e5f49ce8bec4ac8fde18ad5", "tabbable": null, "tooltip": null, "value": 12.0}}}, "version_major": 2, "version_minor": 0}
+{"state": {"158251d7150a4aee8f9226f4d2a26bf5": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "2cb17a3e45d34877a50a8c5eb41cef09": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_158251d7150a4aee8f9226f4d2a26bf5", "placeholder": "\u200b", "style": "IPY_MODEL_d6d9d13bbd5b43538827eb1acc2e40fb", "tabbable": null, "tooltip": null, "value": "\u200712/12\u2007[16:13&lt;00:00,\u200773.19s/it]"}}, "3f66470ceb024c688074c82e278606bc": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5f02b7c5e91c40e5aff508820c797497": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "694e08664f034cc789d7856f3d77c67f": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": "hidden", "width": null}}, "75705b1c2abe4cc5ae3e0c5111098d81": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "78d249a8492e4158b02550248720b958": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_8f1a1a5936ac40a883dae7386686f18b", "IPY_MODEL_fbdbfb5b937c4f0c8eac5e95f0b9b65c", "IPY_MODEL_2cb17a3e45d34877a50a8c5eb41cef09"], "layout": "IPY_MODEL_694e08664f034cc789d7856f3d77c67f", "tabbable": null, "tooltip": null}}, "8f1a1a5936ac40a883dae7386686f18b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_3f66470ceb024c688074c82e278606bc", "placeholder": "\u200b", "style": "IPY_MODEL_a172a31f0d04410fbec6c72bb666b8f7", "tabbable": null, "tooltip": null, "value": "Generating\u2007Candidate\u2007ECMs:\u2007100%"}}, "a172a31f0d04410fbec6c72bb666b8f7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "d6d9d13bbd5b43538827eb1acc2e40fb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "fbdbfb5b937c4f0c8eac5e95f0b9b65c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_75705b1c2abe4cc5ae3e0c5111098d81", "max": 12.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_5f02b7c5e91c40e5aff508820c797497", "tabbable": null, "tooltip": null, "value": 12.0}}}, "version_major": 2, "version_minor": 0}
 </script></section>
 </section>
 
@@ -688,7 +708,7 @@ Text(0.5, 1.0, &#39;[P1,P2]-P3-R4&#39;)
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=0e525676"></script>
+</div><script src="../_static/documentation_options.js?v=aa2ad26f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
