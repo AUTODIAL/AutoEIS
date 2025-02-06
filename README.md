@@ -29,6 +29,9 @@ Julia dependencies will be automatically installed at first import. It's recomme
 
 Visit our [example notebooks](https://autodial.github.io/AutoEIS/examples.html) page to learn how to use AutoEIS.
 
+> [!WARNING]
+> The examples are designed to be run interactively, so you should use a Jupyter notebook-like environment like Jupyter Lab, IPython Notebook, or VSCode. The examples may not work as expected if you run them in a non-interactive environment like a Python REPL. For a smooth experience, please use a supported environment.
+
 ## Workflow
 
 The schematic workflow of AutoEIS is shown below:
