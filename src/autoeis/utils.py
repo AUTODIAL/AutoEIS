@@ -11,7 +11,7 @@ Collection of utility functions used throughout the package.
     generate_circuit_fn_impedance_backend
     fit_circuit_parameters
     are_circuits_equivalent
-    identify_duplicate_circuits
+    find_duplicate_circuits
     initialize_priors
     initialize_priors_from_posteriors
     eval_posterior_predictive
@@ -44,16 +44,18 @@ import pandas as pd
 import psutil
 from box import Box
 from impedance.models.circuits import CustomCircuit
-from impedance.models.circuits.fitting import set_default_bounds
 from impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
 from numpy import pi  # NOQA: F401
+from numpy.linalg import norm
 from numpyro.distributions import Distribution
 from numpyro.infer import MCMC, Predictive
 from scipy import stats
-from scipy.optimize import curve_fit
+from scipy.optimize import least_squares
+from scipy.stats import loguniform
 from scipy.stats.mstats import gmean
+from tqdm.auto import tqdm
 
 import __main__
 
@@ -63,6 +65,10 @@ log = logging.getLogger(__name__)
 
 
 # >>> General utils
+
+
+class DivergenceError(Exception):
+    pass
 
 
 def flush_streams():
@@ -141,11 +147,11 @@ def flatten(xs: Iterable) -> list:
     return list(_flatten(xs))
 
 
-def is_ndarray_like(xs: Iterable) -> bool:
-    """Returns True if the input is an ndarray-like object."""
+def is_ndfarray_like(xs: Iterable) -> bool:
+    """Returns True if the input is an ndarray-like object with float elements."""
     try:
-        np.array(xs)
-    except ValueError:
+        np.asfarray(xs)
+    except (ValueError, TypeError):
         return False
     return True
 
@@ -310,12 +316,12 @@ def parse_initial_guess(
     """
     if isinstance(p0, dict):
         return np.fromiter(p0.values(), dtype=float)
-    if is_ndarray_like(p0):
+    if is_ndfarray_like(p0):
         return np.array(p0)
     raise ValueError(f"Invalid initial guess: {p0}")
 
 
-def generate_initial_guess(circuit: str) -> np.ndarray:
+def generate_initial_guess(circuit: str, seed=None, log=True) -> np.ndarray:
     """Generates a random initial guess for the circuit parameters.
 
     Parameters
@@ -323,6 +329,10 @@ def generate_initial_guess(circuit: str) -> np.ndarray:
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    seed : int, optional
+        Seed for the random number generator. Default is None.
+    log : bool, optional
+        If True, samples the parameters in log-space. Default is True.
 
     Returns
     -------
@@ -330,12 +340,22 @@ def generate_initial_guess(circuit: str) -> np.ndarray:
         A random initial guess for the circuit parameters.
     """
     num_params = parser.count_parameters(circuit)
-    return np.random.rand(num_params)
+    if seed is not None:
+        np.random.seed(seed)
+    if not log:
+        return np.random.rand(num_params)
+    # Sample in log-space for better coverage ~ 1e-9 to 1
+    p = loguniform(1e-9, 1).rvs(num_params)
+    # Except for Pn, which is sampled from 0 to 1
+    ptypes = parser.get_parameter_types(circuit)
+    for i, ptype in enumerate(ptypes):
+        p[i] = np.random.rand() if ptype == "Pn" else p[i]
+    return p
 
 
 def get_parameter_bounds(circuit: str) -> tuple:
     """Returns a 2-element tuple of lower and upper bounds, to be used in
-    SciPy's ``curve_fit``.
+    SciPy's ``least_squares``.
 
     Parameters
     ----------
@@ -348,12 +368,13 @@ def get_parameter_bounds(circuit: str) -> tuple:
     tuple
         A 2-element tuple of lower and upper bounds for the circuit parameters.
     """
+    # NOTE: Using np.inf actually works better than physical bounds!
     bounds_dict = {
-        "R": (0.0, 1e9),
-        "C": (0.0, 10.0),
-        "Pw": (0.0, 1e9),
-        "Pn": (0.0, 1.0),
-        "L": (0.0, 5.0),
+        "R": (0.0, np.inf),  # 1e9
+        "C": (0.0, np.inf),  # 10.0
+        "Pw": (0.0, np.inf),  # 1e9
+        "Pn": (0.0, np.inf),  # 1.0
+        "L": (0.0, np.inf),  # 5.0
     }
     types = parser.get_parameter_types(circuit)
     bounds = [bounds_dict[type_] for type_ in types]
@@ -434,11 +455,15 @@ def fit_circuit_parameters(
     freq: np.ndarray[float],
     Z: np.ndarray[complex],
     p0: Mapping[str, float] | Iterable[float] = None,
-    iters: int = 1,
+    max_iters: int = 50,
+    min_iters: int = 25,
     bounds: Iterable[tuple] = None,
-    maxfev: int = None,
-    ftol: float = 1e-8,
-    xtol: float = 1e-8,
+    max_nfev: int = None,
+    ftol: float = 1e-15,
+    xtol: float = 1e-15,
+    tol_chi_squared: float = 1e-4,
+    method: str = "bode",
+    verbose: bool = False,
 ) -> dict[str, float]:
     """Fits and returns the parameters of a circuit to impedance data.
 
@@ -453,8 +478,12 @@ def fit_circuit_parameters(
         Impedance data.
     p0 : Mapping[str, float] | Iterable[float], optional
         Initial guess for the circuit parameters. Default is None.
-    iters : int, optional
-        Maximum number of iterations for the circuit fitter. Default is 1.
+    max_iters : int, optional
+        Maximum number of iterations for the circuit fitter. Default is 10.
+    min_iters : int, optional
+        Minimum number of iterations for the circuit fitter. Default is 5.
+        If ``min_iters`` is reached AND circuit fitter converges, the fitting
+        process stops.
     bounds : Iterable[tuple], optional
         List of two tuples, each containing the lower and upper bounds,
         respectively, for the circuit parameters. Default is None. The order
@@ -467,6 +496,28 @@ def fit_circuit_parameters(
         See ``scipy.optimize.leastsq`` for details. Default is 1e-8.
     xtol : float, optional
         See ``scipy.optimize.leastsq`` for details. Default is 1e-8.
+    tol_chi_squared : float, optional
+        Tolerance for the chi-squared error. This only gets triggered if
+        ``min_iters`` is set. A good chi-squared value is 1e-3 or smaller.
+        Default is 1e-3.
+    method : str, optional
+        Method to use for fitting. Choose from 'chi-squared', 'nyquist',
+        'bode', and 'magnitude'. The objective function is different for each
+        method:
+
+          * 'chi-squared':
+            ``w * ((Re(Zp) - Re(Z)) ** 2 + (Im(Zp) - Im(Z)) ** 2)`` where
+            ``w = 1 / (Re(Z)**2 + Im(Z)**2)``
+          * 'nyquist': ``[Re(Zp) - Re(Z), Im(Zp) - Im(Z)]``
+          * 'bode': ``[log10(mag / mag_gt), phase - phase_gt]``
+          * 'magnitude': ``abs(Z - Zp)``
+
+        Default is 'bode'. ``Zp`` is the predicted impedance and ``Z`` is
+        ground truth. ``mag`` and ``phase`` are the magnitude and phase of the
+        predicted impedance, and finally ``_gt`` denotes ground truth values.
+
+    verbose : bool, optional
+        If True, prints the fitting results. Default is False.
 
     Returns
     -------
@@ -475,19 +526,59 @@ def fit_circuit_parameters(
 
     Notes
     -----
-    This function uses SciPy's ``curve_fit`` to fit the circuit parameters.
+    This function uses SciPy's ``least_squares`` to fit the circuit parameters.
     """
-    # Define objective function
-    Zc = np.hstack([Z.real, Z.imag])
-    fn = generate_circuit_fn(circuit, jit=True, concat=True)
-    # Format obj function as f(freq, *p) not f(freq, p) for curve_fit
-    obj_fn = lambda freq, *p: fn(freq, p)  # noqa: E731
 
-    # >>> Alternatively, use impedance.py to create the objective function
-    # from impedance.models.circuits.fitting import wrapCircuit
-    # circuit_impy = parser.convert_to_impedance_format(circuit)
-    # obj_fn = wrapCircuit(circuit_impy, constants={})
-    # <<<
+    def obj_chi_squared(p):
+        """Computes ECM error based on residual-based χ2."""
+        Zp = fn(freq, p)
+        residual = (Zp.real - Z.real) ** 2 + (Zp.imag - Z.imag) ** 2
+        weight = 1 / (Z.real**2 + Z.imag**2)
+        return residual * weight
+
+    def obj_nyquist(p):
+        """Computes ECM error based on the Nyquist plot."""
+        Z_pred = fn(freq, p)
+        res = jnp.hstack((Z_pred.real - Z.real, Z_pred.imag - Z.imag))
+        return res
+
+    def obj_bode(p):
+        """Computes ECM error based on the Bode plot."""
+        Z_pred = fn(freq, p)
+        mag = jnp.abs(Z_pred)
+        phase = jnp.angle(Z_pred)
+        res = jnp.hstack((jnp.log10(mag / mag_gt), phase - phase_gt))
+        # res = jnp.hstack((mag - mag_gt, phase - phase_gt))
+        return res
+
+    def obj_magnitude(p):
+        """Computes ECM error based on the magnitude of impedance deviation."""
+        Z_pred = fn(freq, p)
+        res = jnp.abs(Z - Z_pred)
+        return res
+
+    def obj_phase(p):
+        """Computes ECM error based on the phase of impedance deviation."""
+        Z_pred = fn(freq, p)
+        res = jnp.abs(jnp.angle(Z) - jnp.angle(Z_pred))
+        return res
+
+    msg = f"Invalid method: {method}. Use 'chi-squared', 'nyquist', 'bode', 'magnitude', or 'phase'."
+    assert method in ["chi-squared", "nyquist", "bode", "magnitude", "phase"], msg
+    assert len(freq) == len(Z), "Length of frequency and impedance data must match."
+
+    variables = parser.get_parameter_labels(circuit)
+    fn = generate_circuit_fn(circuit, jit=True)
+    obj = {
+        "nyquist": obj_nyquist,
+        "bode": obj_bode,
+        "chi-squared": obj_chi_squared,
+        "magnitude": obj_magnitude,
+        "phase": obj_phase,
+    }[method]
+
+    mag_gt = jnp.abs(Z)
+    phase_gt = jnp.angle(Z)
 
     # Sanitize initial guess
     p0 = parse_initial_guess(p0) if p0 is not None else generate_initial_guess(circuit)
@@ -495,33 +586,57 @@ def fit_circuit_parameters(
     assert len(p0) == num_params, "Wrong number of parameters in initial guess."
 
     # Assemble kwargs for curve_fit
-    # TODO: Remove the next two lines once `get_parameter_bounds` is tested
-    # circuit_impy = parser.convert_to_impedance_format(circuit)
-    # bounds = set_default_bounds(circuit_impy)
     bounds = get_parameter_bounds(circuit) if bounds is None else bounds
-    kwargs = {"p0": p0, "bounds": bounds, "maxfev": maxfev, "ftol": ftol, "xtol": xtol}
+    kwargs = {"x0": p0, "bounds": bounds, "max_nfev": max_nfev, "ftol": ftol, "xtol": xtol}
+
+    # Ensure p0 is not out-of-bounds
+    if p0 is not None:
+        for i, (lower, upper) in enumerate(zip(*bounds)):
+            p0[i] = np.clip(p0[i], lower, upper)
 
     # Fit circuit parameters by brute force
+    min_iters = max_iters if min_iters is None else min_iters
     err_min = np.inf
-    for _ in range(iters):
+
+    for i in tqdm(
+        range(max_iters), desc="Fitting ECM Parameters", disable=not verbose, leave=False
+    ):
+        # HACK: Occasionally, least_squares throws ValueError
         try:
-            popt, pcov = curve_fit(obj_fn, freq, Zc, **kwargs)
-        except Exception as e:
+            res = least_squares(obj, verbose=False, **kwargs)
+        except ValueError:
+            kwargs["x0"] = generate_initial_guess(circuit)
             continue
-        err = gmean(np.abs((obj_fn(freq, *popt) - Zc) ** 2))
-        if err < err_min:
+        if (err := norm(obj(res.x))) < err_min:
             err_min = err
-            p0 = popt
-        kwargs["p0"] = generate_initial_guess(circuit)
+            p0 = res.x
+        converged = (X2 := obj_chi_squared(res.x).mean()) < tol_chi_squared
+        if i + 1 >= min_iters and converged:
+            break
+        kwargs["x0"] = generate_initial_guess(circuit)
+
+    converged = True if err_min != np.inf else False
+
+    r2_mag = metrics.r2_score(jnp.abs(Z), jnp.abs(fn(freq, p0)))
+    r2_phase = metrics.r2_score(jnp.angle(Z), jnp.angle(fn(freq, p0)))
+    X2 = np.mean(obj_chi_squared(p0))
+    log.info(
+        f"Converged in {i+1} iterations with "
+        f"𝛘² = {X2:.3e}, R² (|Z|) = {r2_mag:.4f}, R² (phase) = {r2_phase:.4f}"
+    )
 
     if err_min == np.inf:
-        raise Exception("Failed to fit the circuit parameters. Try increasing 'iters'.")
+        raise DivergenceError(
+            "Failed to fit the circuit parameters. Try increasing 'iters' or "
+            "'maxfev', or narrow down the search by providing 'bounds'."
+        )
 
-    variables = parser.get_parameter_labels(circuit)
     return dict(zip(variables, p0))
 
 
-def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarray[complex]:
+def eval_circuit(
+    circuit: str, freq: np.ndarray | float, p: np.ndarray, jit: bool = False
+) -> np.ndarray[complex]:
     """Returns the impedance of a circuit at a given frequency and parameters.
 
     Parameters
@@ -529,7 +644,7 @@ def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarr
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    f : np.ndarray | float
+    freq : np.ndarray | float
         Frequencies at which to evaluate the circuit.
     p : np.ndarray
         Circuit parameters.
@@ -539,8 +654,12 @@ def eval_circuit(circuit: str, f: np.ndarray | float, p: np.ndarray) -> np.ndarr
     np.ndarray[complex]
         The impedance of the circuit at the given frequency and parameters.
     """
-    Z_expr = parser.generate_mathematical_expr(circuit)
-    return eval(Z_expr)
+    expr = parser.generate_mathematical_expression(circuit)
+    # For frequency-independent circuits, ensure output is the same shape as freq
+    if not np.isscalar(freq):
+        freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
+        expr = f"({expr}) * {freq_like_ones}"
+    return eval(expr)
 
 
 def generate_circuit_fn(circuit: str, jit=False, concat=False):
@@ -566,15 +685,19 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
         and returns the impedance.
     """
 
-    def Z_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
-        return eval_circuit(circuit, freq, p)
+    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
+        atleast_1d = jnp.atleast_1d if jit else np.atleast_1d
+        freq, p = atleast_1d(freq), atleast_1d(p)
+        msg = f"The parameters: {p} don't match the number of parameters in the circuit: {circuit}."
+        assert len(p) == parser.count_parameters(circuit), msg
+        return eval_circuit(circuit, freq, p, jit=jit)
 
-    def Z_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
-        Z = Z_complex(freq, p)
+    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
+        Z = fn_complex(freq, p)
         hstack = jnp.hstack if jit else np.hstack
         return hstack([Z.real, Z.imag])
 
-    fn = Z_concat if concat else Z_complex
+    fn = fn_concat if concat else fn_complex
     fn = jax.jit(fn) if jit else fn
 
     return fn
@@ -708,13 +831,11 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     freq = np.logspace(-3, 3, 10)
     Z1 = generate_circuit_fn(circuit1)(freq, x0(circuit1))
     Z2 = generate_circuit_fn(circuit2)(freq, x0(circuit2))
-    return np.allclose(Z1, Z2)
+    return np.allclose(Z1, Z2, rtol=rtol)
 
 
-def identify_duplicate_circuits(
-    circuits: Iterable[str], rtol: float = 1e-5
-) -> list[list[int]]:
-    """Identifies duplicate circuits in a list of circuit strings.
+def find_duplicate_circuits(circuits: Iterable[str], rtol: float = 1e-5) -> list[list[int]]:
+    """Returns the indices of duplicate circuits given a list of circuit strings.
 
     Parameters
     ----------
@@ -748,6 +869,9 @@ def identify_duplicate_circuits(
             ptype = parser.parse_parameter(label)
             x0.append(values[ptype])
         return np.array(x0)
+
+    # Validate input circuits
+    assert isinstance(circuits, (list, tuple)), "Input must be a list[str] or tuple[str]."
 
     freq = np.logspace(-3, 3, 10)
     Z = [generate_circuit_fn(circuit)(freq, x0(circuit)) for circuit in circuits]
@@ -795,7 +919,7 @@ def initialize_priors(p0: Mapping[str, float]) -> dict[str, Distribution]:
             priors[var] = dist.Uniform(0, 1)
         else:
             # Search over a log-normal dist spanning [0.01*u0, 100*u0]
-            mean, std_dev = jnp.log(value), jnp.log(10)
+            mean, std_dev = jnp.log(value), jnp.log(100)
             priors[var] = dist.LogNormal(mean, std_dev)
     return priors
 
@@ -869,6 +993,7 @@ def eval_posterior_predictive(
     circuit: str,
     freq: np.ndarray[float],
     priors: Mapping[str, Distribution] = None,
+    method: str = "bode",
     rng_key: random.PRNGKey = None,
 ) -> np.ndarray[complex]:
     """Evaluates the posterior predictive distribution of a MCMC run.
@@ -885,6 +1010,9 @@ def eval_posterior_predictive(
     priors : Mapping[str, Distribution], optional
         Priors for the circuit parameters as a dictionary of parameter names
         and distributions. Default is None.
+    method : str, optional
+        Objective function that was used for inference. Default is "bode".
+        Options are "bode", "nyquist", "magnitude", and "chi-squared".
     rng_key : random.PRNGKey, optional
         Random key for the MCMC run. Default is None.
 
@@ -905,13 +1033,23 @@ def eval_posterior_predictive(
         priors = initialize_priors(p0)
 
     # Create a predictive distribution for the circuit parameters
-    model = models.circuit_regression_complex
+    method = method.replace("-", "_")
+    model = getattr(models, f"circuit_regression_{method}")
     predictive = Predictive(model, samples)
 
     # Evaluate the predictive distribution at the given frequency
     kwargs = {"freq": freq, "priors": priors, "circuit_fn": circuit_fn}
     predictions = predictive(rng_key_, **kwargs)
-    Z_pred = predictions["obs_real"] + predictions["obs_imag"] * 1j
+
+    # Handle inference models where real/imag parts are not explicitly predicted
+    if method in ["chi-squared", "magnitude"]:
+        raise NotImplementedError(f"'method={method}' is not implemented yet.")
+    if method == "bode":
+        mag, phase = predictions["obs.mag"], predictions["obs.phase"]
+        predictions["obs.real"] = mag * jnp.cos(phase)
+        predictions["obs.imag"] = mag * jnp.sin(phase)
+
+    Z_pred = predictions["obs.real"] + predictions["obs.imag"] * 1j
 
     return Z_pred
 
@@ -1066,14 +1204,15 @@ def preprocess_impedance_data(
     M, mu, Z_linKK, res_real, res_imag = linKK_silent(freq, Z, **linKK_kwargs)
     rmse = metrics.rmse_score(Z, Z_linKK)
 
+    # NOTE: Attach `freq` in case user wants to plot the residuals (b/c after linKK, freq might change)
+    aux = Box(freq=freq, res=Box(real=res_real, imag=res_imag), rmse=rmse)
+
     mask = (np.abs(res_real) < tol_linKK) & (np.abs(res_imag) < tol_linKK)
     freq = freq[mask]
     Z = Z[mask]
 
     if (frac_filtered := 1 - len(freq) / n0) > 0.1:
         log.warning(f"{frac_filtered * 100:.0f}% of data filtered out.")
-
-    aux = Box(res=Box(real=res_real, imag=res_imag), rmse=rmse)
 
     return (freq, Z, aux) if return_aux else (freq, Z)
 
@@ -1100,9 +1239,7 @@ def distribute_task(
         ]
         if np.unique(iters).size == 0:
             raise RuntimeError("Couldn't infer `iters` from args, specify `iters`")
-        assert (
-            np.unique(iters).size == 1
-        ), "All iterable arguments must have the same length"
+        assert np.unique(iters).size == 1, "All iterable arguments must have the same length"
         iters = iters[0]
 
     args = list(args)

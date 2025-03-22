@@ -171,8 +171,10 @@ results/
 
 # Local development
 tmp/*
-requirements-dev.lock
-requirements.lock
+*.lock
 
 # macOS
 .DS_Store
+
+# Ignore CSV files in the root directory
+/*.csv
