@@ -47,29 +47,29 @@ Current EIS analysis tools—including open-source options like DearEIS [@yrjana
 
 AutoEIS distinguishes itself by comprehensively exploring the model space through evolutionary algorithms, ensuring that potentially valuable circuit configurations are not overlooked. This capability aligns with the growing trend toward self-driving laboratories and autonomous research workflows in materials science and electrochemistry.
 
-# Software Description
+# Software description
 
 AutoEIS implements a four-stage workflow to analyze EIS data as shown in \autoref{fig:workflow}:
 
-![AutoEIS workflow diagram \label{fig:workflow}](./workflow-mmd.png){ width="100%" }
+![AutoEIS workflow. The four-stage process includes data validation via Kramers-Kronig checks, ECM generation using evolutionary algorithms, filtering based on electrochemical theory, and Bayesian parameter estimation for uncertainty-aware model ranking. \label{fig:workflow}](./workflow-mmd.png){ width="100%" }
 
-## Data Preprocessing and Validation
+## Data preprocessing and validation
 
 Before model fitting, AutoEIS applies Kramers-Kronig transformations [@boukamp1995linear] to validate experimental data quality. This critical step identifies measurement artifacts and ensures that only reliable data proceeds to model fitting. Poor-quality data that violates Kramers-Kronig relations is flagged, allowing researchers to address experimental issues before interpretation.
 
-## ECM Generation via Evolutionary Algorithms
+## ECM generation via evolutionary algorithms
 
 AutoEIS employs evolutionary algorithms through the Julia package EquivalentCircuits.jl [@van2021practical] to generate diverse candidate ECMs. This approach efficiently explores the vast space of possible circuit configurations, including models that might not be intuitively chosen by researchers.
 
-## Physics-Based Model Filtering
+## Physics-based model filtering
 
 The software then applies electrochemical theory-based filters [@zhang2023] to eliminate physically implausible models. For example, models lacking an ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
 
-## Bayesian Parameter Estimation
+## Bayesian parameter estimation
 
 For physically plausible models, AutoEIS employs Bayesian inference to estimate circuit component values and their uncertainty distributions. Unlike point estimates from traditional least-squares fitting, this approach quantifies parameter uncertainty, providing crucial information about model reliability. The Bayesian framework also enables model comparison through metrics like the Bayesian Information Criterion, helping identify the most statistically justified model complexity.
 
-# Authorship Contributions
+# Authorship contributions
 
 The original AutoEIS software was developed by RZ. MS conducted a comprehensive refactoring of the codebase that improved algorithmic efficiency. MS also implemented unit testing, expanded documentation, and established automated CI/CD workflows to ensure software reliability. JHS provided project supervision and domain expertise in electrochemical theory. All authors—RZ, MS, and JHS—contributed substantively to the writing and editing of this manuscript.
 
