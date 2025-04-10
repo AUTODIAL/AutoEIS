@@ -35,7 +35,7 @@ AutoEIS is an innovative Python software tool designed to automate the analysis 
 
 EIS data interpretation is fundamental for understanding electrochemical processes and generating mechanistic insights. However, selecting an appropriate ECM has historically been complex, time-consuming, and subjective [@wang2021electrochemical]. AutoEIS resolves this challenge through a systematic approach: it generates multiple candidate ECMs, evaluates their fit against experimental data, and ranks them using comprehensive statistical metrics. This methodology not only streamlines analysis but also introduces reproducibility and objectivity that manual analysis cannot consistently achieve.
 
-The effectiveness of AutoEIS has been validated through diverse case studies, including oxygen evolution reaction electrocatalysis, corrosion of multi-principal element alloys, and CO2 reduction in electrolyzer devices [@zhang2023]. These applications demonstrate the software's versatility across different electrochemical systems and its ability to identify physically meaningful ECMs that accurately capture the underlying electrochemical phenomena.
+The effectiveness of AutoEIS has been validated through diverse case studies, including oxygen evolution reaction electrocatalysis, corrosion of multi-principal element alloys, and CO~2 reduction in electrolyzer devices [@zhang2023]. These applications demonstrate the software's versatility across different electrochemical systems and its ability to identify physically meaningful ECMs that accurately capture the underlying electrochemical phenomena.
 
 # Statement of need
 
@@ -55,7 +55,7 @@ AutoEIS implements a four-stage workflow to analyze EIS data as shown in \autore
 
 ## Data Preprocessing and Validation
 
-Before model fitting, AutoEIS applies Kramers-Kronig transformations to validate experimental data quality. This critical step identifies measurement artifacts and ensures that only reliable data proceeds to model fitting. Poor-quality data that violates Kramers-Kronig relations is flagged, allowing researchers to address experimental issues before interpretation.
+Before model fitting, AutoEIS applies Kramers-Kronig transformations [@boukamp1995linear] to validate experimental data quality. This critical step identifies measurement artifacts and ensures that only reliable data proceeds to model fitting. Poor-quality data that violates Kramers-Kronig relations is flagged, allowing researchers to address experimental issues before interpretation.
 
 ## ECM Generation via Evolutionary Algorithms
 
@@ -63,7 +63,7 @@ AutoEIS employs evolutionary algorithms through the Julia package EquivalentCirc
 
 ## Physics-Based Model Filtering
 
-The software then applies electrochemical theory-based filters to eliminate physically implausible models. For example, models lacking an ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
+The software then applies electrochemical theory-based filters [@zhang2023] to eliminate physically implausible models. For example, models lacking an ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
 
 ## Bayesian Parameter Estimation
 
