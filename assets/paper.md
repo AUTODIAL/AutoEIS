@@ -1,12 +1,15 @@
 ---
-title: "AutoEIS: A Python toolkit for automated analysis of electrochemical impedance spectroscopy and equivalent circuit modeling"
+title: "AutoEIS: Automated equivalent circuit modeling from electrochemical impedance spectroscopy data using statistical machine learning"
 tags:
-    - python
-    - julia
-    - materials science
-    - electrochemical impedance spectroscopy
-    - equivalent circuit model
-    - bayesian inference
+  - python
+  - julia
+  - electrochemistry
+  - materials science
+  - electrochemical impedance spectroscopy
+  - equivalent circuit model
+  - statistical machine learning
+  - bayesian inference
+  - evolutionary search
 authors:
     - name: Mohammad Amin Sadeghi
       orcid: 0000-0002-6756-9117
@@ -23,12 +26,12 @@ authors:
 affiliations:
     - name: University of Toronto, Canada
       index: 1
-date: 24 March 2025
+date: 10 April 2025
 bibliography: paper.bib
 ---
 # Summary
 
-AutoEIS is an innovative software tool designed to automate the analysis of Electrochemical Impedance Spectroscopy (EIS) data, a key technique in electrochemical materials research. By integrating evolutionary algorithms and Bayesian inference, AutoEIS automates the construction and evaluation of equivalent circuit models (ECM), providing more objective, efficient, and accurate analysis compared to traditional manual methods.
+AutoEIS is an innovative Python software tool designed to automate the analysis of Electrochemical Impedance Spectroscopy (EIS) data, a key technique in electrochemical materials research. By integrating evolutionary algorithms and Bayesian inference, AutoEIS automates the construction and evaluation of equivalent circuit models (ECM), providing more objective, efficient, and accurate analysis compared to traditional manual methods.
 
 EIS data interpretation is fundamental for understanding electrochemical processes and generating mechanistic insights. However, selecting an appropriate ECM has historically been complex, time-consuming, and subjective [@wang2021electrochemical]. AutoEIS resolves this challenge through a systematic approach: it generates multiple candidate ECMs, evaluates their fit against experimental data, and ranks them using comprehensive statistical metrics. This methodology not only streamlines analysis but also introduces reproducibility and objectivity that manual analysis cannot consistently achieve.
 
@@ -38,7 +41,7 @@ The effectiveness of AutoEIS has been validated through diverse case studies, in
 
 EIS is widely used in electrochemistry for applications spanning battery research, fuel cell development, and corrosion studies. Accurate interpretation of EIS data is essential for understanding electrochemical reaction mechanisms and material behaviors. Traditional EIS analysis faces three significant challenges: it requires substantial expert knowledge, consumes significant time, and introduces potential researcher bias in model selection and interpretation.
 
-AutoEIS addresses these limitations through an automated platform that reduces the expertise barrier for rigorous EIS analysis. By systematically evaluating numerous potential circuit models, the software minimizes human bias and dramatically reduces analysis time. This automation is particularly valuable for complex systems where manual trial-and-error approaches become impractical.
+AutoEIS addresses these limitations through an automated platform that reduces the expertise barrier for rigorous EIS analysis. By systematically evaluating numerous potential circuit models, the software minimizes human bias and dramatically reduces analysis time. This automation is particularly valuable for complex systems where manual trial-and-error approaches become impractical. Furthermore, this automation capability enables the application of rigorous EIS analysis within high-throughput experimental workflows, where manual approaches become intractable.
 
 Current EIS analysis tools—including open-source options like DearEIS [@yrjana2022deareis], Elchemea Analytical [@elchemea], impedance.py [@murbach2020impedance], PyEIS [@knudsen2019pyeis], and pyimpspec [@pyimpspec], as well as commercial software such as ZView, RelaxIS, and Echem Analyst—all require users to manually propose ECMs and iteratively refine them. This approach becomes increasingly unreliable as system complexity grows, as researchers may not explore the full model space or may unconsciously favor familiar circuit elements.
 
@@ -46,7 +49,9 @@ AutoEIS distinguishes itself by comprehensively exploring the model space throug
 
 # Software Description
 
-AutoEIS implements a four-stage workflow to analyze EIS data:
+AutoEIS implements a four-stage workflow to analyze EIS data as shown in \autoref{fig:workflow}:
+
+![AutoEIS workflow diagram \label{fig:workflow}](./workflow-mmd.png){ width="70%" }
 
 1. **Data Preprocessing and Validation**: Before model fitting, AutoEIS applies Kramers-Kronig transformations to validate experimental data quality. This critical step identifies measurement artifacts and ensures that only reliable data proceeds to model fitting. Poor-quality data that violates Kramers-Kronig relations is flagged, allowing researchers to address experimental issues before interpretation.
 2. **ECM Generation via Evolutionary Algorithms**: AutoEIS employs evolutionary algorithms through the Julia package EquivalentCircuits.jl [@van2021practical] to generate diverse candidate ECMs. This approach efficiently explores the vast space of possible circuit configurations, including models that might not be intuitively chosen by researchers.
