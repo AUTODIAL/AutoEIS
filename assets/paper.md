@@ -51,12 +51,23 @@ AutoEIS distinguishes itself by comprehensively exploring the model space throug
 
 AutoEIS implements a four-stage workflow to analyze EIS data as shown in \autoref{fig:workflow}:
 
-![AutoEIS workflow diagram \label{fig:workflow}](./workflow-mmd.png){ width="70%" }
+![AutoEIS workflow diagram \label{fig:workflow}](./workflow-mmd.png){ width="100%" }
 
-1. **Data Preprocessing and Validation**: Before model fitting, AutoEIS applies Kramers-Kronig transformations to validate experimental data quality. This critical step identifies measurement artifacts and ensures that only reliable data proceeds to model fitting. Poor-quality data that violates Kramers-Kronig relations is flagged, allowing researchers to address experimental issues before interpretation.
-2. **ECM Generation via Evolutionary Algorithms**: AutoEIS employs evolutionary algorithms through the Julia package EquivalentCircuits.jl [@van2021practical] to generate diverse candidate ECMs. This approach efficiently explores the vast space of possible circuit configurations, including models that might not be intuitively chosen by researchers.
-3. **Physics-Based Model Filtering**: The software then applies electrochemical theory-based filters to eliminate physically implausible models. For example, models lacking an ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
-4. **Bayesian Parameter Estimation**: For physically plausible models, AutoEIS employs Bayesian inference to estimate circuit component values and their uncertainty distributions. Unlike point estimates from traditional least-squares fitting, this approach quantifies parameter uncertainty, providing crucial information about model reliability. The Bayesian framework also enables model comparison through metrics like the Bayesian Information Criterion, helping identify the most statistically justified model complexity.
+## Data Preprocessing and Validation
+
+Before model fitting, AutoEIS applies Kramers-Kronig transformations to validate experimental data quality. This critical step identifies measurement artifacts and ensures that only reliable data proceeds to model fitting. Poor-quality data that violates Kramers-Kronig relations is flagged, allowing researchers to address experimental issues before interpretation.
+
+## ECM Generation via Evolutionary Algorithms
+
+AutoEIS employs evolutionary algorithms through the Julia package EquivalentCircuits.jl [@van2021practical] to generate diverse candidate ECMs. This approach efficiently explores the vast space of possible circuit configurations, including models that might not be intuitively chosen by researchers.
+
+## Physics-Based Model Filtering
+
+The software then applies electrochemical theory-based filters to eliminate physically implausible models. For example, models lacking an ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
+
+## Bayesian Parameter Estimation
+
+For physically plausible models, AutoEIS employs Bayesian inference to estimate circuit component values and their uncertainty distributions. Unlike point estimates from traditional least-squares fitting, this approach quantifies parameter uncertainty, providing crucial information about model reliability. The Bayesian framework also enables model comparison through metrics like the Bayesian Information Criterion, helping identify the most statistically justified model complexity.
 
 # Authorship Contributions
 
