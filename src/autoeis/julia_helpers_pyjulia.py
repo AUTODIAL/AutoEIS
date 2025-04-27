@@ -5,6 +5,8 @@
 # Original repository: https://github.com/MilesCranmer/PySR
 # Commit reference: 976f8d8 dated 2023-09-16.
 
+julia_enabled = False
+
 import importlib
 import logging
 import os
@@ -12,7 +14,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from julia.api import JuliaError
+if julia_enabled:
+    from julia.api import JuliaError
+else:
+    JuliaError = Exception  
+
 
 from .version import __equivalent_circuits_jl_version__, __version__
 
@@ -30,6 +36,9 @@ def install(
     julia_project=None, quiet=False, precompile=None, offline=False
 ):  # pragma: no cover
     """Install all required dependencies for EquivalentCircuits.jl."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     import julia
 
     _julia_version_assertion()
@@ -85,6 +94,9 @@ def install(
 
 def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=False):
     """Initialize julia binary, turning off compiled modules if needed."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     global julia_initialized
     global julia_kwargs_at_initialization
     global julia_activated_env
@@ -176,6 +188,9 @@ def init_julia(julia_project=None, quiet=False, julia_kwargs=None, return_aux=Fa
 
 def import_backend(Main):
     """Load EquivalentCircuits.jl, verify version and return a reference."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     ec = import_package("EquivalentCircuits", Main=Main)
     # FIXME: Currently don't know how to assert branch name if installed from GitHub
     if __equivalent_circuits_jl_version__.startswith("v"):
@@ -186,6 +201,9 @@ def import_backend(Main):
 def import_package(pkg_name, Main):
     """Load a Julia package and return a reference to it."""
     # HACK: On Windows, for some reason, the first two imports fail!
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     for _ in range(MAX_RETRIES):
         try:
             Main.eval(f"using {pkg_name}")
@@ -202,6 +220,9 @@ def import_package(pkg_name, Main):
 
 
 def add_to_path(path):
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     if not os.path.exists(path):
         raise ValueError(f"The provided path '{path}' does not exist.")
 
@@ -210,6 +231,9 @@ def add_to_path(path):
 
 
 def _recompile_pycall():
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     import julia
 
     try:
@@ -220,6 +244,9 @@ def _recompile_pycall():
 
 
 def _raise_import_error(root: Exception = None):
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     """Raise ImportError if Julia dependencies are not installed."""
     raise ImportError(
         "Required dependencies are not installed or built. Run the "
@@ -229,6 +256,9 @@ def _raise_import_error(root: Exception = None):
 
 def _raise_julia_not_found(root: Exception = None):
     """Raise FileNotFoundError if Julia is not installed."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     raise FileNotFoundError(
         "Julia is not installed in your PATH. Please install Julia "
         "and add it to your PATH."
@@ -237,6 +267,9 @@ def _raise_julia_not_found(root: Exception = None):
 
 def _load_juliainfo():
     """Execute julia.core.JuliaInfo.load(), and store as juliainfo."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     global juliainfo
 
     if juliainfo is None:
@@ -252,6 +285,9 @@ def _load_juliainfo():
 
 def _get_julia_env_dir():
     """Find the Julia environments' directory."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     try:
         julia_env_dir_str = subprocess.run(
             ["julia", "-e using Pkg; print(Pkg.envdir())"],
@@ -266,6 +302,9 @@ def _get_julia_env_dir():
 
 def _set_julia_project_env(julia_project, is_shared):
     """Set JULIA_PROJECT environment variable."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     if is_shared:
         if _is_julia_version_greater_eq(version=(1, 7, 0)):
             os.environ["JULIA_PROJECT"] = "@" + str(julia_project)
@@ -278,12 +317,18 @@ def _set_julia_project_env(julia_project, is_shared):
 
 def _get_io_arg(quiet):
     """Return Julia-compatible IO arg that suppresses output if quiet=True."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     io = "devnull" if quiet else "stderr"
     io_arg = f"io={io}" if _is_julia_version_greater_eq(version=(1, 6, 0)) else ""
     return io_arg
 
 
 def _process_julia_project(julia_project):
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     if julia_project is None:
         is_shared = True
         processed_julia_project = f"autoeis-{__version__}"
@@ -298,6 +343,9 @@ def _process_julia_project(julia_project):
 
 def _is_julia_version_greater_eq(juliainfo=None, version=(1, 6, 0)):
     """Check if Julia version is greater than specified version."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     if juliainfo is None:
         juliainfo = _load_juliainfo()
     current_version = (
@@ -310,6 +358,9 @@ def _is_julia_version_greater_eq(juliainfo=None, version=(1, 6, 0)):
 
 def _add_ec_to_julia_project(Main, io_arg):
     """Install EquivalentCircuits.jl and dependencies to the Julia project."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     Main.eval("using Pkg")
     Main.eval(f"Pkg.Registry.update({io_arg})")
     kwargs = {"name": "EquivalentCircuits"}
@@ -323,6 +374,9 @@ def _add_ec_to_julia_project(Main, io_arg):
 
 def _escape_filename(filename):
     """Turn a path into a string with correctly escaped backslashes."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     str_repr = str(filename)
     str_repr = str_repr.replace("\\", "\\\\")
     return str_repr
@@ -330,6 +384,9 @@ def _escape_filename(filename):
 
 def _julia_version_assertion():
     """Check if Julia version is greater than 1.9"""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     if not _is_julia_version_greater_eq(version=(1, 9, 0)):
         raise NotImplementedError(
             "AutoEIS requires Julia 1.9.0 or greater. "
@@ -339,6 +396,9 @@ def _julia_version_assertion():
 
 def _backend_version_assertion(Main):
     """Check if EquivalentCircuits.jl version is correct."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     try:
         backend_version = Main.eval("string(pkgversion(EquivalentCircuits))")
         expected_backend_version = __equivalent_circuits_jl_version__
@@ -358,6 +418,9 @@ def _backend_version_assertion(Main):
 
 
 def _update_julia_project(Main, is_shared, io_arg):
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+
     try:
         if is_shared:
             _add_ec_to_julia_project(Main, io_arg)
