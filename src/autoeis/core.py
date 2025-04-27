@@ -49,11 +49,11 @@ config.update("jax_platforms", "cpu")
 warnings.filterwarnings("ignore", category=Warning, module="arviz.*")
 log = logging.getLogger(__name__)
 
-# Initialize Julia runtime
-os.environ["PYTHON_JULIACALL_AUTOLOAD_IPYTHON_EXTENSION"] = "no"
-julia_helpers.ensure_julia_deps_ready(quiet=True)
-jl = julia_helpers.init_julia(quiet=True)
-ec = julia_helpers.import_backend(jl)
+# # Initialize Julia runtime
+# os.environ["PYTHON_JULIACALL_AUTOLOAD_IPYTHON_EXTENSION"] = "no"
+# julia_helpers.ensure_julia_deps_ready(quiet=True)
+# jl = julia_helpers.init_julia(quiet=True)
+# ec = julia_helpers.import_backend(jl)
 
 __all__ = [
     "perform_full_analysis",
