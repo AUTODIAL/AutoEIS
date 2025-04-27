@@ -1,10 +1,13 @@
+julia_enabled = False
+
 import logging
 import shutil
 from pathlib import Path
 
-import juliapkg
-from juliapkg.deps import can_skip_resolve
-from juliapkg.find_julia import find_julia
+if julia_enabled:
+    import juliapkg
+    from juliapkg.deps import can_skip_resolve
+    from juliapkg.find_julia import find_julia
 
 from .utils import suppress_output
 from .version import __equivalent_circuits_jl_version__
@@ -14,6 +17,8 @@ log = logging.getLogger(__name__)
 
 def install_julia(quiet=True):
     """Installs Julia using juliapkg."""
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     # Importing juliacall automatically installs Julia using juliapkg
     if quiet:
         with suppress_output():
@@ -31,6 +36,9 @@ def install_backend(ec_path: Path = None, quiet=True):
         Path to the local copy of EquivalentCircuits. Default is None. If None,
         the remote version will be used.
     """
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+    
     is_julia_installed(error=True)
 
     # TODO: No longer needed since dependencies are specified in juliapkg.json
@@ -62,6 +70,9 @@ def init_julia(quiet=False):
     ImportError
         If Julia is not installed.
     """
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
+        
     is_julia_installed(error=True)
     if not can_skip_resolve():
         log.warning("Julia is installed, but needs to be resolved...")
@@ -96,6 +107,9 @@ def import_package(package_name, Main, error=False):
     ImportError
         If the package is not found and error is True.
     """
+
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     from juliacall import JuliaError
 
     try:
@@ -125,6 +139,8 @@ def import_backend(Main=None):
     ImportError
         If Julia is not installed or the package is not found.
     """
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     Main = init_julia() if Main is None else Main
     is_backend_installed(Main=Main, error=True)
     return import_package("EquivalentCircuits", Main)
@@ -133,6 +149,8 @@ def import_backend(Main=None):
 def is_julia_installed(error=False):
     """Asserts that Julia is installed."""
     # Look for system-wide Julia executable
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     try:
         find_julia()
         return True
@@ -170,6 +188,8 @@ def is_backend_installed(Main=None, error=False):
     ImportError
         If Julia is not installed or the package is not found and error is True.
     """
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     Main = init_julia() if Main is None else Main
     if import_package("EquivalentCircuits", Main, error=False) is not None:
         return True
@@ -181,7 +201,8 @@ def is_backend_installed(Main=None, error=False):
 
 def ensure_julia_deps_ready(quiet=True, retry=True):
     """Ensures Julia and EquivalentCircuits.jl are installed."""
-
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     def _ensure_julia_deps_ready(quiet):
         if not is_julia_installed(error=False):
             log.warning("Julia not found, installing Julia...")
@@ -210,6 +231,8 @@ def ensure_julia_deps_ready(quiet=True, retry=True):
 
 
 def remove_julia_env():
+    if not julia_enabled:
+        raise RuntimeError("Julia functionality is disabled.")
     """Removes the active Julia environment directory.
 
     Notes
