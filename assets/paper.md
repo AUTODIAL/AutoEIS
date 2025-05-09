@@ -63,7 +63,7 @@ AutoEIS employs evolutionary algorithms through the Julia package EquivalentCirc
 
 ## Physics-based model filtering
 
-The software then applies electrochemical theory-based filters [@zhang2023] to eliminate physically implausible models. For example, models lacking an ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
+The software then applies electrochemical theory-based filters [@zhang2023] to eliminate physically implausible models. For example, models lacking an Ohmic resistor are automatically rejected as physically unrealistic, despite potentially good mathematical fits. This step ensures that analysis results remain consistent with established electrochemical principles.
 
 ## Bayesian parameter estimation
 
