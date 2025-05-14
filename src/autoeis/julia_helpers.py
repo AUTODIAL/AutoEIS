@@ -1,3 +1,4 @@
+import os
 import logging
 import shutil
 from pathlib import Path
@@ -223,3 +224,47 @@ def remove_julia_env():
         shutil.rmtree(path_julia_env)
     else:
         log.warning("Julia environment directory not found.")
+
+
+# Lazy loading for jl and ec
+class _LazyJuliaRuntime:
+    def __init__(self):
+        self._initialized = False
+        self._jl = None
+        self._ec = None
+
+    def _init(self):
+        if not self._initialized:
+            log.info("Initializing Julia runtime...")
+            os.environ["PYTHON_JULIACALL_AUTOLOAD_IPYTHON_EXTENSION"] = "no"
+            ensure_julia_deps_ready(quiet=True)
+            self._jl = init_julia(quiet=True)
+            self._ec = import_backend(self._jl)
+            self._initialized = True
+
+    def get_jl(self):
+        self._init()
+        return self._jl
+
+    def get_ec(self):
+        self._init()
+        return self._ec
+
+
+class _LazyProxy:
+    def __init__(self, getter):
+        self._getter = getter
+
+    def __getattr__(self, name):
+        return getattr(self._getter(), name)
+
+    def __call__(self, *args, **kwargs):
+        return self._getter()(*args, **kwargs)
+
+    def __repr__(self):
+        return repr(self._getter())
+
+
+_lazy_rt = _LazyJuliaRuntime()
+jl = _LazyProxy(_lazy_rt.get_jl)
+ec = _LazyProxy(_lazy_rt.get_ec)
