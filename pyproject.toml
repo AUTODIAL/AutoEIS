@@ -35,7 +35,6 @@ dependencies = [
     "ipywidgets",
     "jax",
     "jinja2>=3.1.2",
-    "julia",
     "juliacall",
     "juliapkg",
     "matplotlib",
@@ -105,4 +104,5 @@ dev-dependencies = [
     "nbsphinx>=0.9.5",
     "nbconvert>=7.16.4",
     "nbstripout>=0.7.1",
+    "pre-commit>=4.2.0",
 ]
