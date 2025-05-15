@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Circuit notation" href="circuit.html" /><link rel="prev" title="AutoEIS: Automated EIS Analysis" href="index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Installation - AutoEIS 0.0.38 documentation</title>
+        <title>Contributing to AutoEIS - AutoEIS 0.0.38 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -180,7 +180,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -203,8 +203,8 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Installation</a></li>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/circuit_basics.html">Circuit Models 101</a></li>
@@ -295,7 +295,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/installation.md.txt" title="View this page">
+  <a class="muted-link" href="_sources/contributing.md.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -309,31 +309,41 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
-<p>Open a terminal (or command prompt on Windows) and run the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>autoeis
+          <section class="tex2jax_ignore mathjax_ignore" id="contributing-to-autoeis">
+<h1>Contributing to AutoEIS<a class="headerlink" href="#contributing-to-autoeis" title="Link to this heading">¶</a></h1>
+<p>AutoEIS is a Python package for equivalent circuit modeling of electrochemical impedance spectroscopy (EIS) data using statistical machine learning. It is designed to be fast and user-friendly, making it accessible to researchers and practitioners in the field of electrochemistry. The package is open-source, and we welcome contributions from the community. This document describes how to get involved.</p>
+<p>Before you start you’ll need to set up a free GitHub account and sign in. Here are some <a class="reference external" href="https://help.github.com/articles/signing-up-for-a-new-github-account">instructions</a> to get started.</p>
+<section id="ways-to-contribute">
+<h2>Ways to Contribute<a class="headerlink" href="#ways-to-contribute" title="Link to this heading">¶</a></h2>
+<section id="open-a-new-issue">
+<h3>Open a New Issue<a class="headerlink" href="#open-a-new-issue" title="Link to this heading">¶</a></h3>
+<p>We use Github to track <a class="reference external" href="https://github.com/AUTODIAL/AutoEIS/issues">issues</a>. Issues can take the form of:</p>
+<p>(a) bug reports such as a function producing an error or odd result in some circumstances.</p>
+<p>(b) feature requests such a suggesting a new function be added to the package, presumably based on some literature report that describes it, or enhancements to an existing function.</p>
+<p>© general usage questions where the documentation is not clear and you need help getting a function to work as desired. This is actually a bug report in disguise since it means there is a problem with the documentation.</p>
+</section>
+<section id="addressing-open-issues">
+<h3>Addressing Open Issues<a class="headerlink" href="#addressing-open-issues" title="Link to this heading">¶</a></h3>
+<p>Help fixing open <a class="reference external" href="https://github.com/AUTODIAL/AutoEIS/issues">issues</a> is always welcome; however, the learning curve for submitting new code to any repo on Github is a bit intimidating. The process is as follows:</p>
+<p>a) <a class="reference external" href="https://help.github.com/articles/fork-a-repo/">Fork</a> AutoEIS to your own Github account. This lets you work on the code since you are the owner of that forked copy.</p>
+<p>b) Pull the code to your local machine using some Git client. We suggest <a class="reference external" href="https://www.gitkraken.com/">GitKraken</a>. For help using the Git version control system, see <a class="reference external" href="http://try.github.io/">these resources</a>.</p>
+<p>c) Create a new branch, with a useful name like “fix_issue_41” or “add_feature_X”, then checkout that branch.</p>
+<p>d) Edit the code as desired, either fixing or adding something. You’ll need to know Python and the various packages in the <a class="reference external" href="https://www.scipy.org/">SciPy</a> stack for this part.</p>
+<p>e) Push the changes back to Github, to your own repo.</p>
+<p>f) Navigate to the <a class="reference external" href="https://github.com/AUTODIAL/AutoEIS/pulls">pull requests area</a> on the AutoEIS repo, then click the “new pull request” button. As the name suggests, you are <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request/">requesting us to pull</a> your code in to our repo. You’ll want to select the correct branch on your repo (e.g. “add_awesome_new_feature”) and the “main” branch on AutoEIS.</p>
+<p>g) This will trigger several things on our repo, including most importantly a conversation between you and the AutoEIS team about your code. After any fine-tuning is done, we will merge your code into AutoEIS, and your contribution will be immortalized in AutoEIS.</p>
+<p>!!! note</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Adapted from PoreSpy&#39;s [contributing guide](https://github.com/PMEAL/porespy/blob/dev/CONTRIBUTING.md).
 </pre></div>
 </div>
-<p>Julia dependencies will be automatically installed at first import. It’s recommended that you have your own Julia installation, but if you don’t, Julia itself will also be installed automatically.</p>
-<div class="note admonition">
-<p class="admonition-title">How to install Julia</p>
-<p>If you decided to have your own Julia installation (recommended), the official way to install Julia is via <a class="reference external" href="https://github.com/JuliaLang/juliaup">juliaup</a>. <a class="reference external" href="https://github.com/JuliaLang/juliaup">Juliaup</a> provides a command line interface to automatically install Julia (optionally multiple versions side by side). Working with <a class="reference external" href="https://github.com/JuliaLang/juliaup">juliaup</a> is straightforward; Please follow the instructions on its GitHub <a class="reference external" href="https://github.com/JuliaLang/juliaup">page</a>.</p>
-</div>
-<div class="warning admonition">
-<p class="admonition-title">Minimum Julia version</p>
-<p>AutoEIS requires Julia version 1.9 or higher. This strict requirement is due to many optimizations introduced in Julia 1.9 that significantly reduce the startup time of <code class="docutils literal notranslate"><span class="pre">EquivalentCircuits.jl</span></code>, the backend of AutoEIS.</p>
-</div>
-<div class="note admonition">
-<p class="admonition-title">About shared environments</p>
-<p>AutoEIS doesn’t pollute your global Julia environment. Instead, it creates a new environment with the same name as your Python virtual environment (if you’re in on!) and installs the required packages there. This way, you can safely use AutoEIS without worrying about breaking your global Julia environment. The Julia environment is stored in the same folder as your Python virtual environment. For instance, if you’re using the Anaconda Python distribution and the name of your Python virtual environment is <code class="docutils literal notranslate"><span class="pre">myenv</span></code>, the path to the Julia environment is <code class="docutils literal notranslate"><span class="pre">~/anaconda3/envs/myenv/julia_env</span></code> on Unix-based systems and <code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\anaconda3/envs/myenv/julia_env</span></code> on Windows.</p>
-</div>
+</section>
+</section>
 </section>
 
         </article>
@@ -341,26 +351,8 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="circuit.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Circuit notation</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
-          <a class="prev-page" href="index.html">
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-              <div class="page-info">
-                <div class="context">
-                  <span>Previous</span>
-                </div>
-                
-                <div class="title">Home</div>
-                
-              </div>
-            </a>
+          
+          
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -386,8 +378,31 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Contributing to AutoEIS</a><ul>
+<li><a class="reference internal" href="#ways-to-contribute">Ways to Contribute</a><ul>
+<li><a class="reference internal" href="#open-a-new-issue">Open a New Issue</a></li>
+<li><a class="reference internal" href="#addressing-open-issues">Addressing Open Issues</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
