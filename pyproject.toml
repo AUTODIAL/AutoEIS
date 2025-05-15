@@ -103,6 +103,5 @@ dev-dependencies = [
     "nbmake>=1.5.4",
     "nbsphinx>=0.9.5",
     "nbconvert>=7.16.4",
-    "nbstripout>=0.7.1",
     "pre-commit>=4.2.0",
 ]
