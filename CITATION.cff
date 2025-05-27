@@ -1,0 +1,46 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Sadeghi
+  given-names: Mohammad Amin
+  orcid: "https://orcid.org/0000-0002-6756-9117"
+- family-names: Zhang
+  given-names: Runze
+  orcid: "https://orcid.org/0009-0004-9088-7924"
+- family-names: Hattrick-Simpers
+  given-names: Jason
+  orcid: "https://orcid.org/0000-0003-2937-3188"
+contact:
+- family-names: Hattrick-Simpers
+  given-names: Jason
+  orcid: "https://orcid.org/0000-0003-2937-3188"
+doi: 10.5281/zenodo.15066846
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Sadeghi
+    given-names: Mohammad Amin
+    orcid: "https://orcid.org/0000-0002-6756-9117"
+  - family-names: Zhang
+    given-names: Runze
+    orcid: "https://orcid.org/0009-0004-9088-7924"
+  - family-names: Hattrick-Simpers
+    given-names: Jason
+    orcid: "https://orcid.org/0000-0003-2937-3188"
+  date-published: 2025-05-16
+  doi: 10.21105/joss.06256
+  issn: 2475-9066
+  issue: 109
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6256
+  title: "AutoEIS: Automated equivalent circuit modeling from
+    electrochemical impedance spectroscopy data using statistical
+    machine learning"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06256"
+  volume: 10
+title: "AutoEIS: Automated equivalent circuit modeling from
+  electrochemical impedance spectroscopy data using statistical machine
+  learning"
