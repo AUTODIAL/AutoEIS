@@ -1,6 +1,13 @@
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06256/status.svg)](https://doi.org/10.21105/joss.06256)
 ![example workflow](https://github.com/AUTODIAL/AutoEIS/actions/workflows/nightly.yml/badge.svg)
 
+> [!NOTE]
+> AutoEIS is now published in the Journal of Open Source Software (JOSS). You can find the paper [here](https://doi.org/10.21105/joss.06256). If you find AutoEIS useful, please consider citing it in your work.
+>
+> Sadeghi et al., (2025). AutoEIS: Automated equivalent circuit modeling from electrochemical impedance spectroscopy data using statistical machine learning. _Journal of Open Source Software_, 10(109), 6256, https://doi.org/10.21105/joss.06256
+>
+> Zhang, Runze, et al. "Editors’ choice—AutoEIS: automated bayesian model selection and analysis for electrochemical impedance spectroscopy." _Journal of The Electrochemical Society_ 170.8 (2023): 086502. https://doi.org/10.1149/1945-7111/aceab2
+
 > [!TIP]
 > _Want to get notified about major announcements/new features?_ Please click on "Watch" -> "Custom" -> Check "Releases". Starring the repository alone won't notify you when we make a new release. This is particularly useful since we're actively working on adding new features/improvements to AutoEIS. Currently, we might issue a new release every month, so rest assured that you won't be spammed.
 
@@ -9,7 +16,6 @@
 ## What is AutoEIS?
 
 AutoEIS (Auto ee-eye-ess) is a Python package that automatically proposes statistically plausible equivalent circuit models (ECMs) for electrochemical impedance spectroscopy (EIS) analysis. The package is designed for researchers and practitioners in the fields of electrochemical analysis, including but not limited to explorations of electrocatalysis, battery design, and investigations of material degradation.
-
 
 ## Contributing
 
