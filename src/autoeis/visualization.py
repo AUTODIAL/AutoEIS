@@ -416,14 +416,18 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
     # Add columns to the table
     columns = [
         "Circuit",
-        "WAIC (real)" if "WAIC (real)" in circuits.columns else "WAIC (mag)",
-        "WAIC (imag)" if "WAIC (imag)" in circuits.columns else "WAIC (phase)",
+        "WAIC (mag)" if "WAIC (mag)" in circuits.columns else "WAIC (real)",
+        "WAIC (phase)" if "WAIC (phase)" in circuits.columns else "WAIC (imag)",
         "R2 (re)",
         "R2 (im)",
         "MAPE (re)",
         "MAPE (im)",
         "Np",
+        "Posterior Score",
+        "Posterior Score Rank",
+        "Bad Parameters",
     ]
+
     for column in columns:
         table.add_column(column, justify="right")
 
@@ -431,15 +435,18 @@ def print_inference_results(circuits: pd.DataFrame, return_table=True) -> Styler
     for i, row in df.data.iterrows():
         table.add_row(
             row["circuitstring"],
-            f"{row['WAIC (real)' if 'WAIC (real)' in circuits.columns else 'WAIC (mag)']:.2e}",
-            f"{row['WAIC (imag)' if 'WAIC (imag)' in circuits.columns else 'WAIC (phase)']:.2e}",
+            f"{row['WAIC (mag)' if 'WAIC (mag)' in circuits.columns else 'WAIC (real)']:.2e}",
+            f"{row['WAIC (phase)' if 'WAIC (phase)' in circuits.columns else 'WAIC (imag)']:.2e}",
             f"{row['R^2 (ravg)']:.3f}",
             f"{row['R^2 (iavg)']:.3f}",
             f"{row['MAPE (ravg)']:.2e}",
             f"{row['MAPE (iavg)']:.2e}",
             f"{row['n_params']}",
+            f"{row['Posterior Score']:.2f}",
+            str(row['Posterior Score Rank']),
+            row['Bad Parameters'],
         )
-
+        
     return table if return_table else df
 
 
