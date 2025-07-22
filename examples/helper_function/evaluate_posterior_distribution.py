@@ -90,7 +90,12 @@ def evaluate_posterior_distribution(
         y = gaussian_kde(sample)(x)
         idx, coords = detect_peaks(x, y, height_ratio=height_ratio, debug=debug)
         modes = len(idx)
-        score = r2 * 100 - abs(sk) * 5 - modes * 9
+    # Constants for scoring formula
+    R2_WEIGHT = 100  # Weight for R² (goodness of fit)
+    SKEWNESS_PENALTY = 5  # Penalty for absolute skewness
+    MODES_PENALTY = 9  # Penalty for the number of modes
+
+        score = r2 * R2_WEIGHT - abs(sk) * SKEWNESS_PENALTY - modes * MODES_PENALTY
         return max(0, round(score, 2)), r2, sk, modes, x, y, coords
 
     def save_plot_func(label, sample, x, y, peaks, skew, score, r2, cat1, cat2):
