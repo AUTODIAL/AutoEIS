@@ -1,4 +1,7 @@
-import os, math, numpy as np, matplotlib.pyplot as plt
+import os
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 from scipy.stats import probplot, gaussian_kde
 from sklearn.linear_model import LinearRegression
 
