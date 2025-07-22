@@ -58,7 +58,7 @@ def detect_peaks(x, y, alpha=6e-5, height_ratio=0.5, tol=1e-3, debug=False):
     # ── non-max suppression ───────────────────────────────────
     dx = np.median(np.diff(np.sort(x)))
     bw = 1.06 * y.std() * len(x) ** (-1 / 5)
-    window_pts = round((0.4 * bw) / dx)  # same formula你原来用的
+    window_pts = round((0.4 * bw) / dx)  # Same formula originally used
     idx_sorted = [idx for idx, *_ in sorted(cand, key=lambda p: p[2], reverse=True)]
     idx_keep = suppress_close_peaks(idx_sorted, window_pts)
 
