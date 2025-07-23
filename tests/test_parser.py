@@ -22,7 +22,7 @@ def test_get_parameter_labels():
     circuit = "[R1,R2-P12]-L2-R22-[R6,C7-[L8,R5],L9]-R3"
     # Use default types = None (all parameters)
     variables = parser.get_parameter_labels(circuit)
-    variables_gt = ["R1", "R2", "P12w", "P12n", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]
+    variables_gt = ["R1", "R2", "P12w", "P12n", "L2", "R22", "R6", "C7", "L8", "R5", "L9", "R3"]  # fmt: off
     assert variables == variables_gt
     # Pass string as types
     variables = parser.get_parameter_labels(circuit, types="R")
@@ -170,3 +170,25 @@ def test_convert_to_impedance_format():
     circuit_impy = parser.convert_to_impedance_format(circuit)
     circuit_gt = "R1-p(R2,CPE1-p(R5,L8))-CPE5"
     assert circuit_impy == circuit_gt
+
+
+def test_simplify():
+    test_cases = [
+        ("R1-R2-R3", "R1"),
+        ("R1-P1-R2", "R1-P1"),
+        ("[R1,R2,R3]", "R1"),
+        ("[C1,C2]", "C1"),
+        ("[P1,P2]", "[P1,P2]"),
+        ("[R1,P1,R2,C1]", "[R1,P1,C1]"),
+        ("[R1-R2,C1-C2]", "[R1,C1]"),
+        ("R1-[R2-P2-R3,R4]-C1-R9-[L1-L2,P2]", "R1-[R2-P2,R4]-C1-[L1,P2]"),
+        ("R1-R2-[C1-C2,R3]-R4", "R1-[C1,R3]"),
+        ("R1-[C1-[L1-L2,R2-R3]-P1,R4-R5]", "R1-[C1-[L1,R2]-P1,R4]"),
+        ("P1-[R1,C1]", "P1-[R1,C1]"),
+        ("R0-[R1,R2]-C0", "R0-C0"),
+    ]
+
+    for circuit, simplified in test_cases:
+        assert parser.simplify(circuit) == simplified, (
+            f"Failed for {circuit}: expected {simplified}, got {parser.simplify(circuit)}"
+        )

@@ -136,3 +136,25 @@ def test_eval_posterior_predictive():
     # Evaluate the posterior predictive distribution without priors
     Z_pred = ae.utils.eval_posterior_predictive(result.samples, circuit, freq)
     assert Z_pred.shape == (1000, len(freq))
+
+
+def test_find_duplicate_circuits():
+    circuits = [
+        "R0",
+        "R1-C2-L3",
+        "[R1,[R2,P3]]",
+        "R4-C5-[R1,P2]-R0",
+        "L2-R5-C6",
+        "R1-[P2,R3]-C4",
+        "R4-[R1,R2]-R3",
+    ]
+    # No simplification
+    duplicates = ae.utils.find_duplicate_circuits(circuits)
+    expected = [[0], [1, 4], [2], [3], [5], [6]]
+    match = [np.allclose(a, b) for a, b in zip(duplicates, expected)]
+    assert all(match), f"Expected {expected}, got {duplicates}"
+    # With simplification
+    duplicates = ae.utils.find_duplicate_circuits(circuits, simplify=True)
+    expected = [[0, 6], [1, 4], [2], [3, 5]]
+    match = [np.allclose(a, b) for a, b in zip(duplicates, expected)]
+    assert all(match), f"Expected {expected}, got {duplicates}"
