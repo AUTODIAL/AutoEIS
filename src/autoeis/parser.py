@@ -19,10 +19,12 @@ Collection of functions for parsing circuit strings.
     count_parameters
     convert_to_impedance_format
     find_ohmic_resistors
+    simplify
 
 """
 
 import re
+from functools import lru_cache
 
 from numpy import pi  # noqa: F401
 from pyparsing import nested_expr
@@ -180,7 +182,7 @@ def get_component_labels(circuit: str, types: list[str] = None) -> list[str]:
     types = [types] if isinstance(types, str) else types
     types = ["R", "C", "L", "P"] if types is None else types
     assert isinstance(types, list), "types must be a list of strings."
-    pattern = rf'\b(?:{"|".join(types)})\d+\b'
+    pattern = rf"\b(?:{'|'.join(types)})\d+\b"
     return re.findall(pattern, circuit)
 
 
@@ -561,3 +563,147 @@ def replace_components_with_impedance(expr: str) -> str:
         expr = re.sub(rf"{c}(?!\d)", replacement(c), expr)
 
     return expr
+
+
+def _find_top_level_components(s: str, delimiter: str) -> list[str]:
+    """
+    Splits a string by a delimiter, but only when the delimiter is not
+    inside brackets. This is a robust way to find top-level components.
+    """
+    components = []
+    bracket_level = 0
+    start = 0
+    for i, char in enumerate(s):
+        if char == "[":
+            bracket_level += 1
+        elif char == "]":
+            bracket_level -= 1
+        elif char == delimiter and bracket_level == 0:
+            components.append(s[start:i])
+            start = i + 1
+    components.append(s[start:])
+    return components
+
+
+def _parse_to_structure(s: str):
+    """
+    Recursively parses the circuit string into a nested list structure (an AST).
+    'R1-[R2,C1]' -> ['s', 'R1', ['p', 'R2', 'C1']]
+    """
+    # Base case: The component is just an element.
+    if "-" not in s and "[" not in s:
+        return s
+
+    # It's a series of components.
+    series_components = _find_top_level_components(s, "-")
+
+    # If there's only one component after splitting, it might be a parallel block.
+    if len(series_components) == 1:
+        component = series_components[0]
+        if component.startswith("[") and component.endswith("]"):
+            content = component[1:-1]
+            branches = _find_top_level_components(content, ",")
+            # If there's only one branch, it's not a true parallel block.
+            if len(branches) == 1:
+                return _parse_to_structure(branches[0])
+            return ["p"] + [_parse_to_structure(branch) for branch in branches]
+        return component
+
+    return ["s"] + [_parse_to_structure(comp) for comp in series_components]
+
+
+def _simplify_structure(struct):
+    """
+    Recursively simplifies the nested list structure in a single pass.
+    """
+    # Base case: An element (string) cannot be simplified further.
+    if isinstance(struct, str):
+        return struct
+
+    op = struct[0]
+    components = struct[1:]
+
+    # Recursively simplify children first (post-order traversal).
+    simplified_components = [_simplify_structure(c) for c in components]
+
+    # --- Apply Simplification Logic ---
+    final_components = []
+    seen_types = set()
+    simplifiable_types = {"R", "C", "L"}
+
+    if op == "s":  # Series simplification
+        for comp in simplified_components:
+            comp_type = ""
+            if isinstance(comp, str):
+                comp_type = comp[0]
+            elif comp[0] == "p":  # It's a parallel block
+                comp_type = "p"
+
+            if comp_type in simplifiable_types:
+                if comp_type not in seen_types:
+                    seen_types.add(comp_type)
+                    final_components.append(comp)
+            else:  # P elements or parallel blocks
+                final_components.append(comp)
+
+    elif op == "p":  # Parallel simplification
+        for comp in simplified_components:
+            is_atomic = isinstance(comp, str) and comp[0] != "p"
+
+            if is_atomic:
+                comp_type = comp[0]
+                if comp_type in simplifiable_types:
+                    if comp_type not in seen_types:
+                        seen_types.add(comp_type)
+                        final_components.append(comp)
+                else:  # P element
+                    final_components.append(comp)
+            else:  # Complex branch
+                final_components.append(comp)
+
+    # If only one component remains after simplification, unwrap it.
+    if len(final_components) == 1:
+        return final_components[0]
+
+    return [op] + final_components
+
+
+def _stringify_structure(struct) -> str:
+    """
+    Recursively builds the final string from the simplified structure.
+    """
+    if isinstance(struct, str):
+        return struct
+
+    op = struct[0]
+    stringified_components = [_stringify_structure(c) for c in struct[1:]]
+
+    if op == "s":
+        return "-".join(stringified_components)
+    # op == 'p'
+    return f"[{','.join(stringified_components)}]"
+
+
+@lru_cache(maxsize=1_000_000)
+def simplify(circuit: str) -> str:
+    """
+    Simplifies a circuit string to its canonical form by applying series-parallel
+    reduction, e.g., 'R1-[C2,C3]' -> 'R1-C2' or 'R1-R2' -> 'R1'.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>` for details.
+
+    Returns
+    -------
+    str
+        The simplified circuit string in canonical form.
+    """
+    if not circuit:
+        return ""
+
+    structure = _parse_to_structure(circuit)
+    simplified_structure = _simplify_structure(structure)
+    return _stringify_structure(simplified_structure)

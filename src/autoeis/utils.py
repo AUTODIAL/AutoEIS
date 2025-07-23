@@ -621,7 +621,7 @@ def fit_circuit_parameters(
     r2_phase = metrics.r2_score(jnp.angle(Z), jnp.angle(fn(freq, p0)))
     X2 = np.mean(obj_chi_squared(p0))
     log.info(
-        f"Converged in {i+1} iterations with "
+        f"Converged in {i + 1} iterations with "
         f"𝛘² = {X2:.3e}, R² (|Z|) = {r2_mag:.4f}, R² (phase) = {r2_phase:.4f}"
     )
 
@@ -781,7 +781,9 @@ def circuit_complexity(circuit: str) -> list[int]:
     return flatten(complexity)
 
 
-def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) -> bool:
+def are_circuits_equivalent(
+    circuit1: str, circuit2: str, rtol: float = 1e-5, simplify: bool = False
+) -> bool:
     """Checks if two circuit strings are equivalent.
 
     Parameters
@@ -795,6 +797,8 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     rtol : float, optional
         The relative tolerance for the circuit equivalence check. See the
         Notes section for more details. Default is 1e-5.
+    simplify : bool, optional
+        If True, simplifies the circuits before checking for equivalence.
 
     Returns
     -------
@@ -810,6 +814,10 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     # Ensure that the circuits are valid
     parser.validate_circuit(circuit1)
     parser.validate_circuit(circuit2)
+
+    if simplify:
+        circuit1 = parser.simplify(circuit1)
+        circuit2 = parser.simplify(circuit2)
 
     def x0(circuit: str) -> np.ndarray[float]:
         """Custom x0 to test if two circuits are equivalent by comparing Z(x0).
@@ -834,7 +842,9 @@ def are_circuits_equivalent(circuit1: str, circuit2: str, rtol: float = 1e-5) ->
     return np.allclose(Z1, Z2, rtol=rtol)
 
 
-def find_duplicate_circuits(circuits: Iterable[str], rtol: float = 1e-5) -> list[list[int]]:
+def find_duplicate_circuits(
+    circuits: Iterable[str], rtol: float = 1e-5, simplify: bool = False
+) -> list[list[int]]:
     """Returns the indices of duplicate circuits given a list of circuit strings.
 
     Parameters
@@ -844,6 +854,8 @@ def find_duplicate_circuits(circuits: Iterable[str], rtol: float = 1e-5) -> list
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
     rtol : float, optional
         The relative tolerance for the circuit equivalence check. Default is 1e-5.
+    simplify : bool, optional
+        If True, simplifies the circuits before checking for duplicates.
 
     Returns
     -------
@@ -872,6 +884,10 @@ def find_duplicate_circuits(circuits: Iterable[str], rtol: float = 1e-5) -> list
 
     # Validate input circuits
     assert isinstance(circuits, (list, tuple)), "Input must be a list[str] or tuple[str]."
+    _ = [parser.validate_circuit(circuit) for circuit in circuits]
+
+    if simplify:
+        circuits = [parser.simplify(circuit) for circuit in circuits]
 
     freq = np.logspace(-3, 3, 10)
     Z = [generate_circuit_fn(circuit)(freq, x0(circuit)) for circuit in circuits]
@@ -1297,13 +1313,13 @@ def validate_circuits_dataframe(circuits: pd.DataFrame):
     missing = set(required_columns).difference(circuits.columns)
     assert not missing, f"Missing columns: {missing}"
     # Check if the circuitstring column contains only strings
-    assert (
-        circuits["circuitstring"].apply(lambda x: isinstance(x, str)).all()
-    ), "circuitstring column must only contain strings."
+    assert circuits["circuitstring"].apply(lambda x: isinstance(x, str)).all(), (
+        "circuitstring column must only contain strings."
+    )
     # Check if the Parameters column contains only dictionaries
-    assert (
-        circuits["Parameters"].apply(lambda x: isinstance(x, dict)).all()
-    ), "Parameters column must only contain dictionaries."
+    assert circuits["Parameters"].apply(lambda x: isinstance(x, dict)).all(), (
+        "Parameters column must only contain dictionaries."
+    )
 
 
 # <<< Miscellaneous utils
