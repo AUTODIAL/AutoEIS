@@ -1194,6 +1194,16 @@ def preprocess_impedance_data(
     log.info("Preprocessing/cleaning up impedance data.")
     n0 = len(freq)
 
+    # Fixes AUTODIAL/AutoEIS/issues/140
+    if freq.dtype != "float64":
+        log.warning("Converting frequency data to float64 for consistency.")
+        freq = freq.astype("float64")
+
+    # Not necessary, but just to ensure consistency
+    if Z.dtype != "complex128":
+        log.warning("Converting impedance data to complex128 for consistency.")
+        Z = Z.astype("complex128")
+
     # Make sure frequency is sorted in descending order (needed in Heuristic 1)
     Z = Z[np.argsort(freq)[::-1]]
     freq = freq[np.argsort(freq)[::-1]]
