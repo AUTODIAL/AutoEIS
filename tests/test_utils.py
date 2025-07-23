@@ -34,6 +34,14 @@ def test_preprocess_impedance_data():
     assert set(aux["res"].keys()) == {"real", "imag"}
 
 
+def test_preprocess_impedance_data_dtype_consistency():
+    # This is to ensure AUTODIAL/AutoEIS/#140 is fixed
+    freq, Z = ae.io.load_test_dataset()
+    freq = freq.astype("float32")  # Used to break workflow
+    # Test various tolerances for linKK validation
+    ae.utils.preprocess_impedance_data(freq, Z, tol_linKK=5e-2)
+
+
 def test_preprocess_impedance_data_no_high_freq():
     # This is to ensure AUTODIAL/AutoEIS/#122 is fixed
     freq, Z = ae.io.load_test_dataset()
