@@ -1,0 +1,6 @@
+simplify
+========
+
+.. currentmodule:: autoeis.parser
+
+.. autofunction:: simplify

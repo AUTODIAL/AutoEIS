@@ -4,14 +4,16 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Circuit Generation" href="circuit_generation.html" /><link rel="prev" title="Examples" href="../examples.html" />
+        <link rel="prefetch" href="../_static/logo-light-mode.png" as="image" />
+        <link rel="prefetch" href="../_static/logo-dark-mode.png" as="image" />
 
-    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Circuit Models 101 - AutoEIS 0.0.38 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <!-- Generated with Sphinx 8.1.3 and Furo 2025.07.19 -->
+        <title>Circuit Models 101 - AutoEIS 0.0.39 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=a35ea3b2" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c2075f1a" />
     
     
@@ -19,20 +21,20 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
       }
     }
@@ -169,7 +171,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">AutoEIS 0.0.38 documentation</div></a>
+      <a href="../index.html"><div class="brand">AutoEIS 0.0.39 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -191,7 +193,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo only-light" src="../_static/logo-light-mode.png" alt="Light Logo"/>
     <img class="sidebar-logo only-dark" src="../_static/logo-dark-mode.png" alt="Dark Logo"/>
@@ -272,6 +273,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.count_parameters.html">count_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.convert_to_impedance_format.html">convert_to_impedance_format</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.find_ohmic_resistors.html">find_ohmic_resistors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.simplify.html">simplify</a></li>
 </ul>
 </li>
 </ul>
@@ -451,12 +453,12 @@ True
 Cell <span class="ansi-green-fg">In[7], line 1</span>
 <span class="ansi-green-fg">----&gt; 1</span> <span class="ansi-yellow-bg">ae</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">parser</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">validate_circuit</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#34;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">R1-[R2,P3]-R1</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#34;</span><span class="ansi-yellow-bg">)</span>
 
-File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:56</span>, in <span class="ansi-cyan-fg">validate_circuit</span><span class="ansi-blue-fg">(circuit)</span>
-<span class="ansi-green-intense-fg ansi-bold">     54</span> components <span style="color: rgb(98,98,98)">=</span> get_component_labels(circuit)
-<span class="ansi-green-intense-fg ansi-bold">     55</span> duplicates <span style="color: rgb(98,98,98)">=</span> [e <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> e <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> components <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> components<span style="color: rgb(98,98,98)">.</span>count(e) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">1</span>]
-<span class="ansi-green-fg">---&gt; 56</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> duplicates, <span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Duplicate elements found: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span><span style="color: rgb(0,135,0)">set</span>(duplicates)<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span style="color: rgb(175,0,0)">&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">     57</span> <span style="color: rgb(95,135,135)"># Test circuit is not empty</span>
-<span class="ansi-green-intense-fg ansi-bold">     58</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span style="color: rgb(0,135,0)">len</span>(circuit) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Circuit string is empty.</span><span style="color: rgb(175,0,0)">&#34;</span>
+File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:58</span>, in <span class="ansi-cyan-fg">validate_circuit</span><span class="ansi-blue-fg">(circuit)</span>
+<span class="ansi-green-intense-fg ansi-bold">     56</span> components <span style="color: rgb(98,98,98)">=</span> get_component_labels(circuit)
+<span class="ansi-green-intense-fg ansi-bold">     57</span> duplicates <span style="color: rgb(98,98,98)">=</span> [e <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> e <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> components <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> components<span style="color: rgb(98,98,98)">.</span>count(e) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">1</span>]
+<span class="ansi-green-fg">---&gt; 58</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> duplicates, <span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Duplicate elements found: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span><span style="color: rgb(0,135,0)">set</span>(duplicates)<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span style="color: rgb(175,0,0)">&#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">     59</span> <span style="color: rgb(95,135,135)"># Test circuit is not empty</span>
+<span class="ansi-green-intense-fg ansi-bold">     60</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span style="color: rgb(0,135,0)">len</span>(circuit) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Circuit string is empty.</span><span style="color: rgb(175,0,0)">&#34;</span>
 
 <span class="ansi-red-fg">AssertionError</span>: Duplicate elements found: {&#39;R1&#39;}
 </pre></div></div>
@@ -506,11 +508,11 @@ File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:56
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([1.10232139-1.66608337e+03j, 1.09528951-3.58947516e+02j,
-       1.09183816-7.73091508e+01j, 1.17078258-1.66043490e+01j,
-       1.19750487-3.66867538e+00j, 1.0091528 -9.31286481e-01j,
-       0.87554536-2.68360921e-01j, 0.79818078-1.06197891e-01j,
-       0.74301068-5.47650646e-02j, 0.70836404-3.05201074e-02j])
+array([1.3060494 -1.97733699e+02j, 1.29839272-4.26044521e+01j,
+       1.2910676 -9.17415330e+00j, 1.30164601-1.93570325e+00j,
+       1.41272106-4.06938213e-01j, 1.30753362-1.70654741e-01j,
+       1.25341771-5.04628510e-02j, 1.23974035-2.01582779e-02j,
+       1.22802634-1.38733405e-02j, 1.21606455-1.27548378e-02j])
 </pre></div></div>
 </div>
 </section>
@@ -593,10 +595,10 @@ array([1.10232139-1.66608337e+03j, 1.09528951-3.58947516e+02j,
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=423071ad"></script>
+</div><script src="../_static/documentation_options.js?v=e648f5b4"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
