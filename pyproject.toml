@@ -49,6 +49,7 @@ dependencies = [
     "scikit-learn>=1.4",
     "seaborn",
     "tqdm",
+    "numexpr",
 ]
 [project.optional-dependencies]
 lcapy = ["lcapy"]
