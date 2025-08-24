@@ -38,6 +38,7 @@ from functools import wraps
 
 import jax  # NOQA: F401
 import jax.numpy as jnp
+import numexpr as ne
 import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
@@ -62,7 +63,7 @@ import __main__
 from . import metrics, models, parser, visualization
 
 log = logging.getLogger(__name__)
-
+ne.set_num_threads(ne.detect_number_of_cores())
 
 # >>> General utils
 
@@ -818,6 +819,55 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
     fn = jax.jit(fn) if jit else fn
 
     return fn
+
+
+def generate_circuit_fn_numexpr(circuit: str, concat=False):
+    """Generates an optimized function using numexpr for fast circuit evaluation.
+
+    This is an optimized version of ``generate_circuit_fn`` that uses numexpr
+    for significantly faster evaluation, especially beneficial for vectorized
+    parameter evaluation (multiple parameter sets).
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    concat : bool, optional
+        If True, the generated function returns concatenated real and
+        imaginary parts of the impedance, otherwise it returns the complex
+        impedance. Default is False.
+
+    Returns
+    -------
+    callable
+        A function that takes in frequency and the circuit parameters
+        and returns the impedance. Optimized for vectorized evaluation.
+
+    Notes
+    -----
+    - Particularly efficient for batch evaluation of multiple parameter sets
+    - Uses multi-threading via numexpr for better CPU utilization
+    """
+    # Modify the circuit expression to suit numexpr
+    expr = parser.generate_mathematical_expression(circuit)
+    expr = expr.translate(str.maketrans("", "", "[]"))
+
+    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        freq = np.atleast_1d(freq)
+        p = np.atleast_1d(p).T
+        # Make freq and p broadcastable to enable vectorized operations
+        if p.ndim > 1:
+            freq = freq[:, None]
+            p = [p[i, None] for i in range(p.shape[0])]
+        local_dict = {"freq": freq, "pi": np.pi} | {f"p{i}": p_i for i, p_i in enumerate(p)}
+        return ne.evaluate(expr, local_dict=local_dict).T
+
+    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        Z = fn_complex(freq, p)
+        return np.hstack([Z.real, Z.imag])
+
+    return fn_concat if concat else fn_complex
 
 
 def generate_circuit_fn_impedance_backend(circuit: str):
