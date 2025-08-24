@@ -238,3 +238,70 @@ def test_sample_circuit_parameters_sampling_modes():
 
     assert np.all(pn_log >= 0.0) and np.all(pn_log <= 1.0)
     assert np.all(pn_linear >= 0.0) and np.all(pn_linear <= 1.0)
+
+
+def test_generate_circuit_fn_numexpr_correctness():
+    """Test that generate_circuit_fn_numexpr produces correct results with true batch evaluation."""
+    circuits = ["R1-C2", "R1-[P2,C3]", "R1-P2-C3-L4"]
+    freq = np.logspace(-1, 3, 20)
+
+    for circuit in circuits:
+        # Create both functions
+        fn_standard = ae.utils.generate_circuit_fn(circuit)
+        fn_numexpr = ae.utils.generate_circuit_fn_numexpr(circuit)
+
+        # Test TRUE vectorized batch evaluation - this is the key point!
+        n_samples = 10
+        p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
+
+        # Standard: loop over samples (slow)
+        Z_std_batch = np.array([fn_standard(freq, p) for p in p_batch])
+
+        # Numexpr: should handle batch natively (fast) - pass the full batch
+        Z_ne_batch = fn_numexpr(freq, p_batch)
+
+        # Results should match
+        np.testing.assert_allclose(Z_std_batch, Z_ne_batch, rtol=1e-10)
+
+        # Test single sample still works
+        p_single = p_batch[0]
+        Z_std_single = fn_standard(freq, p_single)
+        Z_ne_single = fn_numexpr(freq, p_single)
+        np.testing.assert_allclose(Z_std_single, Z_ne_single, rtol=1e-10)
+
+
+def test_generate_circuit_fn_numexpr_shapes():
+    """Test true vectorized batch shapes for generate_circuit_fn_numexpr."""
+    circuit = "R1-[P2,C3]"
+    n_samples = 10
+    n_freq = 50
+    freq = np.logspace(0, 4, n_freq)
+    p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
+
+    # Test complex mode (concat=False) with TRUE batch evaluation
+    fn_complex = ae.utils.generate_circuit_fn_numexpr(circuit, concat=False)
+    Z_complex_batch = fn_complex(freq, p_batch)  # Pass batch directly, not loop!
+
+    # Shape should be (n_samples, n_freq)
+    assert Z_complex_batch.shape == (n_samples, n_freq)
+    assert Z_complex_batch.dtype == np.complex128
+
+    # Test concat mode (concat=True) with TRUE batch evaluation
+    fn_concat = ae.utils.generate_circuit_fn_numexpr(circuit, concat=True)
+    Z_concat_batch = fn_concat(freq, p_batch)  # Pass batch directly, not loop!
+
+    # Shape should be (n_samples, 2*n_freq) - real and imaginary parts concatenated
+    assert Z_concat_batch.shape == (n_samples, 2 * n_freq)
+    assert Z_concat_batch.dtype == np.float64
+
+    # Test different frequency array sizes with TRUE batch evaluation
+    for n_test_freq in [1, 5, 100]:
+        test_freq = np.logspace(0, 2, n_test_freq)
+        Z_test = fn_complex(test_freq, p_batch)  # Pass batch directly!
+        assert Z_test.shape == (n_samples, n_test_freq)
+
+    # Test that single samples work too
+    p_single = p_batch[0]
+    Z_single = fn_complex(freq, p_single)
+    assert Z_single.shape == (n_freq,)
+    assert Z_single.dtype == np.complex128
