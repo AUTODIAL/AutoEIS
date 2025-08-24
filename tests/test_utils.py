@@ -166,3 +166,75 @@ def test_find_duplicate_circuits():
     expected = [[0, 6], [1, 4], [2], [3, 5]]
     match = [np.allclose(a, b) for a, b in zip(duplicates, expected)]
     assert all(match), f"Expected {expected}, got {duplicates}"
+
+
+def test_sample_circuit_parameters_basic():
+    """Test basic functionality of sample_circuit_parameters."""
+    circuit = "R1-[P2,C3]"
+
+    # Test single sample (backward compatibility)
+    p_single = ae.utils.sample_circuit_parameters(circuit, seed=42)
+    assert isinstance(p_single, np.ndarray)
+    assert p_single.shape == (4,)
+    assert len(p_single) == ae.parser.count_parameters(circuit)
+
+    # Test multiple samples
+    p_multi = ae.utils.sample_circuit_parameters(circuit, num_samples=10, seed=42)
+    assert p_multi.shape == (10, 4)
+
+    # Test reproducibility
+    p1 = ae.utils.sample_circuit_parameters(circuit, seed=42)
+    p2 = ae.utils.sample_circuit_parameters(circuit, seed=42)
+    np.testing.assert_array_equal(p1, p2)
+
+    # Test different circuits
+    circuits = ["R1", "R1-C2", "[R1,C2]-P3"]
+    for test_circuit in circuits:
+        expected_params = ae.parser.count_parameters(test_circuit)
+        p = ae.utils.sample_circuit_parameters(test_circuit, seed=42)
+        assert p.shape == (expected_params,)
+
+
+def test_sample_circuit_parameters_bounds():
+    """Test bounds enforcement and custom bounds."""
+    circuit = "R1-P2-C3"
+
+    # Test default bounds enforcement
+    p = ae.utils.sample_circuit_parameters(circuit, num_samples=50, seed=42)
+
+    # Pn values should be [0,1]
+    pn_values = p[:, 2]  # P2n
+    assert np.all(pn_values >= 0.0) and np.all(pn_values <= 1.0)
+
+    # Other parameters should be positive
+    assert np.all(p[:, [0, 1, 3]] > 0)  # R, Pw, C
+
+    # Test custom bounds
+    bounds = {"R": (1e-2, 1e2), "C": (1e-9, 1e-6)}
+    p_custom = ae.utils.sample_circuit_parameters(
+        "R1-C2", bounds=bounds, num_samples=20, seed=42
+    )
+
+    assert np.all(p_custom[:, 0] >= bounds["R"][0])  # R min
+    assert np.all(p_custom[:, 0] <= bounds["R"][1])  # R max
+    assert np.all(p_custom[:, 1] >= bounds["C"][0])  # C min
+    assert np.all(p_custom[:, 1] <= bounds["C"][1])  # C max
+
+
+def test_sample_circuit_parameters_sampling_modes():
+    """Test log vs linear sampling and Pn uniformity."""
+    circuit = "P1"  # CPE with Pw and Pn
+
+    # Test log vs linear produces different results
+    p_log = ae.utils.sample_circuit_parameters(circuit, num_samples=50, log=True, seed=42)
+    p_linear = ae.utils.sample_circuit_parameters(circuit, num_samples=50, log=False, seed=42)
+
+    # Pw should be different between log/linear
+    assert not np.array_equal(p_log[:, 0], p_linear[:, 0])
+
+    # Pn should be uniformly distributed in both cases
+    pn_log = p_log[:, 1]
+    pn_linear = p_linear[:, 1]
+
+    assert np.all(pn_log >= 0.0) and np.all(pn_log <= 1.0)
+    assert np.all(pn_linear >= 0.0) and np.all(pn_linear <= 1.0)
