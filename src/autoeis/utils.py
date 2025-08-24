@@ -38,6 +38,7 @@ from functools import wraps
 
 import jax  # NOQA: F401
 import jax.numpy as jnp
+import numexpr as ne
 import numpy as np
 import numpyro.distributions as dist
 import pandas as pd
@@ -62,7 +63,7 @@ import __main__
 from . import metrics, models, parser, visualization
 
 log = logging.getLogger(__name__)
-
+ne.set_num_threads(ne.detect_number_of_cores())
 
 # >>> General utils
 
@@ -350,6 +351,123 @@ def generate_initial_guess(circuit: str, seed=None, log=True) -> np.ndarray:
     ptypes = parser.get_parameter_types(circuit)
     for i, ptype in enumerate(ptypes):
         p[i] = np.random.rand() if ptype == "Pn" else p[i]
+    return p
+
+
+def sample_circuit_parameters(
+    circuit: str,
+    bounds: dict = None,
+    seed: int = None,
+    log: bool = True,
+    num_samples: int = 1,
+) -> np.ndarray:
+    """Returns a (or more if ``num_samples`` > 1) random sample of circuit parameters.
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    bounds : dict, optional
+        Dictionary mapping parameter types to (lower, upper) bounds.
+        Keys should be parameter types: 'R', 'C', 'Pw', 'Pn', 'L'.
+        Values should be tuples of (lower_bound, upper_bound).
+        If None, uses sensible physical defaults.
+    seed : int, optional
+        Random seed for reproducibility. Default is None.
+    log : bool, optional
+        If True, samples parameters in log-space for better coverage
+        (except Pn which is always uniform). Default is True.
+    num_samples : int, optional
+        Number of parameter samples to generate. Default is 1.
+        If num_samples > 1, returns a 2D array of shape (num_samples, num_params).
+
+    Returns
+    -------
+    np.ndarray
+        Array of sampled parameters respecting the bounds.
+        - If num_samples = 1: shape (num_params,)
+        - If num_samples > 1: shape (num_samples, num_params)
+
+    Examples
+    --------
+    >>> # Single sample (default)
+    >>> p = sample_circuit_parameters("R1-[P2,C3]")
+    >>> p.shape
+    (4,)
+
+    >>> # Multiple samples
+    >>> p = sample_circuit_parameters("R1-[P2,C3]", num_samples=10)
+    >>> p.shape
+    (10, 4)
+
+    >>> # Custom bounds
+    >>> custom_bounds = {"R": (1e-6, 1e6), "C": (1e-12, 1e-3)}
+    >>> p = sample_circuit_parameters("R1-C2", bounds=custom_bounds)
+
+    >>> # Linear space sampling
+    >>> p = sample_circuit_parameters("R1-L2", log=False, seed=42)
+    """
+    default_bounds = {
+        "R": (1e-9, 1e9),  # Resistance [Ω]
+        "C": (1e-9, 10.0),  # Capacitance [F]
+        "Pw": (1e-9, 1e9),  # CPE coefficient, Q
+        "Pn": (0.0, 1.0),  # CPE exponent, α
+        "L": (1e-9, 5.0),  # Inductance [H]
+    }
+    # Override default bounds if provided
+    bounds = {**default_bounds, **bounds} if bounds is not None else default_bounds
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    num_params = parser.count_parameters(circuit)
+    ptypes = parser.get_parameter_types(circuit)
+    lbs = np.array([bounds[ptype][0] for ptype in ptypes])
+    ubs = np.array([bounds[ptype][1] for ptype in ptypes])
+
+    # Define the shape based on num_samples
+    shape = (num_samples, num_params) if num_samples > 1 else (num_params,)
+
+    if not log:
+        # Linear space sampling: uniform distribution between bounds
+        p = np.random.uniform(lbs, ubs, size=shape)
+    else:
+        # Log-space sampling for better parameter coverage
+        p = np.zeros(shape)
+
+        # Create boolean mask for Pn parameters (always uniform)
+        Pn_mask = np.array([ptype == "Pn" for ptype in ptypes])
+
+        if num_samples > 1:
+            # Vectorized sampling for multiple samples
+            if Pn_mask.any():
+                p[:, Pn_mask] = np.random.uniform(
+                    lbs[Pn_mask], ubs[Pn_mask], size=(num_samples, Pn_mask.sum())
+                )
+
+            # Sample non-Pn parameters in log-space
+            non_Pn_mask = ~Pn_mask
+            if non_Pn_mask.any():
+                log_lower = np.log10(lbs[non_Pn_mask])
+                log_upper = np.log10(ubs[non_Pn_mask])
+                log_samples = np.random.uniform(
+                    log_lower, log_upper, size=(num_samples, non_Pn_mask.sum())
+                )
+                p[:, non_Pn_mask] = 10**log_samples
+        else:
+            # Single sample case (backward compatible)
+            if Pn_mask.any():
+                p[Pn_mask] = np.random.uniform(lbs[Pn_mask], ubs[Pn_mask])
+
+            # Sample non-Pn parameters in log-space
+            non_Pn_mask = ~Pn_mask
+            if non_Pn_mask.any():
+                log_lower = np.log10(lbs[non_Pn_mask])
+                log_upper = np.log10(ubs[non_Pn_mask])
+                log_samples = np.random.uniform(log_lower, log_upper)
+                p[non_Pn_mask] = 10**log_samples
+
     return p
 
 
@@ -701,6 +819,55 @@ def generate_circuit_fn(circuit: str, jit=False, concat=False):
     fn = jax.jit(fn) if jit else fn
 
     return fn
+
+
+def generate_circuit_fn_numexpr(circuit: str, concat=False):
+    """Generates an optimized function using numexpr for fast circuit evaluation.
+
+    This is an optimized version of ``generate_circuit_fn`` that uses numexpr
+    for significantly faster evaluation, especially beneficial for vectorized
+    parameter evaluation (multiple parameter sets).
+
+    Parameters
+    ----------
+    circuit : str
+        CDC string representation of the input circuit. See
+        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    concat : bool, optional
+        If True, the generated function returns concatenated real and
+        imaginary parts of the impedance, otherwise it returns the complex
+        impedance. Default is False.
+
+    Returns
+    -------
+    callable
+        A function that takes in frequency and the circuit parameters
+        and returns the impedance. Optimized for vectorized evaluation.
+
+    Notes
+    -----
+    - Particularly efficient for batch evaluation of multiple parameter sets
+    - Uses multi-threading via numexpr for better CPU utilization
+    """
+    # Modify the circuit expression to suit numexpr
+    expr = parser.generate_mathematical_expression(circuit)
+    expr = expr.translate(str.maketrans("", "", "[]"))
+
+    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        freq = np.atleast_1d(freq)
+        p = np.atleast_1d(p).T
+        # Make freq and p broadcastable to enable vectorized operations
+        if p.ndim > 1:
+            freq = freq[:, None]
+            p = [p[i, None] for i in range(p.shape[0])]
+        local_dict = {"freq": freq, "pi": np.pi} | {f"p{i}": p_i for i, p_i in enumerate(p)}
+        return ne.evaluate(expr, local_dict=local_dict).T
+
+    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        Z = fn_complex(freq, p)
+        return np.hstack([Z.real, Z.imag])
+
+    return fn_concat if concat else fn_complex
 
 
 def generate_circuit_fn_impedance_backend(circuit: str):

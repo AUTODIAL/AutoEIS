@@ -166,3 +166,142 @@ def test_find_duplicate_circuits():
     expected = [[0, 6], [1, 4], [2], [3, 5]]
     match = [np.allclose(a, b) for a, b in zip(duplicates, expected)]
     assert all(match), f"Expected {expected}, got {duplicates}"
+
+
+def test_sample_circuit_parameters_basic():
+    """Test basic functionality of sample_circuit_parameters."""
+    circuit = "R1-[P2,C3]"
+
+    # Test single sample (backward compatibility)
+    p_single = ae.utils.sample_circuit_parameters(circuit, seed=42)
+    assert isinstance(p_single, np.ndarray)
+    assert p_single.shape == (4,)
+    assert len(p_single) == ae.parser.count_parameters(circuit)
+
+    # Test multiple samples
+    p_multi = ae.utils.sample_circuit_parameters(circuit, num_samples=10, seed=42)
+    assert p_multi.shape == (10, 4)
+
+    # Test reproducibility
+    p1 = ae.utils.sample_circuit_parameters(circuit, seed=42)
+    p2 = ae.utils.sample_circuit_parameters(circuit, seed=42)
+    np.testing.assert_array_equal(p1, p2)
+
+    # Test different circuits
+    circuits = ["R1", "R1-C2", "[R1,C2]-P3"]
+    for test_circuit in circuits:
+        expected_params = ae.parser.count_parameters(test_circuit)
+        p = ae.utils.sample_circuit_parameters(test_circuit, seed=42)
+        assert p.shape == (expected_params,)
+
+
+def test_sample_circuit_parameters_bounds():
+    """Test bounds enforcement and custom bounds."""
+    circuit = "R1-P2-C3"
+
+    # Test default bounds enforcement
+    p = ae.utils.sample_circuit_parameters(circuit, num_samples=50, seed=42)
+
+    # Pn values should be [0,1]
+    pn_values = p[:, 2]  # P2n
+    assert np.all(pn_values >= 0.0) and np.all(pn_values <= 1.0)
+
+    # Other parameters should be positive
+    assert np.all(p[:, [0, 1, 3]] > 0)  # R, Pw, C
+
+    # Test custom bounds
+    bounds = {"R": (1e-2, 1e2), "C": (1e-9, 1e-6)}
+    p_custom = ae.utils.sample_circuit_parameters(
+        "R1-C2", bounds=bounds, num_samples=20, seed=42
+    )
+
+    assert np.all(p_custom[:, 0] >= bounds["R"][0])  # R min
+    assert np.all(p_custom[:, 0] <= bounds["R"][1])  # R max
+    assert np.all(p_custom[:, 1] >= bounds["C"][0])  # C min
+    assert np.all(p_custom[:, 1] <= bounds["C"][1])  # C max
+
+
+def test_sample_circuit_parameters_sampling_modes():
+    """Test log vs linear sampling and Pn uniformity."""
+    circuit = "P1"  # CPE with Pw and Pn
+
+    # Test log vs linear produces different results
+    p_log = ae.utils.sample_circuit_parameters(circuit, num_samples=50, log=True, seed=42)
+    p_linear = ae.utils.sample_circuit_parameters(circuit, num_samples=50, log=False, seed=42)
+
+    # Pw should be different between log/linear
+    assert not np.array_equal(p_log[:, 0], p_linear[:, 0])
+
+    # Pn should be uniformly distributed in both cases
+    pn_log = p_log[:, 1]
+    pn_linear = p_linear[:, 1]
+
+    assert np.all(pn_log >= 0.0) and np.all(pn_log <= 1.0)
+    assert np.all(pn_linear >= 0.0) and np.all(pn_linear <= 1.0)
+
+
+def test_generate_circuit_fn_numexpr_correctness():
+    """Test that generate_circuit_fn_numexpr produces correct results with true batch evaluation."""
+    circuits = ["R1-C2", "R1-[P2,C3]", "R1-P2-C3-L4"]
+    freq = np.logspace(-1, 3, 20)
+
+    for circuit in circuits:
+        # Create both functions
+        fn_standard = ae.utils.generate_circuit_fn(circuit)
+        fn_numexpr = ae.utils.generate_circuit_fn_numexpr(circuit)
+
+        # Test TRUE vectorized batch evaluation - this is the key point!
+        n_samples = 10
+        p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
+
+        # Standard: loop over samples (slow)
+        Z_std_batch = np.array([fn_standard(freq, p) for p in p_batch])
+
+        # Numexpr: should handle batch natively (fast) - pass the full batch
+        Z_ne_batch = fn_numexpr(freq, p_batch)
+
+        # Results should match
+        np.testing.assert_allclose(Z_std_batch, Z_ne_batch, rtol=1e-10)
+
+        # Test single sample still works
+        p_single = p_batch[0]
+        Z_std_single = fn_standard(freq, p_single)
+        Z_ne_single = fn_numexpr(freq, p_single)
+        np.testing.assert_allclose(Z_std_single, Z_ne_single, rtol=1e-10)
+
+
+def test_generate_circuit_fn_numexpr_shapes():
+    """Test true vectorized batch shapes for generate_circuit_fn_numexpr."""
+    circuit = "R1-[P2,C3]"
+    n_samples = 10
+    n_freq = 50
+    freq = np.logspace(0, 4, n_freq)
+    p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
+
+    # Test complex mode (concat=False) with TRUE batch evaluation
+    fn_complex = ae.utils.generate_circuit_fn_numexpr(circuit, concat=False)
+    Z_complex_batch = fn_complex(freq, p_batch)  # Pass batch directly, not loop!
+
+    # Shape should be (n_samples, n_freq)
+    assert Z_complex_batch.shape == (n_samples, n_freq)
+    assert Z_complex_batch.dtype == np.complex128
+
+    # Test concat mode (concat=True) with TRUE batch evaluation
+    fn_concat = ae.utils.generate_circuit_fn_numexpr(circuit, concat=True)
+    Z_concat_batch = fn_concat(freq, p_batch)  # Pass batch directly, not loop!
+
+    # Shape should be (n_samples, 2*n_freq) - real and imaginary parts concatenated
+    assert Z_concat_batch.shape == (n_samples, 2 * n_freq)
+    assert Z_concat_batch.dtype == np.float64
+
+    # Test different frequency array sizes with TRUE batch evaluation
+    for n_test_freq in [1, 5, 100]:
+        test_freq = np.logspace(0, 2, n_test_freq)
+        Z_test = fn_complex(test_freq, p_batch)  # Pass batch directly!
+        assert Z_test.shape == (n_samples, n_test_freq)
+
+    # Test that single samples work too
+    p_single = p_batch[0]
+    Z_single = fn_complex(freq, p_single)
+    assert Z_single.shape == (n_freq,)
+    assert Z_single.dtype == np.complex128
