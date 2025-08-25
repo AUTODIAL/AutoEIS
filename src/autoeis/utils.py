@@ -43,8 +43,8 @@ import numpyro.distributions as dist
 import pandas as pd
 import psutil
 from box import Box
-from impedance.models.circuits import CustomCircuit
-from impedance.validation import linKK
+from .impedance.models.circuits import CustomCircuit
+from .impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
 from numpy import pi  # NOQA: F401
