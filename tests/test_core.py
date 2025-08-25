@@ -6,7 +6,7 @@ import pytest
 
 def test_compute_ohmic_resistance():
     circuit_string = "R1-[P2,P3-R4]"
-    circuit_fn = ae.utils.generate_circuit_fn_impedance_backend(circuit_string)
+    circuit_fn = ae.utils.generate_circuit_fn(circuit_string, backend="impedance")
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     freq = np.logspace(-3, 3, 1000)
@@ -17,7 +17,7 @@ def test_compute_ohmic_resistance():
 
 def test_compute_ohmic_resistance_missing_high_freq():
     circuit_string = "R1-[P2,P3-R4]"
-    circuit_fn = ae.utils.generate_circuit_fn_impedance_backend(circuit_string)
+    circuit_fn = ae.utils.generate_circuit_fn(circuit_string, backend="impedance")
     R1 = 250
     parameters = np.array([R1, 1e-3, 0.1, 5e-5, 0.8, 10])
     freq = np.logspace(-3, 0, 1000)
