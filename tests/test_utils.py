@@ -14,7 +14,7 @@ y2 = x2 + np.zeros(10) * 1j
 circuit_string = "R1-[P2,R3]"
 p0_dict = {"R1": 250, "P2w": 1e-3, "P2n": 0.5, "R3": 10.0}
 p0_vals = list(p0_dict.values())
-circuit_fn_gt = ae.utils.generate_circuit_fn_impedance_backend(circuit_string)
+circuit_fn_gt = ae.utils.generate_circuit_fn(circuit_string, backend="impedance")
 freq = np.logspace(-3, 3, 1000)
 Z = circuit_fn_gt(freq, p0_vals)
 
@@ -169,7 +169,6 @@ def test_find_duplicate_circuits():
 
 
 def test_sample_circuit_parameters_basic():
-    """Test basic functionality of sample_circuit_parameters."""
     circuit = "R1-[P2,C3]"
 
     # Test single sample (backward compatibility)
@@ -196,7 +195,6 @@ def test_sample_circuit_parameters_basic():
 
 
 def test_sample_circuit_parameters_bounds():
-    """Test bounds enforcement and custom bounds."""
     circuit = "R1-P2-C3"
 
     # Test default bounds enforcement
@@ -222,7 +220,6 @@ def test_sample_circuit_parameters_bounds():
 
 
 def test_sample_circuit_parameters_sampling_modes():
-    """Test log vs linear sampling and Pn uniformity."""
     circuit = "P1"  # CPE with Pw and Pn
 
     # Test log vs linear produces different results
@@ -241,14 +238,13 @@ def test_sample_circuit_parameters_sampling_modes():
 
 
 def test_generate_circuit_fn_numexpr_correctness():
-    """Test that generate_circuit_fn_numexpr produces correct results with true batch evaluation."""
     circuits = ["R1-C2", "R1-[P2,C3]", "R1-P2-C3-L4"]
     freq = np.logspace(-1, 3, 20)
 
     for circuit in circuits:
         # Create both functions
-        fn_standard = ae.utils.generate_circuit_fn(circuit)
-        fn_numexpr = ae.utils.generate_circuit_fn_numexpr(circuit)
+        fn_standard = ae.utils.generate_circuit_fn(circuit, backend="numpy")
+        fn_numexpr = ae.utils.generate_circuit_fn(circuit, backend="numexpr")
 
         # Test TRUE vectorized batch evaluation - this is the key point!
         n_samples = 10
@@ -271,7 +267,6 @@ def test_generate_circuit_fn_numexpr_correctness():
 
 
 def test_generate_circuit_fn_numexpr_shapes():
-    """Test true vectorized batch shapes for generate_circuit_fn_numexpr."""
     circuit = "R1-[P2,C3]"
     n_samples = 10
     n_freq = 50
@@ -279,7 +274,7 @@ def test_generate_circuit_fn_numexpr_shapes():
     p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
 
     # Test complex mode (concat=False) with TRUE batch evaluation
-    fn_complex = ae.utils.generate_circuit_fn_numexpr(circuit, concat=False)
+    fn_complex = ae.utils.generate_circuit_fn(circuit, backend="numexpr", concat=False)
     Z_complex_batch = fn_complex(freq, p_batch)  # Pass batch directly, not loop!
 
     # Shape should be (n_samples, n_freq)
@@ -287,7 +282,7 @@ def test_generate_circuit_fn_numexpr_shapes():
     assert Z_complex_batch.dtype == np.complex128
 
     # Test concat mode (concat=True) with TRUE batch evaluation
-    fn_concat = ae.utils.generate_circuit_fn_numexpr(circuit, concat=True)
+    fn_concat = ae.utils.generate_circuit_fn(circuit, backend="numexpr", concat=True)
     Z_concat_batch = fn_concat(freq, p_batch)  # Pass batch directly, not loop!
 
     # Shape should be (n_samples, 2*n_freq) - real and imaginary parts concatenated
