@@ -8,7 +8,7 @@
         <link rel="prefetch" href="../_static/logo-dark-mode.png" as="image" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.07.19 -->
-        <title>utils - AutoEIS 0.0.39 documentation</title>
+        <title>utils - AutoEIS 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -170,7 +170,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">AutoEIS 0.0.39 documentation</div></a>
+      <a href="../index.html"><div class="brand">AutoEIS 0.0.40 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -244,7 +244,6 @@
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn_impedance_backend.html">generate_circuit_fn_impedance_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html">are_circuits_equivalent</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.utils.find_duplicate_circuits.html">find_duplicate_circuits</a></li>
@@ -326,43 +325,40 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.circuit_complexity.html#autoeis.utils.circuit_complexity" title="autoeis.utils.circuit_complexity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">circuit_complexity</span></code></a>(circuit)</p></td>
 <td><p>Computes the component complexity of the circuit.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn.html#autoeis.utils.generate_circuit_fn" title="autoeis.utils.generate_circuit_fn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn</span></code></a>(circuit[, jit, concat])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn.html#autoeis.utils.generate_circuit_fn" title="autoeis.utils.generate_circuit_fn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn</span></code></a>(circuit[, backend, jit, ...])</p></td>
 <td><p>Generates a function to compute the circuit impedance, parameterized by frequency and the circuit parameters.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.generate_circuit_fn_impedance_backend.html#autoeis.utils.generate_circuit_fn_impedance_backend" title="autoeis.utils.generate_circuit_fn_impedance_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_circuit_fn_impedance_backend</span></code></a>(circuit)</p></td>
-<td><p>Generates a function to compute the circuit impedance, parameterized by frequency and the circuit parameters, using <code class="docutils literal notranslate"><span class="pre">impedance.py</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.fit_circuit_parameters.html#autoeis.utils.fit_circuit_parameters" title="autoeis.utils.fit_circuit_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_circuit_parameters</span></code></a>(circuit, freq, Z[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.fit_circuit_parameters.html#autoeis.utils.fit_circuit_parameters" title="autoeis.utils.fit_circuit_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_circuit_parameters</span></code></a>(circuit, freq, Z[, ...])</p></td>
 <td><p>Fits and returns the parameters of a circuit to impedance data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html#autoeis.utils.are_circuits_equivalent" title="autoeis.utils.are_circuits_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">are_circuits_equivalent</span></code></a>(circuit1, circuit2)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.are_circuits_equivalent.html#autoeis.utils.are_circuits_equivalent" title="autoeis.utils.are_circuits_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">are_circuits_equivalent</span></code></a>(circuit1, circuit2)</p></td>
 <td><p>Checks if two circuit strings are equivalent.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.find_duplicate_circuits.html#autoeis.utils.find_duplicate_circuits" title="autoeis.utils.find_duplicate_circuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_duplicate_circuits</span></code></a>(circuits[, rtol, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.find_duplicate_circuits.html#autoeis.utils.find_duplicate_circuits" title="autoeis.utils.find_duplicate_circuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_duplicate_circuits</span></code></a>(circuits[, rtol, ...])</p></td>
 <td><p>Returns the indices of duplicate circuits given a list of circuit strings.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.initialize_priors.html#autoeis.utils.initialize_priors" title="autoeis.utils.initialize_priors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_priors</span></code></a>(p0)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.initialize_priors.html#autoeis.utils.initialize_priors" title="autoeis.utils.initialize_priors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_priors</span></code></a>(p0)</p></td>
 <td><p>Initializes prior distributions from parameters dictionary.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.initialize_priors_from_posteriors.html#autoeis.utils.initialize_priors_from_posteriors" title="autoeis.utils.initialize_priors_from_posteriors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_priors_from_posteriors</span></code></a>(posterior)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.initialize_priors_from_posteriors.html#autoeis.utils.initialize_priors_from_posteriors" title="autoeis.utils.initialize_priors_from_posteriors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_priors_from_posteriors</span></code></a>(posterior)</p></td>
 <td><p>Creates new priors based on the posterior distributions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.eval_posterior_predictive.html#autoeis.utils.eval_posterior_predictive" title="autoeis.utils.eval_posterior_predictive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eval_posterior_predictive</span></code></a>(samples, circuit, freq)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.eval_posterior_predictive.html#autoeis.utils.eval_posterior_predictive" title="autoeis.utils.eval_posterior_predictive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eval_posterior_predictive</span></code></a>(samples, circuit, freq)</p></td>
 <td><p>Evaluates the posterior predictive distribution of a MCMC run.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.validate_circuits_dataframe.html#autoeis.utils.validate_circuits_dataframe" title="autoeis.utils.validate_circuits_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_circuits_dataframe</span></code></a>(circuits)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.validate_circuits_dataframe.html#autoeis.utils.validate_circuits_dataframe" title="autoeis.utils.validate_circuits_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_circuits_dataframe</span></code></a>(circuits)</p></td>
 <td><p>Ensures that the circuits dataframe if properly formatted/typed.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.preprocess_impedance_data.html#autoeis.utils.preprocess_impedance_data" title="autoeis.utils.preprocess_impedance_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_impedance_data</span></code></a>(freq, Z[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.preprocess_impedance_data.html#autoeis.utils.preprocess_impedance_data" title="autoeis.utils.preprocess_impedance_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_impedance_data</span></code></a>(freq, Z[, ...])</p></td>
 <td><p>Preprocesses/cleans up impedance measurements.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.Settings.html#autoeis.utils.Settings" title="autoeis.utils.Settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Settings</span></code></a>([loglevel, ncores, notebook, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.Settings.html#autoeis.utils.Settings" title="autoeis.utils.Settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Settings</span></code></a>([loglevel, ncores, notebook, ...])</p></td>
 <td><p>Global settings, e.g., logging, parallelism, etc.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.InferenceResult.html#autoeis.utils.InferenceResult" title="autoeis.utils.InferenceResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InferenceResult</span></code></a>(circuit, mcmc, *, converged, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.InferenceResult.html#autoeis.utils.InferenceResult" title="autoeis.utils.InferenceResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InferenceResult</span></code></a>(circuit, mcmc, *, converged, ...)</p></td>
 <td><p>Container for inference result.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.utils.ImpedanceData.html#autoeis.utils.ImpedanceData" title="autoeis.utils.ImpedanceData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImpedanceData</span></code></a>(freq, Z)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.utils.ImpedanceData.html#autoeis.utils.ImpedanceData" title="autoeis.utils.ImpedanceData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImpedanceData</span></code></a>(freq, Z)</p></td>
 <td><p>Container for impedance data.</p></td>
 </tr>
 </tbody>
@@ -426,7 +422,7 @@
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=e648f5b4"></script>
+</div><script src="../_static/documentation_options.js?v=84bd753f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

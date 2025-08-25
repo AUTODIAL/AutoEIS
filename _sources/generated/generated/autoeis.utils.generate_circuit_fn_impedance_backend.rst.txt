@@ -1,6 +1,0 @@
-generate\_circuit\_fn\_impedance\_backend
-=========================================
-
-.. currentmodule:: autoeis.utils
-
-.. autofunction:: generate_circuit_fn_impedance_backend
