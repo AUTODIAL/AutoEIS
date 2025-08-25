@@ -8,7 +8,6 @@ Collection of utility functions used throughout the package.
 
     circuit_complexity
     generate_circuit_fn
-    generate_circuit_fn_impedance_backend
     fit_circuit_parameters
     are_circuits_equivalent
     find_duplicate_circuits
@@ -780,88 +779,20 @@ def eval_circuit(
     return eval(expr)
 
 
-def generate_circuit_fn(circuit: str, jit=False, concat=False):
-    """Generates a function to compute the circuit impedance, parameterized
-    by frequency and the circuit parameters.
+def _generate_circuit_fn_numpy(circuit: str, concat=False):
+    """NumPy backend for circuit function generation.
 
-    Parameters
-    ----------
-    circuit : str
-        CDC string representation of the input circuit. See
-        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    jit : bool, optional
-        If True, uses JAX to compile the function. Default is False.
-    concat : bool, optional
-        If True, the generated function returns concatenated real and
-        imaginary parts of the impedance, otherwise it returns the complex
-        impedance. Default is False.
-
-    Returns
-    -------
-    callable
-        A function that takes in frequency and the circuit parameters
-        and returns the impedance.
+    Uses pure NumPy operations for circuit evaluation. Default backend.
     """
 
     def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
-        atleast_1d = jnp.atleast_1d if jit else np.atleast_1d
-        freq, p = atleast_1d(freq), atleast_1d(p)
-        msg = f"The parameters: {p} don't match the number of parameters in the circuit: {circuit}."
-        assert len(p) == parser.count_parameters(circuit), msg
-        return eval_circuit(circuit, freq, p, jit=jit)
-
-    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
-        Z = fn_complex(freq, p)
-        hstack = jnp.hstack if jit else np.hstack
-        return hstack([Z.real, Z.imag])
-
-    fn = fn_concat if concat else fn_complex
-    fn = jax.jit(fn) if jit else fn
-
-    return fn
-
-
-def generate_circuit_fn_numexpr(circuit: str, concat=False):
-    """Generates an optimized function using numexpr for fast circuit evaluation.
-
-    This is an optimized version of ``generate_circuit_fn`` that uses numexpr
-    for significantly faster evaluation, especially beneficial for vectorized
-    parameter evaluation (multiple parameter sets).
-
-    Parameters
-    ----------
-    circuit : str
-        CDC string representation of the input circuit. See
-        `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
-    concat : bool, optional
-        If True, the generated function returns concatenated real and
-        imaginary parts of the impedance, otherwise it returns the complex
-        impedance. Default is False.
-
-    Returns
-    -------
-    callable
-        A function that takes in frequency and the circuit parameters
-        and returns the impedance. Optimized for vectorized evaluation.
-
-    Notes
-    -----
-    - Particularly efficient for batch evaluation of multiple parameter sets
-    - Uses multi-threading via numexpr for better CPU utilization
-    """
-    # Modify the circuit expression to suit numexpr
-    expr = parser.generate_mathematical_expression(circuit)
-    expr = expr.translate(str.maketrans("", "", "[]"))
-
-    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
         freq = np.atleast_1d(freq)
-        p = np.atleast_1d(p).T
-        # Make freq and p broadcastable to enable vectorized operations
-        if p.ndim > 1:
-            freq = freq[:, None]
-            p = [p[i, None] for i in range(p.shape[0])]
-        local_dict = {"freq": freq, "pi": np.pi} | {f"p{i}": p_i for i, p_i in enumerate(p)}
-        return ne.evaluate(expr, local_dict=local_dict).T
+        p = np.atleast_1d(p).T  # Reshape to (n_params, n_samples)
+        msg = f"The parameters: {p} don't match the number of parameters in the circuit: {circuit}."
+        assert p.shape[0] == parser.count_parameters(circuit), msg
+        # Broadcast p to enable batch operation over multiple parameter sets
+        p = [p[i, None].T for i in range(len(p))]
+        return eval_circuit(circuit, freq, p, jit=False)
 
     def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
         Z = fn_complex(freq, p)
@@ -870,34 +801,126 @@ def generate_circuit_fn_numexpr(circuit: str, concat=False):
     return fn_concat if concat else fn_complex
 
 
-def generate_circuit_fn_impedance_backend(circuit: str):
+def _generate_circuit_fn_jax(circuit: str, concat=False):
+    """JAX backend for circuit function generation.
+
+    Uses JAX for JIT compilation and automatic differentiation.
+    """
+
+    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray[complex]:
+        freq = jnp.atleast_1d(freq)
+        p = jnp.atleast_1d(p).T  # Reshape to (n_params, n_samples)
+        msg = f"The parameters: {p} don't match the number of parameters in the circuit: {circuit}."
+        assert p.shape[0] == parser.count_parameters(circuit), msg
+        # Broadcast p to enable batch operation over multiple parameter sets
+        p = [p[i, None].T for i in range(len(p))]
+        return eval_circuit(circuit, freq, p, jit=True)
+
+    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        Z = fn_complex(freq, p)
+        return jnp.hstack([Z.real, Z.imag])
+
+    fn = fn_concat if concat else fn_complex
+    return jax.jit(fn)
+
+
+def _generate_circuit_fn_numexpr(circuit: str, concat=False):
+    """NumExpr backend for circuit function generation.
+
+    Uses NumExpr for optimized vectorized evaluation, especially efficient
+    for batch evaluation of multiple parameter sets.
+    """
+    # Modify the circuit expression to suit numexpr
+    expr = parser.generate_mathematical_expression(circuit)
+    expr = expr.translate(str.maketrans("", "", "[]"))
+
+    def fn_complex(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        freq = np.atleast_1d(freq)
+        p = np.atleast_1d(p).T  # Reshape to (n_params, n_samples)
+        # Broadcast p to enable batch operation over multiple parameter sets
+        p_dict = {f"p{i}": p[i, None].T for i in range(len(p))}
+        local_dict = {"freq": freq, "pi": np.pi} | p_dict
+        return ne.evaluate(expr, local_dict=local_dict, optimization="aggressive")
+
+    def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
+        Z = fn_complex(freq, p)
+        return np.hstack([Z.real, Z.imag])
+
+    return fn_concat if concat else fn_complex
+
+
+def _generate_circuit_fn_impedance(circuit: str, concat=False):
+    """Impedance.py backend for circuit function generation.
+
+    Uses the impedance.py library's CustomCircuit class for circuit evaluation.
+    """
+    num_params = parser.count_parameters(circuit)
+    # Convert circuit string to impedance.py format
+    circuit_impy = parser.convert_to_impedance_format(circuit)
+    # Generate circuit function
+    p0 = np.full(num_params, np.nan)
+    circuit_obj = CustomCircuit(circuit_impy, initial_guess=p0)
+
+    def fn_complex(freq: np.ndarray | float, p: np.ndarray) -> np.ndarray:
+        circuit_obj.parameters_ = p
+        return circuit_obj.predict(freq)
+
+    def fn_concat(freq: np.ndarray | float, p: np.ndarray) -> np.ndarray:
+        Z = fn_complex(freq, p)
+        return np.hstack([Z.real, Z.imag])
+
+    return fn_concat if concat else fn_complex
+
+
+def generate_circuit_fn(circuit: str, backend="numpy", jit=False, concat=False):
     """Generates a function to compute the circuit impedance, parameterized
-    by frequency and the circuit parameters, using ``impedance.py``.
+    by frequency and the circuit parameters.
 
     Parameters
     ----------
     circuit : str
         CDC string representation of the input circuit. See
         `here <https://autodial.github.io/AutoEIS/circuit.html>`_ for details.
+    backend : str, optional
+        Backend to use for computation. Options are "numpy", "jax", "numexpr",
+        "impedance". Default is "numpy".
+    jit : bool, optional
+        If True, overrides backend to "jax" for backward compatibility.
+        Default is False.
+    concat : bool, optional
+        If True, the generated function returns concatenated real and
+        imaginary parts of the impedance, otherwise it returns the complex
+        impedance. Default is False.
 
     Returns
     -------
     callable
         A function that takes in frequency and the circuit parameters
         and returns the impedance.
+
+    Raises
+    ------
+    ValueError
+        If an invalid backend is specified.
     """
-    num_params = parser.count_parameters(circuit)
-    # Convert circuit string to impedance.py format
-    circuit = parser.convert_to_impedance_format(circuit)
-    # Generate circuit function
-    p0 = np.full(num_params, np.nan)
-    circuit = CustomCircuit(circuit, initial_guess=p0)
+    # Backward compatibility: jit=True overrides backend to "jax"
+    if jit:
+        backend = "jax"
 
-    def func(freq: np.ndarray | float, p: np.ndarray) -> np.ndarray:
-        circuit.parameters_ = p
-        return circuit.predict(freq)
+    # Validate backend
+    valid_backends = ["numpy", "jax", "numexpr", "impedance"]
+    if backend not in valid_backends:
+        raise ValueError(f"Invalid backend '{backend}'. Must be one of {valid_backends}")
 
-    return func
+    # Route to appropriate backend
+    if backend == "numpy":
+        return _generate_circuit_fn_numpy(circuit, concat)
+    elif backend == "jax":
+        return _generate_circuit_fn_jax(circuit, concat)
+    elif backend == "numexpr":
+        return _generate_circuit_fn_numexpr(circuit, concat)
+    elif backend == "impedance":
+        return _generate_circuit_fn_impedance(circuit, concat)
 
 
 def circuit_complexity(circuit: str) -> list[int]:
