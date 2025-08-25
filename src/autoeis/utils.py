@@ -772,11 +772,11 @@ def eval_circuit(
         The impedance of the circuit at the given frequency and parameters.
     """
     expr = parser.generate_mathematical_expression(circuit)
+    Z = eval(expr)
     # For frequency-independent circuits, ensure output is the same shape as freq
-    if not np.isscalar(freq):
-        freq_like_ones = "jnp.ones(len(freq))" if jit else "np.ones(len(freq))"
-        expr = f"({expr}) * {freq_like_ones}"
-    return eval(expr)
+    if "freq" not in expr:
+        Z = Z * np.ones(len(freq))
+    return Z
 
 
 def _generate_circuit_fn_numpy(circuit: str, concat=False):
@@ -840,7 +840,11 @@ def _generate_circuit_fn_numexpr(circuit: str, concat=False):
         # Broadcast p to enable batch operation over multiple parameter sets
         p_dict = {f"p{i}": p[i, None].T for i in range(len(p))}
         local_dict = {"freq": freq, "pi": np.pi} | p_dict
-        return ne.evaluate(expr, local_dict=local_dict, optimization="aggressive")
+        Z = ne.evaluate(expr, local_dict=local_dict, optimization="aggressive")
+        # For frequency-independent circuits, ensure output is the same shape as freq
+        if "freq" not in expr:
+            Z = Z * np.ones(len(freq))
+        return Z
 
     def fn_concat(freq: np.ndarray, p: np.ndarray) -> np.ndarray:
         Z = fn_complex(freq, p)
@@ -862,6 +866,10 @@ def _generate_circuit_fn_impedance(circuit: str, concat=False):
     circuit_obj = CustomCircuit(circuit_impy, initial_guess=p0)
 
     def fn_complex(freq: np.ndarray | float, p: np.ndarray) -> np.ndarray:
+        if np.ndim(p) > 1:
+            raise RuntimeError("Batch processing over multiple parameters not supported")
+        # Impedance.py expects frequency as array, not scalar
+        freq = np.atleast_1d(freq)
         circuit_obj.parameters_ = p
         return circuit_obj.predict(freq)
 
