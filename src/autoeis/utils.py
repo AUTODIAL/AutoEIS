@@ -43,8 +43,8 @@ import numpyro.distributions as dist
 import pandas as pd
 import psutil
 from box import Box
-from impedance.models.circuits import CustomCircuit
-from impedance.validation import linKK
+from .impedance.models.circuits import CustomCircuit
+from .impedance.validation import linKK
 from jax import random
 from mpire import WorkerPool
 from numpy import pi  # NOQA: F401
@@ -150,7 +150,7 @@ def flatten(xs: Iterable) -> list:
 def is_ndfarray_like(xs: Iterable) -> bool:
     """Returns True if the input is an ndarray-like object with float elements."""
     try:
-        np.asfarray(xs)
+        np.asarray(xs, dtype=float)
     except (ValueError, TypeError):
         return False
     return True
