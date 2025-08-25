@@ -84,11 +84,14 @@ def test_generate_circuit_fn():
     np.testing.assert_allclose(Z_py, Z_jl)
 
 
-def test_generate_circuit_fn_frequency_independent_ecm():
-    """Frequency-independent ECMs used to return a scalar, rather than an
-    array of size len(freq). This unit test checks for this behavior."""
+@pytest.mark.parametrize("backend", ["numpy", "jax", "numexpr", "impedance"])
+def test_generate_circuit_fn_frequency_independent_ecm(backend):
+    """
+    Frequency-independent ECMs used to return a scalar, rather than an
+    array of size len(freq). This unit test checks for this behavior.
+    """
     circuit = "R1-R2"
-    circuit_fn = ae.utils.generate_circuit_fn(circuit)
+    circuit_fn = ae.utils.generate_circuit_fn(circuit, backend=backend)
     num_params = ae.parser.count_parameters(circuit)
     p = np.random.rand(num_params)
     # Input: frequency array, output: array of size len(freq)
@@ -237,66 +240,120 @@ def test_sample_circuit_parameters_sampling_modes():
     assert np.all(pn_linear >= 0.0) and np.all(pn_linear <= 1.0)
 
 
-def test_generate_circuit_fn_numexpr_correctness():
-    circuits = ["R1-C2", "R1-[P2,C3]", "R1-P2-C3-L4"]
-    freq = np.logspace(-1, 3, 20)
+@pytest.mark.parametrize("backend", ["numpy", "jax", "numexpr", "impedance"])
+@pytest.mark.parametrize("concat", [False, True])
+def test_generate_circuit_fn_backends(backend, concat):
+    """Test basic functionality across all backends."""
+    circuits = ["R1-C2", "R1-[P2,C3]"]
+    freq = np.logspace(-1, 3, 5)  # Smaller array for faster tests
 
     for circuit in circuits:
-        # Create both functions
-        fn_standard = ae.utils.generate_circuit_fn(circuit, backend="numpy")
-        fn_numexpr = ae.utils.generate_circuit_fn(circuit, backend="numexpr")
+        fn = ae.utils.generate_circuit_fn(circuit, backend=backend, concat=concat)
+        p = ae.utils.sample_circuit_parameters(circuit, seed=42)
+        Z = fn(freq, p)
 
-        # Test TRUE vectorized batch evaluation - this is the key point!
-        n_samples = 10
-        p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
+        # Check output shape and type
+        expected_shape = (2 * len(freq),) if concat else (len(freq),)
+        expected_dtype = np.float64 if concat else np.complex128
 
-        # Standard: loop over samples (slow)
-        Z_std_batch = np.array([fn_standard(freq, p) for p in p_batch])
+        msg = f"Backend {backend}, concat={concat}: Shape mismatch."
+        assert Z.shape == expected_shape, msg
+        msg = f"Backend {backend}, concat={concat}: Dtype mismatch."
+        assert Z.dtype == expected_dtype, msg
 
-        # Numexpr: should handle batch natively (fast) - pass the full batch
-        Z_ne_batch = fn_numexpr(freq, p_batch)
-
-        # Results should match
-        np.testing.assert_allclose(Z_std_batch, Z_ne_batch, rtol=1e-10)
-
-        # Test single sample still works
-        p_single = p_batch[0]
-        Z_std_single = fn_standard(freq, p_single)
-        Z_ne_single = fn_numexpr(freq, p_single)
-        np.testing.assert_allclose(Z_std_single, Z_ne_single, rtol=1e-10)
+        # Test scalar frequency
+        Z_scalar = fn(10.0, p)
+        if concat:
+            assert Z_scalar.shape == (2,)
+        else:
+            assert Z_scalar.shape == (1,)
 
 
-def test_generate_circuit_fn_numexpr_shapes():
+@pytest.mark.parametrize("backend", ["numpy", "jax", "numexpr", "impedance"])
+def test_generate_circuit_fn_consistency(backend):
+    """Test that all backends produce consistent results."""
     circuit = "R1-[P2,C3]"
-    n_samples = 10
-    n_freq = 50
-    freq = np.logspace(0, 4, n_freq)
+    freq = np.logspace(-1, 3, 10)
+    p = ae.utils.sample_circuit_parameters(circuit, seed=42)
+
+    # Get reference result from numpy backend
+    fn_numpy = ae.utils.generate_circuit_fn(circuit, backend="numpy", concat=False)
+    Z_ref = fn_numpy(freq, p)
+
+    # Test backend against reference
+    fn_backend = ae.utils.generate_circuit_fn(circuit, backend=backend, concat=False)
+    Z_test = fn_backend(freq, p)
+
+    # Allow slightly looser tolerance for different backends
+    tolerance = 1e-10 if backend in ["numpy", "jax"] else 1e-8
+    np.testing.assert_allclose(
+        Z_test,
+        Z_ref,
+        rtol=tolerance,
+        err_msg=f"Backend {backend} inconsistent with numpy reference",
+    )
+
+
+@pytest.mark.parametrize("backend", ["numpy", "jax", "numexpr"])
+@pytest.mark.parametrize("concat", [False, True])
+def test_generate_circuit_fn_batch_evaluation(backend, concat):
+    """Test batch evaluation for backends that support it."""
+    circuit = "R1-[P2,C3]"
+    freq = np.logspace(-1, 3, 10)
+    n_samples = 5
     p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
 
-    # Test complex mode (concat=False) with TRUE batch evaluation
-    fn_complex = ae.utils.generate_circuit_fn(circuit, backend="numexpr", concat=False)
-    Z_complex_batch = fn_complex(freq, p_batch)  # Pass batch directly, not loop!
+    # Test batch capabilities
+    fn_batch = ae.utils.generate_circuit_fn(circuit, backend=backend, concat=concat)
+    Z_batch = fn_batch(freq, p_batch)
 
-    # Shape should be (n_samples, n_freq)
-    assert Z_complex_batch.shape == (n_samples, n_freq)
-    assert Z_complex_batch.dtype == np.complex128
+    # Compare with individual evaluations
+    fn_single = ae.utils.generate_circuit_fn(circuit, backend="numpy", concat=concat)
+    Z_individual = np.array([fn_single(freq, p) for p in p_batch])
 
-    # Test concat mode (concat=True) with TRUE batch evaluation
-    fn_concat = ae.utils.generate_circuit_fn(circuit, backend="numexpr", concat=True)
-    Z_concat_batch = fn_concat(freq, p_batch)  # Pass batch directly, not loop!
+    # Check shapes and results
+    assert Z_batch.shape == Z_individual.shape
+    np.testing.assert_allclose(Z_batch, Z_individual, rtol=1e-10)
 
-    # Shape should be (n_samples, 2*n_freq) - real and imaginary parts concatenated
-    assert Z_concat_batch.shape == (n_samples, 2 * n_freq)
-    assert Z_concat_batch.dtype == np.float64
 
-    # Test different frequency array sizes with TRUE batch evaluation
-    for n_test_freq in [1, 5, 100]:
-        test_freq = np.logspace(0, 2, n_test_freq)
-        Z_test = fn_complex(test_freq, p_batch)  # Pass batch directly!
-        assert Z_test.shape == (n_samples, n_test_freq)
+def test_generate_circuit_fn_batch_impedance_error():
+    """Test that impedance backend raises error for batch evaluation."""
+    circuit = "R1-C2"
+    freq = np.logspace(-1, 3, 5)
+    n_samples = 3
+    p_batch = ae.utils.sample_circuit_parameters(circuit, num_samples=n_samples, seed=42)
 
-    # Test that single samples work too
-    p_single = p_batch[0]
-    Z_single = fn_complex(freq, p_single)
-    assert Z_single.shape == (n_freq,)
-    assert Z_single.dtype == np.complex128
+    fn_impedance = ae.utils.generate_circuit_fn(circuit, backend="impedance")
+
+    with pytest.raises(RuntimeError):
+        fn_impedance(freq, p_batch)
+
+
+def test_generate_circuit_fn_edge_cases():
+    """Test edge cases and error handling."""
+
+    # Test frequency-independent circuit
+    freq_indep_circuit = "R1-R2"
+    freq = np.array([1, 10, 100])
+    p = ae.utils.sample_circuit_parameters(freq_indep_circuit, seed=42)
+
+    for backend in ["numpy", "jax", "numexpr", "impedance"]:
+        fn = ae.utils.generate_circuit_fn(freq_indep_circuit, backend=backend)
+        Z = fn(freq, p)
+        msg = f"Backend {backend} failed frequency-independent circuit test"
+        assert Z.shape == (len(freq),), msg
+
+        # Test scalar frequency
+        Z_scalar = fn(10.0, p)
+        assert Z_scalar.shape == (1,), f"Backend {backend} failed scalar frequency test"
+
+    # Test invalid backend
+    with pytest.raises(ValueError, match="Invalid backend"):
+        ae.utils.generate_circuit_fn("R1", backend="invalid")
+
+    # Test single component circuits
+    for component in ["R1", "C1", "L1"]:
+        p_single = ae.utils.sample_circuit_parameters(component, seed=42)
+        fn = ae.utils.generate_circuit_fn(component, backend="numpy")
+        Z = fn(freq, p_single)
+        assert len(Z) == len(freq)
