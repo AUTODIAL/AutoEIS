@@ -1,16 +1,16 @@
 <!doctype html>
 <html class="no-js" lang="en" data-content_root="../">
-  <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Circuit Generation" href="circuit_generation.html" /><link rel="prev" title="Examples" href="../examples.html" />
-        <link rel="prefetch" href="../_static/logo-light-mode.png" as="image" />
-        <link rel="prefetch" href="../_static/logo-dark-mode.png" as="image" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Circuit Generation" href="circuit_generation.html"><link rel="prev" title="Examples" href="../examples.html">
+        <link rel="prefetch" href="../_static/logo-light-mode.png" as="image">
+        <link rel="prefetch" href="../_static/logo-dark-mode.png" as="image">
 
-    <!-- Generated with Sphinx 8.1.3 and Furo 2025.07.19 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
         <title>Circuit Models 101 - AutoEIS 0.0.42 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=580074bf" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=a35ea3b2" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -27,14 +27,14 @@
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #2b2b2b;
-  --color-code-foreground: #f8f8f2;
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #2b2b2b;
-  --color-code-foreground: #f8f8f2;
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
   
       }
     }
@@ -149,14 +149,10 @@
   </symbol>
 </svg>
 
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
-<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
-<label class="overlay sidebar-overlay" for="__navigation">
-  <div class="visually-hidden">Hide navigation sidebar</div>
-</label>
-<label class="overlay toc-overlay" for="__toc">
-  <div class="visually-hidden">Hide table of contents sidebar</div>
-</label>
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
 
 <a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
@@ -166,8 +162,7 @@
   <header class="mobile-header">
     <div class="header-left">
       <label class="nav-overlay-icon" for="__navigation">
-        <div class="visually-hidden">Toggle site navigation sidebar</div>
-        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
       </label>
     </div>
     <div class="header-center">
@@ -175,8 +170,7 @@
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
-        <button class="theme-toggle">
-          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
           <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
           <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
@@ -184,8 +178,7 @@
         </button>
       </div>
       <label class="toc-overlay-icon toc-header-icon" for="__toc">
-        <div class="visually-hidden">Toggle table of contents sidebar</div>
-        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
   </header>
@@ -208,15 +201,15 @@
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../circuit.html">Circuit notation</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../examples.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../examples.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Circuit Models 101</a></li>
 <li class="toctree-l2"><a class="reference internal" href="circuit_generation.html">Circuit Generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="basic_workflow.html">Detailed Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parallel_inference.html">Batch Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../modules.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.io.html">io</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of io</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.io.html">io</a><input aria-label="Toggle navigation of io" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.load_battery_dataset.html">load_battery_dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
@@ -224,14 +217,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.core.html">core</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.core.html">core</a><input aria-label="Toggle navigation of core" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.perform_full_analysis.html">perform_full_analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.generate_equivalent_circuits.html">generate_equivalent_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.filter_implausible_circuits.html">filter_implausible_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.core.perform_bayesian_inference.html">perform_bayesian_inference</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.visualization.html">visualization</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.visualization.html">visualization</a><input aria-label="Toggle navigation of visualization" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.draw_circuit.html">draw_circuit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_bode.html">plot_bode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.plot_nyquist.html">plot_nyquist</a></li>
@@ -242,7 +235,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.visualization.show_nticks.html">show_nticks</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of utils</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.utils.html">utils</a><input aria-label="Toggle navigation of utils" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.circuit_complexity.html">circuit_complexity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.generate_circuit_fn.html">generate_circuit_fn</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.fit_circuit_parameters.html">fit_circuit_parameters</a></li>
@@ -258,7 +251,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.utils.ImpedanceData.html">autoeis.utils.ImpedanceData</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.parser.html">parser</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of parser</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generated/autoeis.parser.html">parser</a><input aria-label="Toggle navigation of parser" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.validate_circuit.html">validate_circuit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.validate_parameter.html">validate_parameter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/generated/autoeis.parser.parse_component.html">parse_component</a></li>
@@ -303,8 +296,7 @@
   </a>
 </div>
 <div class="theme-toggle-container theme-toggle-content">
-            <button class="theme-toggle">
-              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
               <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
               <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
@@ -312,8 +304,7 @@
             </button>
           </div>
           <label class="toc-overlay-icon toc-content-icon" for="__toc">
-            <div class="visually-hidden">Toggle table of contents sidebar</div>
-            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
         <article role="main" id="furo-main-content">
@@ -350,29 +341,14 @@
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/Users/runner/work/AutoEIS/AutoEIS/.venv/lib/python3.10/site-packages/lcapy/__init__.py:76: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
-  import pkg_resources
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Suggestion: add a constraint between nodes (25, 27) and (28, 26) for vertical graph
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_circuit_basics_5_2.png" class="no-scaled-link" src="../_images/examples_circuit_basics_5_2.png" style="width: 1787px; height: 688px;" />
-</div>
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">[01:08:32]</span><span class="ansi-cyan-fg"> </span><span class="ansi-red-intense-fg ansi-bold">ERROR   </span> lcapy is not installed. Please install it using `pip install
+<span class="ansi-cyan-fg">           </span>         lcapy`.
+</pre></div></div>
 </div>
 </section>
 <section id="Querying-circuit-strings">
@@ -507,11 +483,11 @@ File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:58
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([2.47101063-1.90324214e+02j, 2.45090467-4.10119181e+01j,
-       2.45102511-8.82122947e+00j, 2.47344142-1.90984378e+00j,
-       2.45028677-4.44860703e-01j, 2.40214456-1.54854868e-01j,
-       2.31473269-8.41415766e-02j, 2.26697117-4.92385197e-02j,
-       2.22847868-4.17354044e-02j, 2.18939631-4.07371620e-02j])
+array([0.74258737-6.74879248e+02j, 0.7438537 -1.45382771e+02j,
+       0.76800544-3.12586010e+01j, 0.89706216-6.66517040e+00j,
+       0.94227672-1.45101083e+00j, 0.90643147-3.90034968e-01j,
+       0.77431774-1.41153397e-01j, 0.74367183-3.35024505e-02j,
+       0.74164169-7.65252377e-03j, 0.74102523-2.23360937e-03j])
 </pre></div></div>
 </div>
 </section>
