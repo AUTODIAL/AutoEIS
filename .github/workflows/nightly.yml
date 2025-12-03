@@ -44,7 +44,7 @@ jobs:
 
       - name: Install AutoEIS
         run: |
-          uv sync --dev
+          uv sync --group dev
           # Install Julia dependencies at first import
           uv run python -c "import autoeis"
 

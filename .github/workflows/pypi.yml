@@ -32,7 +32,7 @@ jobs:
 
     - name: Install AutoEIS
       run: |
-          uv sync --dev
+          uv sync --group dev
 
     - name: Ensure no mismatch between recent tag and new version
       run: |
