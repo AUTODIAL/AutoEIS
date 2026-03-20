@@ -39,12 +39,16 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Install Pandoc and TeXLive
-        run: |
-          brew install pandoc  # Required by nbsphinx
-          brew install mactex  # Required by lcapy
-          eval "$(/usr/libexec/path_helper)"
-          echo "$(dirname "$(which pdflatex)")" >> $GITHUB_PATH
+      - name: Install Pandoc
+        run: brew install pandoc  # Required by nbsphinx
+
+      - name: Install TeXLive
+        uses: TeX-Live/setup-texlive-action@v3
+        with:
+          packages: |
+            standalone
+            circuitikz
+            amsmath
 
       - name: Install AutoEIS
         run: |
