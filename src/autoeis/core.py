@@ -544,7 +544,7 @@ def _validate_seed(seed, num_splits=1) -> list[jax.Array] | jax.Array:
     return subkey
 
 
-def _refine_p0(p0, circuit, datasets, progress_bar):
+def _refine_p0(p0, circuit, datasets, progress_bar, parallel=True):
     """"""
     if p0 is None:
         p0 = [None] * len(datasets)
@@ -552,17 +552,28 @@ def _refine_p0(p0, circuit, datasets, progress_bar):
         raise ValueError("Length of 'p0', 'circuit', and 'datasets' must be the same.")
 
     max_iters = 10
-    p0 = utils.distribute_task(
-        utils.fit_circuit_parameters,
-        circuit,
-        [dataset.freq for dataset in datasets],
-        [dataset.Z for dataset in datasets],
-        p0,
-        max_iters,
-        static=(4),  # static args = (circuit, freq, Z, max_iters)
-        progress_bar=progress_bar,
-        desc="Refining Initial Guess",
-    )
+
+    if parallel:
+        p0 = utils.distribute_task(
+            utils.fit_circuit_parameters,
+            circuit,
+            [dataset.freq for dataset in datasets],
+            [dataset.Z for dataset in datasets],
+            p0,
+            max_iters,
+            static=(4),  # static args = (circuit, freq, Z, max_iters)
+            progress_bar=progress_bar,
+            desc="Refining Initial Guess",
+        )
+    else:
+        p0_refined = []
+        for i, dataset in enumerate(datasets):
+            try:
+                result = utils.fit_circuit_parameters(circuit[i], dataset.freq, dataset.Z, p0[i], max_iters)
+            except Exception as e:
+                result = e
+            p0_refined.append(result)
+        p0 = p0_refined
 
     # Handle failed refinements
     for i, elem in enumerate(p0):
@@ -629,7 +640,8 @@ def perform_bayesian_inference(
         If True, the initial guess for the circuit parameters will be refined
         using the circuit fitter (default is True).
     parallel : bool, optional
-        If True, the MCMC chains will be run in parallel (default is True).
+        If True, computations (including p0 refinement and Bayesian
+        inference) will be run in parallel (default is True).
 
     Returns
     -------
@@ -671,7 +683,7 @@ def perform_bayesian_inference(
     # Ensure p0 and priors are valid and ready for parallel inference
     p0 = _validate_p0(p0, broadcast_to=num_inferences)
     if refine_p0 or (p0[0] is None):
-        p0 = _refine_p0(p0, circuit, datasets, progress_bar)
+        p0 = _refine_p0(p0, circuit, datasets, progress_bar, parallel)
     if priors is None:
         priors = [utils.initialize_priors(p0_) for p0_ in p0]
     priors = _validate_priors(priors, broadcast_to=num_inferences)
