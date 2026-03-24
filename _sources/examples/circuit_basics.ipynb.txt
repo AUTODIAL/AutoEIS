@@ -14,10 +14,10 @@
    "execution_count": 1,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:15.919579Z",
-     "iopub.status.busy": "2026-03-24T18:24:15.919194Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.451804Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.449822Z"
+     "iopub.execute_input": "2026-03-24T18:36:41.757327Z",
+     "iopub.status.busy": "2026-03-24T18:36:41.756895Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.409322Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.408364Z"
     }
    },
    "outputs": [],
@@ -41,10 +41,10 @@
    "execution_count": 2,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.458980Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.458169Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.464355Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.462303Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.411597Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.411409Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.420102Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.419245Z"
     }
    },
    "outputs": [],
@@ -64,10 +64,10 @@
    "execution_count": 3,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.469718Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.469232Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.484012Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.481843Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.421936Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.421829Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.427618Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.426684Z"
     }
    },
    "outputs": [
@@ -75,7 +75,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\u001b[2;36m[18:24:18]\u001b[0m\u001b[2;36m \u001b[0m\u001b[1;31mERROR   \u001b[0m lcapy is not installed. Please install it using `pip install\n",
+      "\u001b[2;36m[18:36:43]\u001b[0m\u001b[2;36m \u001b[0m\u001b[1;31mERROR   \u001b[0m lcapy is not installed. Please install it using `pip install\n",
       "\u001b[2;36m           \u001b[0m         lcapy`.                                                     \n"
      ]
     }
@@ -100,10 +100,10 @@
    "execution_count": 4,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.490488Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.490009Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.495822Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.494690Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.429743Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.429599Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.433715Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.432971Z"
     }
    },
    "outputs": [
@@ -134,10 +134,10 @@
    "execution_count": 5,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.501694Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.501458Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.507484Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.506109Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.435892Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.435777Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.438820Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.438024Z"
     }
    },
    "outputs": [
@@ -175,10 +175,10 @@
    "execution_count": 6,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.513809Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.513282Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.519274Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.518040Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.440834Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.440684Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.443557Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.442898Z"
     }
    },
    "outputs": [
@@ -209,10 +209,10 @@
    "execution_count": 7,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.526036Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.525493Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.893634Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.892018Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.445468Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.445332Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.753783Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.753018Z"
     },
     "tags": [
      "raises-exception"
@@ -248,10 +248,10 @@
    "execution_count": 8,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.899511Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.898939Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.905334Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.903596Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.756045Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.755888Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.759686Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.758856Z"
     }
    },
    "outputs": [],
@@ -278,10 +278,10 @@
    "execution_count": 9,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.910036Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.909600Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.914271Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.912939Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.761647Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.761538Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.770118Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.769253Z"
     }
    },
    "outputs": [],
@@ -301,21 +301,21 @@
    "execution_count": 10,
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-03-24T18:24:18.920234Z",
-     "iopub.status.busy": "2026-03-24T18:24:18.919348Z",
-     "iopub.status.idle": "2026-03-24T18:24:18.925607Z",
-     "shell.execute_reply": "2026-03-24T18:24:18.924213Z"
+     "iopub.execute_input": "2026-03-24T18:36:43.772100Z",
+     "iopub.status.busy": "2026-03-24T18:36:43.771990Z",
+     "iopub.status.idle": "2026-03-24T18:36:43.775884Z",
+     "shell.execute_reply": "2026-03-24T18:36:43.775244Z"
     }
    },
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "array([1.05676857-2.16501730e+03j, 1.05727475-4.66417381e+02j,\n",
-       "       1.10094185-1.00402009e+02j, 1.2505708 -2.15931542e+01j,\n",
-       "       1.24683689-4.74092158e+00j, 1.06612501-1.17451641e+00j,\n",
-       "       0.91556726-3.25454232e-01j, 0.83350753-1.22014696e-01j,\n",
-       "       0.77420018-5.90306987e-02j, 0.73982932-2.97918853e-02j])"
+       "array([1.10358731-8.47414399e+02j, 1.09559441-1.82589433e+02j,\n",
+       "       1.06927486-3.93892843e+01j, 0.98271537-8.58983860e+00j,\n",
+       "       0.93637233-1.88333587e+00j, 0.50157258-6.64680290e-01j,\n",
+       "       0.36941357-1.79970365e-01j, 0.33675884-4.94828950e-02j,\n",
+       "       0.32725264-1.40043708e-02j, 0.32425436-4.10285088e-03j])"
       ]
      },
      "execution_count": 10,
