@@ -19,6 +19,7 @@ AutoEIS is still under development, and we will add more examples as we make pro
     :name: examples-gallery
     :maxdepth: 1
 
+    examples/loading_eis_data
     examples/circuit_basics
     examples/circuit_generation
     examples/basic_workflow

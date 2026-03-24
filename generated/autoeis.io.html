@@ -201,6 +201,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../examples.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/loading_eis_data.html">Loading EIS Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/circuit_basics.html">Circuit Models 101</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/circuit_generation.html">Circuit Generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/basic_workflow.html">Detailed Workflow</a></li>
@@ -211,6 +212,7 @@
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">io</a><input aria-label="Toggle navigation of io" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_battery_dataset.html">load_battery_dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_eis_data.html">load_eis_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.load_test_circuits.html">load_test_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
@@ -319,13 +321,16 @@
 <tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.load_battery_dataset.html#autoeis.io.load_battery_dataset" title="autoeis.io.load_battery_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_battery_dataset</span></code></a>([preprocess, noise])</p></td>
 <td><p>Loads EIS data of a battery cell during cycling (at discharged state).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html#autoeis.io.load_test_dataset" title="autoeis.io.load_test_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_dataset</span></code></a>([preprocess, noise])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.load_eis_data.html#autoeis.io.load_eis_data" title="autoeis.io.load_eis_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_eis_data</span></code></a>(filepath[, instrument])</p></td>
+<td><p>Loads EIS data from instrument-specific file formats.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_dataset.html#autoeis.io.load_test_dataset" title="autoeis.io.load_test_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_dataset</span></code></a>([preprocess, noise])</p></td>
 <td><p>Returns a test dataset as a tuple of frequency and impedance arrays.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_circuits.html#autoeis.io.load_test_circuits" title="autoeis.io.load_test_circuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_circuits</span></code></a>([filtered])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.load_test_circuits.html#autoeis.io.load_test_circuits" title="autoeis.io.load_test_circuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_test_circuits</span></code></a>([filtered])</p></td>
 <td><p>Returns candidate ECMs fitted to test dataset for testing.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html#autoeis.io.parse_ec_output" title="autoeis.io.parse_ec_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_ec_output</span></code></a>(circuits[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/autoeis.io.parse_ec_output.html#autoeis.io.parse_ec_output" title="autoeis.io.parse_ec_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_ec_output</span></code></a>(circuits[, ...])</p></td>
 <td><p>Parses the output of EquivalentCircuits.jl's <code class="docutils literal notranslate"><span class="pre">circuit_evolution</span></code>.</p></td>
 </tr>
 </tbody>

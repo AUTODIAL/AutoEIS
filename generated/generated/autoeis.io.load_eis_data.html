@@ -3,12 +3,12 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="parse_ec_output" href="autoeis.io.parse_ec_output.html"><link rel="prev" title="load_test_dataset" href="autoeis.io.load_test_dataset.html">
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="load_test_dataset" href="autoeis.io.load_test_dataset.html"><link rel="prev" title="load_battery_dataset" href="autoeis.io.load_battery_dataset.html">
         <link rel="prefetch" href="../../_static/logo-light-mode.png" as="image">
         <link rel="prefetch" href="../../_static/logo-dark-mode.png" as="image">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.12.19 -->
-        <title>load_test_circuits - AutoEIS 0.0.43 documentation</title>
+        <title>load_eis_data - AutoEIS 0.0.43 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -212,9 +212,9 @@
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../autoeis.io.html">io</a><input aria-label="Toggle navigation of io" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.get_assets_path.html">get_assets_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_battery_dataset.html">load_battery_dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_eis_data.html">load_eis_data</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">load_eis_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_dataset.html">load_test_dataset</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">load_test_circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="autoeis.io.load_test_circuits.html">load_test_circuits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoeis.io.parse_ec_output.html">parse_ec_output</a></li>
 </ul>
 </li>
@@ -291,7 +291,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/generated/generated/autoeis.io.load_test_circuits.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/generated/generated/autoeis.io.load_eis_data.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -309,21 +309,42 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="load-test-circuits">
-<h1>load_test_circuits<a class="headerlink" href="#load-test-circuits" title="Link to this heading">¶</a></h1>
+          <section id="load-eis-data">
+<h1>load_eis_data<a class="headerlink" href="#load-eis-data" title="Link to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="autoeis.io.load_test_circuits">
-<span class="sig-prename descclassname"><span class="pre">autoeis.io.</span></span><span class="sig-name descname"><span class="pre">load_test_circuits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filtered</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#autoeis.io.load_test_circuits" title="Link to this definition">¶</a></dt>
-<dd><p>Returns candidate ECMs fitted to test dataset for testing.</p>
+<dt class="sig sig-object py" id="autoeis.io.load_eis_data">
+<span class="sig-prename descclassname"><span class="pre">autoeis.io.</span></span><span class="sig-name descname"><span class="pre">load_eis_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">complex</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#autoeis.io.load_eis_data" title="Link to this definition">¶</a></dt>
+<dd><p>Loads EIS data from instrument-specific file formats.</p>
+<p>Supports a wide range of electrochemical instrument formats by combining
+two backends: the vendored <code class="docutils literal notranslate"><span class="pre">impedance</span></code> package and <code class="docutils literal notranslate"><span class="pre">pyimpspec</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>filtered</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only physically plausible circuits are returned. Default is False.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the EIS data file.</p></li>
+<li><p><strong>instrument</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Instrument type. Required for formats that share a file extension
+(e.g., <code class="docutils literal notranslate"><span class="pre">.txt</span></code>). If None, the format is auto-detected from the
+file extension. Supported values:</p>
+<ul>
+<li><p>Vendored backend: <code class="docutils literal notranslate"><span class="pre">&quot;gamry&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;autolab&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;biologic&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;parstat&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;zplot&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;versastudio&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;powersuite&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;chinstruments&quot;</span></code></p></li>
+<li><p>pyimpspec backend: <code class="docutils literal notranslate"><span class="pre">&quot;ecochemie&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ivium&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;palmsens&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;spreadsheet&quot;</span></code></p></li>
+</ul>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dataframe containing the ECMs.</p>
+<dd class="field-even"><p>Tuple of frequency (Hz) and complex impedance (Ohm) arrays.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
+<dd class="field-odd"><p>tuple[np.ndarray[float], np.ndarray[complex]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the instrument type is not supported or the file cannot be parsed.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If the file does not exist.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -335,23 +356,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="autoeis.io.parse_ec_output.html">
+          <a class="next-page" href="autoeis.io.load_test_dataset.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">parse_ec_output</div>
+                <div class="title">load_test_dataset</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="autoeis.io.load_test_dataset.html">
+          <a class="prev-page" href="autoeis.io.load_battery_dataset.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">load_test_dataset</div>
+                <div class="title">load_battery_dataset</div>
                 
               </div>
             </a>
@@ -392,8 +413,8 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">load_test_circuits</a><ul>
-<li><a class="reference internal" href="#autoeis.io.load_test_circuits"><code class="docutils literal notranslate"><span class="pre">load_test_circuits()</span></code></a></li>
+<li><a class="reference internal" href="#">load_eis_data</a><ul>
+<li><a class="reference internal" href="#autoeis.io.load_eis_data"><code class="docutils literal notranslate"><span class="pre">load_eis_data()</span></code></a></li>
 </ul>
 </li>
 </ul>

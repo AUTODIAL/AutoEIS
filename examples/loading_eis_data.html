@@ -3,12 +3,12 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Circuit Generation" href="circuit_generation.html"><link rel="prev" title="Loading EIS Data" href="loading_eis_data.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Circuit Models 101" href="circuit_basics.html"><link rel="prev" title="Examples" href="../examples.html">
         <link rel="prefetch" href="../_static/logo-light-mode.png" as="image">
         <link rel="prefetch" href="../_static/logo-dark-mode.png" as="image">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.12.19 -->
-        <title>Circuit Models 101 - AutoEIS 0.0.43 documentation</title>
+        <title>Loading EIS Data - AutoEIS 0.0.43 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -202,8 +202,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../circuit.html">Circuit notation</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../examples.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="loading_eis_data.html">Loading EIS Data</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Circuit Models 101</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Loading EIS Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_basics.html">Circuit Models 101</a></li>
 <li class="toctree-l2"><a class="reference internal" href="circuit_generation.html">Circuit Generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="basic_workflow.html">Detailed Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parallel_inference.html">Batch Analysis</a></li>
@@ -292,7 +292,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/examples/circuit_basics.ipynb.txt" title="View this page">
+  <a class="muted-link" href="../_sources/examples/loading_eis_data.ipynb.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -310,188 +310,273 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="Circuit-Models-101">
-<h1>Circuit Models 101<a class="headerlink" href="#Circuit-Models-101" title="Link to this heading">¶</a></h1>
-<p>In this notebook, we will explore the basics of circuit models in AutoEIS. We will start by importing the necessary libraries.</p>
+          <section id="Loading-EIS-Data">
+<h1>Loading EIS Data<a class="headerlink" href="#Loading-EIS-Data" title="Link to this heading">¶</a></h1>
+<p>AutoEIS requires two 1D arrays as input:</p>
+<ul class="simple">
+<li><p><strong>``freq``</strong>: Frequency array in Hz (<code class="docutils literal notranslate"><span class="pre">np.ndarray[float]</span></code>)</p></li>
+<li><p><strong>``Z``</strong>: Complex impedance array in Ohms (<code class="docutils literal notranslate"><span class="pre">np.ndarray[complex]</span></code>)</p></li>
+</ul>
+<p>Both arrays must have the same length. The impedance follows the convention where the imaginary part is typically negative for capacitive behavior.</p>
+<p>This notebook demonstrates how to load EIS data from various sources, including built-in datasets and instrument-specific file formats.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">autoeis</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ae</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">autoeis</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ae</span>
 <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">set_plot_style</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<section id="Circuit-representation">
-<h2>Circuit representation<a class="headerlink" href="#Circuit-representation" title="Link to this heading">¶</a></h2>
-<p>In AutoEIS, circuits are represented as strings. Please refer to <a class="reference internal" href="../circuit.html"><span class="doc">circuit notation</span></a> for the syntax of the circuit string. Now, let’s create a sample circuit string:</p>
-<div class="nbinput nblast docutils container">
+<section id="Built-in-datasets">
+<h2>Built-in datasets<a class="headerlink" href="#Built-in-datasets" title="Link to this heading">¶</a></h2>
+<p>AutoEIS ships with two built-in datasets for testing and demonstration:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ae.io.load_test_dataset()</span></code> - a single EIS measurement</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ae.io.load_battery_dataset()</span></code> - multiple EIS measurements from a battery cell during cycling</p></li>
+</ul>
+<p>Both accept optional <code class="docutils literal notranslate"><span class="pre">preprocess</span></code> and <code class="docutils literal notranslate"><span class="pre">noise</span></code> arguments.</p>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">circuit</span> <span class="o">=</span> <span class="s2">&quot;R1-[P2,R3]-C4-[[R5,C6],[L7,R8]]-R2&quot;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_test_dataset</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;freq: shape=</span><span class="si">{</span><span class="n">freq</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, dtype=</span><span class="si">{</span><span class="n">freq</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Z:    shape=</span><span class="si">{</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, dtype=</span><span class="si">{</span><span class="n">Z</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>We can visualize the circuit model using the <code class="docutils literal notranslate"><span class="pre">draw_circuit</span></code> function, which requires the <code class="docutils literal notranslate"><span class="pre">lcapy</span></code> package to be installed, and a working LaTeX installation. See <a class="reference external" href="https://lcapy.readthedocs.io/en/latest/install.html">here</a> for more details.</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+freq: shape=(67,), dtype=float64
+Z:    shape=(67,), dtype=complex128
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([&lt;Axes: xlabel=&#39;Re(Z)&#39;, ylabel=&#39;-Im(Z)&#39;&gt;,
+       &lt;Axes: xlabel=&#39;frequency (Hz)&#39;, ylabel=&#39;$|Z|$&#39;&gt;,
+       &lt;Axes: ylabel=&#39;$\\phi$ (deg)&#39;&gt;], dtype=object)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_loading_eis_data_3_2.png" src="../_images/examples_loading_eis_data_3_2.png" />
+</div>
+</div>
+</section>
+<section id="Loading-from-instrument-files">
+<h2>Loading from instrument files<a class="headerlink" href="#Loading-from-instrument-files" title="Link to this heading">¶</a></h2>
+<p>AutoEIS can load EIS data directly from proprietary instrument file formats using <code class="docutils literal notranslate"><span class="pre">ae.io.load_eis_data()</span></code>. This function combines two backends to support a wide range of instruments:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Instrument</p></th>
+<th class="head"><p>File extension</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">instrument</span></code> parameter</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Gamry</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.DTA</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;gamry&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>BioLogic</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.mpt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;biologic&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>ZPlot/ZView</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.z</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;zplot&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Autolab</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.txt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;autolab&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Parstat</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.txt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;parstat&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>VersaStudio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.par</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;versastudio&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>PowerSuite</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.txt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;powersuite&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>CH Instruments</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.txt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;chinstruments&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Eco Chemie</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.dfr</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ecochemie&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Ivium</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.idf</span></code>, <code class="docutils literal notranslate"><span class="pre">.ids</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ivium&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>PalmSens</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.pssession</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;palmsens&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Spreadsheets</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.xlsx</span></code>, <code class="docutils literal notranslate"><span class="pre">.ods</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;spreadsheet&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>CSV</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.csv</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> (auto-detected)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For formats with unique file extensions (e.g., <code class="docutils literal notranslate"><span class="pre">.DTA</span></code>, <code class="docutils literal notranslate"><span class="pre">.mpt</span></code>, <code class="docutils literal notranslate"><span class="pre">.z</span></code>), the instrument type is auto-detected. For formats that share extensions (e.g., <code class="docutils literal notranslate"><span class="pre">.txt</span></code>), you must specify the <code class="docutils literal notranslate"><span class="pre">instrument</span></code> parameter.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_circuit</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load from a Gamry .DTA file (auto-detected from extension)</span>
+<span class="n">fpath</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_assets_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;exampleDataGamry.DTA&quot;</span>
+<span class="n">freq</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_eis_data</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([&lt;Axes: xlabel=&#39;Re(Z)&#39;, ylabel=&#39;-Im(Z)&#39;&gt;,
+       &lt;Axes: xlabel=&#39;frequency (Hz)&#39;, ylabel=&#39;$|Z|$&#39;&gt;,
+       &lt;Axes: ylabel=&#39;$\\phi$ (deg)&#39;&gt;], dtype=object)
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-cyan-fg">[17:29:26]</span><span class="ansi-cyan-fg"> </span><span class="ansi-red-intense-fg ansi-bold">ERROR   </span> lcapy is not installed. Please install it using `pip install
-<span class="ansi-cyan-fg">           </span>         lcapy`.
-</pre></div></div>
+<img alt="../_images/examples_loading_eis_data_5_1.png" src="../_images/examples_loading_eis_data_5_1.png" />
 </div>
-</section>
-<section id="Querying-circuit-strings">
-<h2>Querying circuit strings<a class="headerlink" href="#Querying-circuit-strings" title="Link to this heading">¶</a></h2>
-<p>Once you have the circuit string, you can run different queries on it. We’re not going to explore all of available queries here, but we’ll show you a few of the most common ones. To see the full list of available queries, check out the <a class="reference internal" href="../modules.html"><span class="doc">API reference</span></a>.</p>
-<p>To get the list of components in the circuit, you can use the <code class="docutils literal notranslate"><span class="pre">get_component_labels</span></code> function:</p>
+</div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">get_component_labels</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load from a BioLogic .mpt file (auto-detected from extension)</span>
+<span class="n">fpath</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_assets_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;exampleDataBioLogic.mpt&quot;</span>
+<span class="n">freq</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_eis_data</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[&#39;R1&#39;, &#39;P2&#39;, &#39;R3&#39;, &#39;C4&#39;, &#39;R5&#39;, &#39;C6&#39;, &#39;L7&#39;, &#39;R8&#39;, &#39;R2&#39;]
+array([&lt;Axes: xlabel=&#39;Re(Z)&#39;, ylabel=&#39;-Im(Z)&#39;&gt;,
+       &lt;Axes: xlabel=&#39;frequency (Hz)&#39;, ylabel=&#39;$|Z|$&#39;&gt;,
+       &lt;Axes: ylabel=&#39;$\\phi$ (deg)&#39;&gt;], dtype=object)
 </pre></div></div>
-</div>
-<p>(The impedance of) Each component is represented by one or more parameters. To get the list of parameters that fully describe the circuit, use the <code class="docutils literal notranslate"><span class="pre">get_parameter_labels</span></code> function:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">get_parameter_labels</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[&#39;R1&#39;, &#39;P2w&#39;, &#39;P2n&#39;, &#39;R3&#39;, &#39;C4&#39;, &#39;R5&#39;, &#39;C6&#39;, &#39;L7&#39;, &#39;R8&#39;, &#39;R2&#39;]
-</pre></div></div>
-</div>
-<p>Note that components and parameters are not the same, despite the fact that for single-parameter components they’re represented by the same string. For instance, <code class="docutils literal notranslate"><span class="pre">R1</span></code> is both a parameter and a component, but <code class="docutils literal notranslate"><span class="pre">P2</span></code> is a component, which is described by the parameters <code class="docutils literal notranslate"><span class="pre">P2w</span></code> and <code class="docutils literal notranslate"><span class="pre">P2n</span></code>.</p>
-<p>You can also validate the circuit using the <code class="docutils literal notranslate"><span class="pre">validate_circuit</span></code> function in case you’re not sure if the circuit is valid:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">validate_circuit</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-True
-</pre></div></div>
-</div>
-<p>Let’s try to validate an invalid circuit string:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ae</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">validate_circuit</span><span class="p">(</span><span class="s2">&quot;R1-[R2,P3]-R1&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AssertionError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[7], line 1</span>
-<span class="ansi-green-fg">----&gt; 1</span> <span class="ansi-yellow-bg">ae</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">parser</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">validate_circuit</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#34;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">R1-[R2,P3]-R1</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#34;</span><span class="ansi-yellow-bg">)</span>
-
-File <span class="ansi-green-fg">~/work/AutoEIS/AutoEIS/src/autoeis/parser.py:58</span>, in <span class="ansi-cyan-fg">validate_circuit</span><span class="ansi-blue-fg">(circuit)</span>
-<span class="ansi-green-intense-fg ansi-bold">     56</span> components <span style="color: rgb(98,98,98)">=</span> get_component_labels(circuit)
-<span class="ansi-green-intense-fg ansi-bold">     57</span> duplicates <span style="color: rgb(98,98,98)">=</span> [e <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> e <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> components <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> components<span style="color: rgb(98,98,98)">.</span>count(e) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">1</span>]
-<span class="ansi-green-fg">---&gt; 58</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> duplicates, <span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Duplicate elements found: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span><span style="color: rgb(0,135,0)">set</span>(duplicates)<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span style="color: rgb(175,0,0)">&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">     59</span> <span style="color: rgb(95,135,135)"># Test circuit is not empty</span>
-<span class="ansi-green-intense-fg ansi-bold">     60</span> <span class="ansi-bold" style="color: rgb(0,135,0)">assert</span> <span style="color: rgb(0,135,0)">len</span>(circuit) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Circuit string is empty.</span><span style="color: rgb(175,0,0)">&#34;</span>
-
-<span class="ansi-red-fg">AssertionError</span>: Duplicate elements found: {&#39;R1&#39;}
-</pre></div></div>
-</div>
-<p>Another useful query is to compare two circuits to see if they are structurally equivalent. For instance, one would expect that <code class="docutils literal notranslate"><span class="pre">R1-R2</span></code> and <code class="docutils literal notranslate"><span class="pre">R2-R1</span></code> and <code class="docutils literal notranslate"><span class="pre">R5-R0</span></code> are equivalent, i.e., neither the order of appearance of the components nor the labels matter. This is useful for filtering out duplicate circuits, which may (and will) arise during circuit generation using evolutionary algorithms. You can do this using the <code class="docutils literal notranslate"><span class="pre">are_circuits_equivalent</span></code> function:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">circuit1</span> <span class="o">=</span> <span class="s2">&quot;R1-[P2,R3]-C4&quot;</span>
-<span class="n">circuit2</span> <span class="o">=</span> <span class="s2">&quot;C4-R1-[R3,P2]&quot;</span>
-<span class="n">circuit3</span> <span class="o">=</span> <span class="s2">&quot;C0-R5-[R9,P0]&quot;</span>
-
-<span class="k">assert</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">are_circuits_equivalent</span><span class="p">(</span><span class="n">circuit1</span><span class="p">,</span> <span class="n">circuit2</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">are_circuits_equivalent</span><span class="p">(</span><span class="n">circuit1</span><span class="p">,</span> <span class="n">circuit3</span><span class="p">)</span>
-</pre></div>
+<img alt="../_images/examples_loading_eis_data_6_1.png" src="../_images/examples_loading_eis_data_6_1.png" />
 </div>
 </div>
-</section>
-<section id="Evaluating-circuit-strings">
-<h2>Evaluating circuit strings<a class="headerlink" href="#Evaluating-circuit-strings" title="Link to this heading">¶</a></h2>
-<p>Once you have a valid circuit string, you can calculate the EIS spectra of the circuit model by evaluating it at the frequency range of interest. To do this, you need to convert the circuit string to a function using the <code class="docutils literal notranslate"><span class="pre">generate_circuit_fn</span></code> function:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">circuit_fn</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">generate_circuit_fn</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<p>Now, let’s calculate the EIS spectra for a few frequencies. For this, we also need to pass the parameters of the circuit model, for which we can use random values:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="n">num_params</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">count_parameters</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">num_params</span><span class="p">)</span>
-<span class="n">Z</span> <span class="o">=</span> <span class="n">circuit_fn</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
-<span class="n">Z</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># For .txt formats, specify the instrument explicitly</span>
+<span class="n">fpath</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_assets_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;exampleDataAutolab.txt&quot;</span>
+<span class="n">freq</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_eis_data</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="s2">&quot;autolab&quot;</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0.88210143-4.20470772e+02j, 0.88188204-9.05855819e+01j,
-       0.88259037-1.95053267e+01j, 0.9038979 -4.16058481e+00j,
-       0.9848146 -8.84298910e-01j, 0.94277796-2.56562867e-01j,
-       0.87214445-7.91552579e-02j, 0.85237721-3.18335482e-02j,
-       0.83211437-2.40698373e-02j, 0.8100567 -2.05455989e-02j])
+array([&lt;Axes: xlabel=&#39;Re(Z)&#39;, ylabel=&#39;-Im(Z)&#39;&gt;,
+       &lt;Axes: xlabel=&#39;frequency (Hz)&#39;, ylabel=&#39;$|Z|$&#39;&gt;,
+       &lt;Axes: ylabel=&#39;$\\phi$ (deg)&#39;&gt;], dtype=object)
 </pre></div></div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_loading_eis_data_7_1.png" src="../_images/examples_loading_eis_data_7_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load from an Eco Chemie .dfr file (via pyimpspec backend)</span>
+<span class="n">fpath</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">get_assets_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;data.dfr&quot;</span>
+<span class="n">freq</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_eis_data</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">instrument</span><span class="o">=</span><span class="s2">&quot;ecochemie&quot;</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">plot_impedance_combo</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([&lt;Axes: xlabel=&#39;Re(Z)&#39;, ylabel=&#39;-Im(Z)&#39;&gt;,
+       &lt;Axes: xlabel=&#39;frequency (Hz)&#39;, ylabel=&#39;$|Z|$&#39;&gt;,
+       &lt;Axes: ylabel=&#39;$\\phi$ (deg)&#39;&gt;], dtype=object)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_loading_eis_data_8_1.png" src="../_images/examples_loading_eis_data_8_1.png" />
+</div>
+</div>
+</section>
+<section id="Loading-from-generic-formats">
+<h2>Loading from generic formats<a class="headerlink" href="#Loading-from-generic-formats" title="Link to this heading">¶</a></h2>
+<p>If your data is in a generic format (CSV, text, NumPy, etc.), you can load it directly with standard Python libraries and construct the <code class="docutils literal notranslate"><span class="pre">freq</span></code> and <code class="docutils literal notranslate"><span class="pre">Z</span></code> arrays yourself:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># From a CSV with columns: frequency, Re(Z), Im(Z)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;my_data.csv&quot;</span><span class="p">)</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Re(Z)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Im(Z)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+<span class="c1"># From a text file with columns: freq, Re(Z), -Im(Z)</span>
+<span class="n">freq</span><span class="p">,</span> <span class="n">Zre</span><span class="p">,</span> <span class="n">Zim_neg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s2">&quot;my_data.txt&quot;</span><span class="p">,</span> <span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">Zre</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">Zim_neg</span>
+</pre></div>
+</div>
+<p>Pay attention to the sign convention: some instruments store <code class="docutils literal notranslate"><span class="pre">-Im(Z)</span></code> instead of <code class="docutils literal notranslate"><span class="pre">Im(Z)</span></code>. AutoEIS expects the standard complex impedance where the imaginary part is negative for capacitive behavior.</p>
 </section>
 </section>
 
@@ -500,23 +585,23 @@ array([0.88210143-4.20470772e+02j, 0.88188204-9.05855819e+01j,
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="circuit_generation.html">
+          <a class="next-page" href="circuit_basics.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Circuit Generation</div>
+                <div class="title">Circuit Models 101</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="loading_eis_data.html">
+          <a class="prev-page" href="../examples.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Loading EIS Data</div>
+                <div class="title">Examples</div>
                 
               </div>
             </a>
@@ -557,10 +642,10 @@ array([0.88210143-4.20470772e+02j, 0.88188204-9.05855819e+01j,
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Circuit Models 101</a><ul>
-<li><a class="reference internal" href="#Circuit-representation">Circuit representation</a></li>
-<li><a class="reference internal" href="#Querying-circuit-strings">Querying circuit strings</a></li>
-<li><a class="reference internal" href="#Evaluating-circuit-strings">Evaluating circuit strings</a></li>
+<li><a class="reference internal" href="#">Loading EIS Data</a><ul>
+<li><a class="reference internal" href="#Built-in-datasets">Built-in datasets</a></li>
+<li><a class="reference internal" href="#Loading-from-instrument-files">Loading from instrument files</a></li>
+<li><a class="reference internal" href="#Loading-from-generic-formats">Loading from generic formats</a></li>
 </ul>
 </li>
 </ul>
