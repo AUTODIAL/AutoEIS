@@ -130,3 +130,14 @@ def test_bayesian_inference_empty_circuits_list():
     freq, Z = ae.io.load_test_dataset()
     results = ae.core.perform_bayesian_inference([], freq, Z)
     assert results == []
+
+
+def test_bayesian_inference_incompatible_broadcast_lengths():
+    freq, Z = ae.io.load_test_dataset()
+    # 2 circuits with 3 datasets is incompatible (neither 1-to-many nor matching)
+    with pytest.raises(ValueError):
+        ae.core.perform_bayesian_inference(
+            ["R1-[P2,R3]", "R1-[P2,R3]"],
+            [freq, freq, freq],
+            [Z, Z, Z],
+        )

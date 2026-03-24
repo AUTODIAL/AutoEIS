@@ -680,6 +680,9 @@ def perform_bayesian_inference(
     if len(circuit) > 1 and len(datasets) > 1:
         raise ValueError("Can't handle multiple circuits and multiple datasets together.")
     # Ensure circuits and datasets are of the same length (if not, broadcast)
+    if len(circuit) not in (1, num_inferences) or len(datasets) not in (1, num_inferences):
+        msg = f"Incompatible lengths: {len(circuit)} circuit(s) and {len(datasets)} dataset(s)."
+        raise ValueError(msg)
     circuit = circuit * num_inferences if len(circuit) == 1 else circuit
     datasets = datasets * num_inferences if len(datasets) == 1 else datasets
 
