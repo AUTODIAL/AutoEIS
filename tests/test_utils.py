@@ -357,3 +357,22 @@ def test_generate_circuit_fn_edge_cases():
         fn = ae.utils.generate_circuit_fn(component, backend="numpy")
         Z = fn(freq, p_single)
         assert len(Z) == len(freq)
+
+
+def test_is_ndfarray_like_empty_list():
+    assert ae.utils.is_ndfarray_like([]) is False
+
+
+def test_is_ndfarray_like_empty_tuple():
+    assert ae.utils.is_ndfarray_like(()) is False
+
+
+def test_is_ndfarray_like_valid_inputs():
+    assert ae.utils.is_ndfarray_like([1.0, 2.0]) is True
+    assert ae.utils.is_ndfarray_like(np.array([1.0])) is True
+    assert ae.utils.is_ndfarray_like((1.0, 2.0, 3.0)) is True
+
+
+def test_is_ndfarray_like_invalid_inputs():
+    assert ae.utils.is_ndfarray_like({"a": 1}) is False
+    assert ae.utils.is_ndfarray_like([{"a": 1}]) is False
