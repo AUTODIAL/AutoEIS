@@ -141,3 +141,12 @@ def test_bayesian_inference_incompatible_broadcast_lengths():
             [freq, freq, freq],
             [Z, Z, Z],
         )
+
+
+def test_refine_p0_rejects_mismatched_lengths():
+    from autoeis.core import _refine_p0
+    freq, Z = ae.io.load_test_dataset()
+    dataset = ae.utils.ImpedanceData(freq, Z)
+    # p0 and datasets match (1 each), but circuit has 2 — should raise
+    with pytest.raises(ValueError, match="must be the same"):
+        _refine_p0([None], ["R1-[P2,R3]", "R1-[P2,R3]"], [dataset], False)

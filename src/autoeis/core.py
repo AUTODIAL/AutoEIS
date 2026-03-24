@@ -548,7 +548,7 @@ def _refine_p0(p0, circuit, datasets, progress_bar, parallel=True):
     """"""
     if p0 is None:
         p0 = [None] * len(datasets)
-    if len(p0) != len(circuit) != len(datasets):
+    if not (len(p0) == len(circuit) == len(datasets)):
         raise ValueError("Length of 'p0', 'circuit', and 'datasets' must be the same.")
 
     max_iters = 10
