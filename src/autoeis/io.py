@@ -8,6 +8,7 @@ Collection of functions for importing and exporting EIS data/results.
 
     get_assets_path
     load_battery_dataset
+    load_eis_data
     load_test_dataset
     load_test_circuits
     parse_ec_output
@@ -125,6 +126,99 @@ def load_test_circuits(filtered: bool = False) -> pd.DataFrame:
     # Convert stringified list to proper Python objects
     circuits["Parameters"] = circuits["Parameters"].apply(eval)
     return circuits
+
+
+def load_eis_data(
+    filepath: str | Path,
+    instrument: str | None = None,
+) -> tuple[np.ndarray[float], np.ndarray[complex]]:
+    """Loads EIS data from instrument-specific file formats.
+
+    Supports a wide range of electrochemical instrument formats by combining
+    two backends: the vendored ``impedance`` package and ``pyimpspec``.
+
+    Parameters
+    ----------
+    filepath : str or Path
+        Path to the EIS data file.
+    instrument : str, optional
+        Instrument type. Required for formats that share a file extension
+        (e.g., ``.txt``). If None, the format is auto-detected from the
+        file extension. Supported values:
+
+        - Vendored backend: ``"gamry"``, ``"autolab"``, ``"biologic"``,
+          ``"parstat"``, ``"zplot"``, ``"versastudio"``, ``"powersuite"``,
+          ``"chinstruments"``
+        - pyimpspec backend: ``"ecochemie"``, ``"ivium"``, ``"palmsens"``,
+          ``"spreadsheet"``
+
+    Returns
+    -------
+    tuple[np.ndarray[float], np.ndarray[complex]]
+        Tuple of frequency (Hz) and complex impedance (Ohm) arrays.
+
+    Raises
+    ------
+    ValueError
+        If the instrument type is not supported or the file cannot be parsed.
+    FileNotFoundError
+        If the file does not exist.
+    """
+    filepath = Path(filepath)
+    if not filepath.exists():
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    _VENDORED_INSTRUMENTS = {
+        "gamry", "autolab", "biologic", "parstat",
+        "zplot", "versastudio", "powersuite", "chinstruments",
+    }
+    _PYIMPSPEC_INSTRUMENTS = {"ecochemie", "ivium", "palmsens", "spreadsheet"}
+    _PYIMPSPEC_FORMAT_MAP = {
+        "ecochemie": ".dfr",
+        "ivium": ".idf",
+        "palmsens": ".pssession",
+        "spreadsheet": ".xlsx",
+    }
+
+    if instrument is not None:
+        all_instruments = _VENDORED_INSTRUMENTS | _PYIMPSPEC_INSTRUMENTS
+        if instrument not in all_instruments:
+            msg = f"Unsupported instrument: '{instrument}'. Supported: {sorted(all_instruments)}"
+            raise ValueError(msg)
+
+    # Route to the appropriate backend
+    if instrument in _VENDORED_INSTRUMENTS:
+        from autoeis.impedance.preprocessing import readFile
+        try:
+            freq, Z = readFile(str(filepath), instrument=instrument)
+        except AssertionError as e:
+            raise ValueError(str(e)) from e
+    elif instrument in _PYIMPSPEC_INSTRUMENTS:
+        from pyimpspec import parse_data
+        fmt = _PYIMPSPEC_FORMAT_MAP[instrument]
+        datasets = parse_data(filepath, file_format=fmt)
+        if not datasets:
+            raise ValueError(f"No data found in file: {filepath}")
+        freq = datasets[0].get_frequencies()
+        Z = datasets[0].get_impedances()
+    else:
+        # Auto-detect: try pyimpspec first (handles most extensions well)
+        from pyimpspec import parse_data
+        try:
+            datasets = parse_data(filepath)
+            if not datasets:
+                raise ValueError(f"No data found in file: {filepath}")
+            freq = datasets[0].get_frequencies()
+            Z = datasets[0].get_impedances()
+        except Exception:
+            # Fall back to vendored CSV reader
+            from autoeis.impedance.preprocessing import readFile
+            try:
+                freq, Z = readFile(str(filepath))
+            except Exception as e:
+                raise ValueError(f"Could not parse file: {filepath}") from e
+
+    return freq, Z
 
 
 def parse_ec_output(

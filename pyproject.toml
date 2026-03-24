@@ -49,6 +49,7 @@ dependencies = [
     "seaborn",
     "tqdm",
     "numexpr",
+    "pyimpspec>=5.1.2",
 ]
 [project.optional-dependencies]
 lcapy = ["lcapy"]
