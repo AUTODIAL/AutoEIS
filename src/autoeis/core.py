@@ -668,6 +668,9 @@ def perform_bayesian_inference(
 
     # Standardize circuits and impedance data to always be a list
     circuit = [circuit] if isinstance(circuit, str) else circuit
+    if len(circuit) == 0:
+        log.warning("No circuits to perform inference on.")
+        return []
     freq, Z = ([freq], [Z]) if isinstance(freq, np.ndarray) else (freq, Z)
     datasets = [utils.ImpedanceData(freq_, Z_) for freq_, Z_ in zip(freq, Z)]
 

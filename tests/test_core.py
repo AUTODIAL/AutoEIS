@@ -117,3 +117,16 @@ def test_perform_full_analysis():
     results = ae.core.perform_full_analysis(freq, Z)
     required_columns = ["circuitstring", "Parameters", "MCMC", "success", "divergences"]
     assert all(col in results.columns for col in required_columns)
+
+
+def test_bayesian_inference_empty_circuits_dataframe():
+    freq, Z = ae.io.load_test_dataset()
+    empty_df = pd.DataFrame(columns=["circuitstring", "Parameters"])
+    results = ae.core.perform_bayesian_inference(empty_df, freq, Z)
+    assert results == []
+
+
+def test_bayesian_inference_empty_circuits_list():
+    freq, Z = ae.io.load_test_dataset()
+    results = ae.core.perform_bayesian_inference([], freq, Z)
+    assert results == []
