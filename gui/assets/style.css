@@ -1,0 +1,47 @@
+/* AutoEIS GUI – custom styles */
+
+body {
+    background-color: #f8f9fa;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* Navbar brand */
+.navbar-brand {
+    font-size: 1.3rem;
+}
+
+/* Card hover effect for Quick Mode selection */
+[id^="{"type":"quick-card"]:hover {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* DataTable tweaks */
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
+    font-family: "Courier New", monospace;
+}
+
+/* Plotly chart border */
+.js-plotly-plot {
+    border-radius: 4px;
+}
+
+/* Progress bar label */
+#progress-stage {
+    font-size: 0.9rem;
+}
+
+/* Summary badges spacing */
+.badge {
+    font-size: 0.78rem;
+}
+
+/* Collapse card header button */
+#pp-toggle {
+    text-decoration: none;
+    font-size: 1rem;
+}
+#pp-toggle:focus {
+    box-shadow: none;
+}

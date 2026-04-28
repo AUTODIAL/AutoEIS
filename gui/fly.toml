@@ -1,0 +1,35 @@
+# Fly.io deployment config — https://fly.io/docs/reference/configuration/
+# Deploy with: fly launch  (first time)  or  fly deploy  (subsequent)
+
+app = "autoeis-gui"       # change to your chosen app name
+primary_region = "sea"    # Seattle; pick the region closest to your users
+
+[build]
+  # Fly.io builds from the Dockerfile in the repo root
+
+[env]
+  PORT               = "8050"
+  MAX_CONCURRENT_TASKS = "3"
+  LOG_LEVEL          = "info"
+
+[http_service]
+  internal_port      = 8050
+  force_https        = true
+  auto_stop_machines = "stop"   # stop when idle (saves cost)
+  auto_start_machines = true
+  min_machines_running = 0      # set to 1 if you don't want cold-starts
+
+  [http_service.concurrency]
+    type       = "requests"
+    soft_limit = 10
+    hard_limit = 20
+
+[[vm]]
+  size   = "shared-cpu-2x"   # 2 vCPU, 2 GB RAM — Julia + NumPyro need ~1.5 GB
+  memory = "2gb"
+
+# Persist the Julia depot across deploys so precompiled .ji files survive
+[mounts]
+  source      = "julia_depot"
+  destination = "/julia_depot"
+  initial_size = "5gb"

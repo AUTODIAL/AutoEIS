@@ -1,0 +1,27 @@
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.git
+.gitignore
+.env
+*.env
+*.log
+
+# Don't copy local Julia depot into the image — it gets rebuilt during build
+julia_depot/
+
+# Editor / OS noise
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Test / notebook artefacts
+*.ipynb
+.ipynb_checkpoints/
+htmlcov/
+.coverage
