@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  autoeis:
+    build: .
+    ports:
+      - "8050:8050"
+    environment:
+      - PORT=8050
+      - MAX_CONCURRENT_TASKS=3   # cap simultaneous analyses
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    # Persist the Julia depot so a re-deploy doesn't re-precompile from scratch
+    volumes:
+      - julia_depot:/julia_depot
+
+  # Optional nginx reverse proxy with HTTPS.
+  # Remove this block if you're using a cloud platform (Fly, Railway, Render)
+  # that handles SSL termination for you.
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro   # put your SSL certs here
+    depends_on:
+      - autoeis
+    restart: unless-stopped
+    profiles:
+      - with-nginx   # run with: docker compose --profile with-nginx up
+
+volumes:
+  julia_depot:
