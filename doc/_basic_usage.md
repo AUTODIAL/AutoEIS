@@ -27,6 +27,35 @@ for i, row in circuits.iterrows():
 ae.visualization.print_inference_results(circuits)
 ```
 
+## Posterior quality diagnostics
+
+After Bayesian inference, AutoEIS can score each posterior parameter
+distribution for Gaussian-like behavior. The diagnostic combines Q-Q plot
+linearity, skewness, and KDE mode count, then labels each parameter as
+`Normal`, `Multi-Peak`, `Left-Skewed`, `Right-Skewed`, `Touch-Bound`, or
+`Invalid`.
+
+```python
+result = results[0]
+
+# Return one row per inferred parameter.
+quality = result.assess_posterior_quality(threshold=79)
+print(quality[["parameter", "score", "shape", "status"]])
+
+# The same API is also available as a module-level function.
+quality = ae.diagnostics.assess_posterior_quality(result.mcmc, threshold=79)
+
+# Optional: save KDE + histogram plots for each parameter.
+quality = result.assess_posterior_quality(
+    threshold=79,
+    save_plots=True,
+    save_dir="posterior_quality",
+)
+
+# Add posterior scores back to a circuits dataframe and rank models.
+circuits = ae.diagnostics.add_posterior_quality(circuits, results, threshold=79)
+```
+
 :::{seealso}
 While the above example should work out of the box, it is recommended to use AutoEIS in a step by step fashion to have more control over the analysis process. Furthermore, you'll learn more about the inner workings of AutoEIS this way. An example notebook that demonstrates how to use AutoEIS in more details can be found [here](https://github.com/AUTODIAL/AutoEIS/blob/develop/examples/autoeis_demo.ipynb).
 :::

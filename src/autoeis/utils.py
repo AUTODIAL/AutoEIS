@@ -1310,6 +1310,16 @@ class InferenceResult:
         """Prints a summary of the inference results."""
         self.mcmc.print_summary()
 
+    def assess_posterior_quality(self, **kwargs):
+        """Assess posterior parameter distributions from this inference result.
+
+        See :func:`autoeis.diagnostics.assess_posterior_quality` for keyword
+        arguments such as ``threshold``, ``var_names``, and ``save_plots``.
+        """
+        from .diagnostics import assess_posterior_quality
+
+        return assess_posterior_quality(self, **kwargs)
+
 
 class ImpedanceData:
     """Container for impedance data."""

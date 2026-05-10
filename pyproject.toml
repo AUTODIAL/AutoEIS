@@ -46,6 +46,7 @@ dependencies = [
     "pyparsing>=3",
     "rich",
     "scikit-learn>=1.4",
+    "scipy",
     "seaborn",
     "tqdm",
     "numexpr",
