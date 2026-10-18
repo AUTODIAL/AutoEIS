@@ -3,7 +3,7 @@ name = "autoeis"
 dynamic = ["version"]
 description = "A tool for automated EIS analysis by proposing statistically plausible ECMs."
 readme = "README.md"
-requires-python = ">=3.10, <3.13"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "Runze Zhang", email = "runzee.zhang@mail.utoronto.ca" },
@@ -24,7 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-    "arviz",
+    "arviz>=0.23,<1",  # arviz 1.x removed az.waic
     "click",
     "deprecated",
     "dill",
@@ -32,7 +32,7 @@ dependencies = [
     "ipython",
     "ipykernel",
     "ipywidgets",
-    "jax<0.7.0",
+    "jax>=0.7.0",
     "jinja2>=3.1.2",
     "juliacall",
     "juliapkg",
